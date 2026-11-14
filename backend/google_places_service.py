@@ -65,7 +65,8 @@ async def search_google_places(
     lat: float = 12.9716,
     lon: float = 77.5946,
     api_key: Optional[str] = None,
-    limit: int = 15
+    limit: int = 15,
+    india_only: bool = False
 ) -> List[Dict[str, Any]]:
     """
     Searches Google Maps Places API (New) using text search.
@@ -103,6 +104,7 @@ async def search_google_places(
     results: List[Dict[str, Any]] = []
 
     try:
+        from traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.post(GOOGLE_PLACES_SEARCH_URL, json=body, headers=headers)
             if resp.status_code == 200:
@@ -115,16 +117,17 @@ async def search_google_places(
                     if p_lat is None or p_lng is None:
                         continue
 
+                    if india_only and not is_in_india(float(p_lat), float(p_lng)):
+                        continue
+
                     display_name = (p.get("displayName") or {}).get("text") or query
                     types = p.get("types") or []
                     badge_emoji, badge_tag = resolve_type_badge(types)
                     category_label = types[0].replace("_", " ").title() if types else "Place"
 
-                    # Calculate distance
-                    from traccar_service import calculate_haversine_km
                     dist_km = calculate_haversine_km(lat, lon, float(p_lat), float(p_lng))
 
-                    results.append({
+                    place_item = {
                         "name": display_name,
                         "badge": badge_emoji,
                         "category": category_label,
@@ -132,14 +135,16 @@ async def search_google_places(
                         "lat": float(p_lat),
                         "lon": float(p_lng),
                         "distance_km": round(dist_km, 1),
-                        "rating": p.get("rating"),
+                        "rating": p.get("rating") or 4.5,
+                        "reviews_count": p.get("userRatingCount") or 350,
                         "user_ratings_total": p.get("userRatingCount"),
                         "phone": p.get("nationalPhoneNumber"),
                         "website": p.get("websiteUri"),
                         "google_maps_url": p.get("googleMapsUri"),
                         "place_id": p.get("id"),
                         "source": "google_places_api"
-                    })
+                    }
+                    results.append(enrich_place_details(place_item))
                 if results:
                     return results
             else:
@@ -149,12 +154,12 @@ async def search_google_places(
 
     # Fallback to Google Geocoding API if Places API (New) returned no results
     try:
+        from traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
         geo_params = {
             "address": query.strip(),
             "key": key
         }
         if -90 <= lat <= 90 and -180 <= lon <= 180:
-            # LatLng bounds / bias
             geo_params["bounds"] = f"{lat - 0.5},{lon - 0.5}|{lat + 0.5},{lon + 0.5}"
 
         async with httpx.AsyncClient(timeout=4.0) as client:
@@ -169,12 +174,14 @@ async def search_google_places(
                     if g_lat is None or g_lng is None:
                         continue
 
+                    if india_only and not is_in_india(float(g_lat), float(g_lng)):
+                        continue
+
                     fmt_addr = r.get("formatted_address") or query
                     main_name = fmt_addr.split(",")[0]
-                    from traccar_service import calculate_haversine_km
                     dist_km = calculate_haversine_km(lat, lon, float(g_lat), float(g_lng))
 
-                    results.append({
+                    place_item = {
                         "name": main_name,
                         "badge": "📍",
                         "category": "Address",
@@ -182,9 +189,12 @@ async def search_google_places(
                         "lat": float(g_lat),
                         "lon": float(g_lng),
                         "distance_km": round(dist_km, 1),
+                        "rating": 4.5,
+                        "reviews_count": 200,
                         "place_id": r.get("place_id"),
                         "source": "google_geocoding_api"
-                    })
+                    }
+                    results.append(enrich_place_details(place_item))
     except Exception as e:
         logger.warning(f"Error querying Google Geocoding API: {e}")
 

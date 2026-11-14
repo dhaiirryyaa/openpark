@@ -828,7 +828,7 @@ async def search_traccar_places(
     if google_key or os.getenv("GOOGLE_MAPS_API_KEY"):
         try:
             from google_places_service import search_google_places
-            g_results = await search_google_places(raw_query, lat=lat, lon=lon, api_key=google_key, limit=15)
+            g_results = await search_google_places(raw_query, lat=lat, lon=lon, api_key=google_key, limit=15, india_only=india_only)
             if g_results:
                 return g_results
         except Exception as e:
