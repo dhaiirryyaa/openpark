@@ -845,7 +845,10 @@ async def search_traccar_places(
 
     # 2. Query Offline SQLite FTS5 Places Database (Instant local matches)
     try:
-        from places_db import search_places_fts
+        try:
+            from backend.places_db import search_places_fts
+        except ImportError:
+            from places_db import search_places_fts
         local_matches = search_places_fts(raw_query, limit=12)
         for p in local_matches:
             p_lat = float(p["lat"])
@@ -1032,6 +1035,31 @@ async def search_traccar_places(
                 "distance_km": round(dist, 1),
                 "source": "curated_landmarks"
             })
+
+    # Sort results by match relevance (exact name match, prefix match, tokens in name, etc.)
+    def compute_relevance(item: Dict[str, Any]) -> float:
+        n = (item.get("name") or "").lower()
+        addr = (item.get("address") or "").lower()
+        score = 0.0
+        if n == q_lower:
+            score += 250.0
+        elif n.startswith(q_lower):
+            score += 180.0
+        elif q_lower in n:
+            score += 120.0
+        else:
+            token_matches = sum(1 for t in q_tokens if t in n)
+            if token_matches == len(q_tokens) and len(q_tokens) > 0:
+                score += 90.0
+            elif token_matches > 0:
+                score += token_matches * 20.0
+            elif q_lower in addr:
+                score += 25.0
+        dist = item.get("distance_km") or 0.0
+        score -= min(float(dist) * 0.05, 15.0)
+        return score
+
+    results.sort(key=compute_relevance, reverse=True)
 
     # 4. Fallback geocoded coordinate point if absolutely nothing matches
     if not results:
