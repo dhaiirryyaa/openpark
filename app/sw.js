@@ -1,8 +1,8 @@
-/* OpenPark Autonomous Offline Service Worker Engine v1.0
+/* OpenPark Autonomous Offline Service Worker Engine v2.0
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v1';
+const CACHE_NAME = 'openpark-offline-v3';
 const PRECACHE_ASSETS = [
   '/app/',
   '/app/index.html',
@@ -100,21 +100,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 3. Static local assets (CSS, JS, Fonts, Vendor) -> Stale-While-Revalidate
+  // 3. Static local assets (CSS, JS, Fonts, Vendor) -> Network First with cache fallback
   if (url.origin === self.location.origin && url.pathname.startsWith('/app/')) {
     event.respondWith(
-      caches.match(req).then((cached) => {
-        const fetchPromise = fetch(req)
-          .then((networkRes) => {
-            if (networkRes && networkRes.status === 200) {
-              const clone = networkRes.clone();
-              caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
-            }
-            return networkRes;
-          })
-          .catch(() => cached);
-        return cached || fetchPromise;
-      })
+      fetch(req)
+        .then((networkRes) => {
+          if (networkRes && networkRes.status === 200) {
+            const clone = networkRes.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, clone));
+          }
+          return networkRes;
+        })
+        .catch(() => caches.match(req))
     );
     return;
   }

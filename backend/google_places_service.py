@@ -10,6 +10,11 @@ import urllib.parse
 from typing import List, Dict, Any, Optional
 import httpx
 
+try:
+    from backend.traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
+except ImportError:
+    from traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
+
 logger = logging.getLogger("openpark.google_places")
 
 GOOGLE_PLACES_SEARCH_URL = "https://places.googleapis.com/v1/places:searchText"
@@ -104,7 +109,6 @@ async def search_google_places(
     results: List[Dict[str, Any]] = []
 
     try:
-        from traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
         async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.post(GOOGLE_PLACES_SEARCH_URL, json=body, headers=headers)
             if resp.status_code == 200:
@@ -154,7 +158,6 @@ async def search_google_places(
 
     # Fallback to Google Geocoding API if Places API (New) returned no results
     try:
-        from traccar_service import calculate_haversine_km, is_in_india, enrich_place_details
         geo_params = {
             "address": query.strip(),
             "key": key

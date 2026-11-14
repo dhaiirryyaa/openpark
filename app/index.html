@@ -9541,15 +9541,18 @@
       });
     })();
   </script>
-  <script src="js/animated-list.js?v=20261113_05"></script>
-  <script src="js/target-cursor.js?v=20261113_05"></script>
-  <script src="js/ui-polish.js?v=20261113_05"></script>
-  <script src="js/jelly-radio.js?v=20261113_05"></script>
+  <script src="js/animated-list.js?v=20261114_08"></script>
+  <script src="js/target-cursor.js?v=20261114_08"></script>
+  <script src="js/ui-polish.js?v=20261114_08"></script>
+  <script src="js/jelly-radio.js?v=20261114_08"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js', { scope: './' })
-          .then((reg) => console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope))
+        navigator.serviceWorker.register('sw.js?v=20261114_08', { scope: './' })
+          .then((reg) => {
+            reg.update();
+            console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
+          })
           .catch((err) => console.warn('[OpenPark] SW registration failed:', err));
       });
     }
