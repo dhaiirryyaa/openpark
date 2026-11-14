@@ -763,11 +763,27 @@ async def traccar_routes_compare_endpoint(
 async def traccar_search_endpoint(
     query: str = Query(..., min_length=1),
     lat: float = Query(12.9716),
-    lon: float = Query(77.5946)
+    lon: float = Query(77.5946),
+    google_key: Optional[str] = Query(None),
+    india_only: bool = Query(True)
 ):
-    """Traccar Geocoding & Search Engine (OSM Nominatim + Places Catalog)."""
-    results = await search_traccar_places(query=query, lat=lat, lon=lon)
+    """Universal Place Search Engine (Google Maps Places API + Global OSM + Places Catalog)."""
+    results = await search_traccar_places(query=query, lat=lat, lon=lon, google_key=google_key, india_only=india_only)
     return {"status": "ok", "query": query, "results": results}
+
+
+@app.get("/api/google/places/search")
+async def google_places_search_endpoint(
+    query: str = Query(..., min_length=1),
+    lat: float = Query(12.9716),
+    lon: float = Query(77.5946),
+    api_key: Optional[str] = Query(None),
+    limit: int = Query(15, ge=1, le=20)
+):
+    """Direct Google Maps Platform Places API (New) Search Proxy."""
+    from google_places_service import search_google_places
+    results = await search_google_places(query=query, lat=lat, lon=lon, api_key=api_key, limit=limit)
+    return {"status": "ok", "query": query, "total": len(results), "results": results}
 
 
 @app.get("/api/places/search")

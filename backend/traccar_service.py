@@ -803,30 +803,51 @@ def is_in_india(lat: float, lon: float, country_code: Optional[str] = None, coun
     return 6.5 <= float(lat) <= 37.5 and 68.0 <= float(lon) <= 97.5
 
 
+import logging
+logger = logging.getLogger("openpark.traccar")
+
 async def search_traccar_places(
     query: str,
     lat: float = 12.9716,
-    lon: float = 77.5946
+    lon: float = 77.5946,
+    google_key: Optional[str] = None,
+    india_only: bool = True
 ) -> List[Dict[str, Any]]:
     """
-    Universal Google Maps-style place search powered by Photon Geocoder (Komoot/OSM)
-    and OpenStreetMap Nominatim, plus curated landmarks and POIs (strictly restricted to India).
+    Universal Place Search Engine.
+    1. Direct Google Maps Places API (New) when key is supplied or configured
+    2. High-speed Offline SQLite FTS5 database (33,000+ places)
+    3. Global Photon Geocoder (Komoot/OSM) with proximity bias
+    4. OpenStreetMap Nominatim Global Fallback
     """
     raw_query = query.strip()
+    if not raw_query:
+        return []
+
+    # 1. Live Google Maps Places API (New) Text Search
+    if google_key or os.getenv("GOOGLE_MAPS_API_KEY"):
+        try:
+            from google_places_service import search_google_places
+            g_results = await search_google_places(raw_query, lat=lat, lon=lon, api_key=google_key, limit=15)
+            if g_results:
+                return g_results
+        except Exception as e:
+            logger.debug(f"Google Places search bypass: {e}")
+
     q_lower = raw_query.lower()
     q_tokens = [t for t in re.split(r'[\s,.-]+', q_lower) if len(t) >= 2]
 
     results: List[Dict[str, Any]] = []
     seen_names = set()
 
-    # 0. Query Offline SQLite FTS5 Places Database (Instant local matches)
+    # 2. Query Offline SQLite FTS5 Places Database (Instant local matches)
     try:
         from places_db import search_places_fts
-        local_matches = search_places_fts(raw_query, limit=10)
+        local_matches = search_places_fts(raw_query, limit=12)
         for p in local_matches:
             p_lat = float(p["lat"])
             p_lon = float(p["lon"])
-            if not is_in_india(p_lat, p_lon):
+            if india_only and not is_in_india(p_lat, p_lon):
                 continue
             norm_key = f"{p['name'].lower()}_{round(p_lat, 3)}_{round(p_lon, 3)}"
             if norm_key not in seen_names:
@@ -845,12 +866,13 @@ async def search_traccar_places(
     except Exception:
         pass
 
-    # 1. Query Photon Geocoder restricted to India bounding box + proximity bias
+    # 3. Query Photon Geocoder (Worldwide with proximity bias)
     if len(raw_query) >= 2:
         try:
+            bbox_param = "&bbox=68.0,6.5,97.5,37.5" if india_only else ""
             photon_url = (
                 f"https://photon.komoot.io/api/?q={urllib.parse.quote(raw_query)}"
-                f"&lat={lat}&lon={lon}&bbox=68.0,6.5,97.5,37.5&limit=15"
+                f"&lat={lat}&lon={lon}{bbox_param}&limit=15"
             )
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -869,7 +891,7 @@ async def search_traccar_places(
 
                         p_lon = float(coords[0])
                         p_lat = float(coords[1])
-                        if not is_in_india(p_lat, p_lon, props.get("countrycode"), props.get("country")):
+                        if india_only and not is_in_india(p_lat, p_lon, props.get("countrycode"), props.get("country")):
                             continue
                         base_name = props.get("name") or props.get("street") or props.get("city")
                         if not base_name:
@@ -902,7 +924,6 @@ async def search_traccar_places(
                         badge = resolve_place_badge(osm_type, osm_val)
                         cat = (props.get("osm_value") or props.get("type") or "Place").replace("_", " ").title()
 
-                        # For popular chains (e.g. Starbucks, McDonald's), distinguish branch by street/locality if available
                         disp_name = base_name
                         locality = props.get("locality") or props.get("street") or props.get("district")
                         if locality and locality.lower() not in base_name.lower():
@@ -921,12 +942,13 @@ async def search_traccar_places(
         except Exception:
             pass
 
-    # 2. Query OSM Nominatim restricted strictly to India (countrycodes=in)
+    # 4. Query OSM Nominatim
     if len(results) < 5 and len(raw_query) >= 3:
         try:
+            cc_param = "&countrycodes=in" if india_only else ""
             nom_url = (
                 f"https://nominatim.openstreetmap.org/search?format=json"
-                f"&q={urllib.parse.quote(raw_query)}&countrycodes=in&limit=8&addressdetails=1"
+                f"&q={urllib.parse.quote(raw_query)}{cc_param}&limit=10&addressdetails=1"
             )
             headers = {
                 "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
@@ -938,8 +960,7 @@ async def search_traccar_places(
                     for item in resp.json():
                         p_lat = float(item["lat"])
                         p_lon = float(item["lon"])
-                        addr_obj = item.get("address") or {}
-                        if not is_in_india(p_lat, p_lon, addr_obj.get("country_code"), addr_obj.get("country")):
+                        if india_only and not is_in_india(p_lat, p_lon, (item.get("address") or {}).get("country_code"), (item.get("address") or {}).get("country")):
                             continue
                         d_name = item.get("display_name", "").split(",")[0]
                         norm_key = f"{d_name.lower()}_{round(p_lat, 3)}_{round(p_lon, 3)}"

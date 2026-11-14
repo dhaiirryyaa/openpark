@@ -2884,6 +2884,20 @@
 
           <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
+              <span>Google Maps Platform API / Demo Key</span>
+              <a href="https://mapsplatform.google.com/maps-demo-key" target="_blank" style="color: #00f2fe; font-size: 12px; text-decoration: underline;">Get Free Demo Key</a>
+            </div>
+            <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.4;">
+              Access 100% of Google Maps places, stores, addresses & landmarks worldwide. Works with free Demo Key (no credit card needed).
+            </div>
+            <div style="display: flex; gap: 8px; width: 100%;">
+              <input type="password" id="setting-googlemaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Google Maps API Key or Demo Key (AIzaSy...)" />
+              <button class="btn-pill-primary" id="btn-save-googlemaps-key" style="padding: 6px 14px; font-size: 13px; width: auto; background: #0066ff;">Save</button>
+            </div>
+          </div>
+
+          <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
               <span>Outscraper API Key (Google Reviews & Places)</span>
               <a href="https://app.outscraper.com" target="_blank" style="color: var(--color-primary); font-size: 12px; text-decoration: underline;">app.outscraper.com</a>
             </div>
@@ -3540,6 +3554,7 @@
             return s;
           })(),
           olaMapsKey: localStorage.getItem('openpark_olamaps_key') || '',
+          googleMapsKey: localStorage.getItem('openpark_google_maps_key') || '',
           outscraperKey: localStorage.getItem('openpark_outscraper_key') || ''
         },
         watchId: null,
@@ -4683,31 +4698,28 @@
             const off = matchOfflinePlaces();
             if (off.length > 0) return off;
           }
-          // 1. Query backend proxy (Photon + Nominatim + Curated Landmarks, India-filtered)
+          // 1. Query backend proxy (Google Maps Places API + Global OSM + Places Catalog)
           try {
-            const res = await fetch(`/api/traccar/search?query=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}`);
+            const gKey = STATE.config.googleMapsKey || localStorage.getItem('openpark_google_maps_key') || '';
+            const keyParam = gKey ? `&google_key=${encodeURIComponent(gKey)}` : '';
+            const res = await fetch(`/api/traccar/search?query=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}&india_only=false${keyParam}`);
             if (res.ok) {
               const data = await res.json();
               if (data.results && data.results.length > 0) {
-                const indiaOnly = data.results.filter(r => this.isInIndiaPlace(r.lat, r.lon));
-                if (indiaOnly.length > 0) return indiaOnly.map(r => enrichPlaceDetails(r));
+                return data.results.map(r => enrichPlaceDetails(r));
               }
             }
           } catch (e) {
-            console.warn("Traccar search proxy notice", e);
+            console.warn("Place search proxy notice", e);
           }
 
-          // 2. Direct browser Photon Geocoder fallback (restricted to India bbox)
+          // 2. Direct browser Photon Geocoder fallback (Worldwide with proximity bias)
           try {
-            const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}&bbox=68.0,6.5,97.5,37.5&limit=15`);
+            const photonRes = await fetch(`https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=${lat}&lon=${lon}&limit=15`);
             if (photonRes.ok) {
               const pData = await photonRes.json();
-              const indiaFeatures = (pData.features || []).filter(f => {
-                const p = f.properties || {};
-                const coords = (f.geometry && f.geometry.coordinates) || [];
-                return this.isInIndiaPlace(coords[1], coords[0], p.countrycode, p.country);
-              });
-              if (indiaFeatures.length > 0) {
+              const features = pData.features || [];
+              if (features.length > 0) {
                 const getBadge = (val, type) => {
                   const s = `${val || ''} ${type || ''}`.toLowerCase();
                   if (s.includes('cafe') || s.includes('coffee')) return 'cafe';
@@ -4726,7 +4738,7 @@
                   return 'place';
                 };
 
-                return indiaFeatures.map(f => {
+                return features.map(f => {
                   const p = f.properties || {};
                   const coords = (f.geometry && f.geometry.coordinates) || [lon, lat];
                   const pLon = parseFloat(coords[0]);
@@ -4742,8 +4754,9 @@
                   if (p.district) addrParts.push(p.district);
                   if (p.city) addrParts.push(p.city);
                   if (p.state) addrParts.push(p.state);
+                  if (p.country) addrParts.push(p.country);
 
-                  const fullAddr = addrParts.length > 0 ? addrParts.join(', ') : (p.name || 'Bengaluru');
+                  const fullAddr = addrParts.length > 0 ? addrParts.join(', ') : (p.name || 'Global Destination');
                   const distKm = (calculateDistanceMeters(lat, lon, pLat, pLon) / 1000).toFixed(1);
                   const cat = (p.osm_value || p.type || 'Destination').replace('_', ' ');
 
@@ -4764,13 +4777,11 @@
             console.warn("Browser Photon fallback notice", e);
           }
 
-          // 3. Direct browser OSM Nominatim fallback (strictly countrycodes=in)
+          // 3. Direct browser OSM Nominatim fallback (Worldwide Fallback)
           try {
-            const nomRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=in&limit=8&addressdetails=1`);
+            const nomRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=10&addressdetails=1`);
             if (nomRes.ok) {
-              const nomData = (await nomRes.json()).filter(item =>
-                this.isInIndiaPlace(item.lat, item.lon, item.address?.country_code, item.address?.country)
-              );
+              const nomData = await nomRes.json();
               if (nomData && nomData.length > 0) {
                 return nomData.map(item => enrichPlaceDetails({
                   name: item.display_name.split(',')[0],
@@ -6447,6 +6458,21 @@
                 ParkingApp.showToast('Ola Maps API key saved! Loading map...');
                 MapEngine.switchMapStyle('ola-maps');
               }
+            };
+          }
+
+          // Settings Tab: Google Maps Platform Key Configuration
+          const settingGoogleKey = document.getElementById('setting-googlemaps-key');
+          const btnSaveGoogleKey = document.getElementById('btn-save-googlemaps-key');
+          if (settingGoogleKey) {
+            settingGoogleKey.value = STATE.config.googleMapsKey || localStorage.getItem('openpark_google_maps_key') || '';
+          }
+          if (btnSaveGoogleKey && settingGoogleKey) {
+            btnSaveGoogleKey.onclick = () => {
+              const k = settingGoogleKey.value.trim();
+              STATE.config.googleMapsKey = k;
+              localStorage.setItem('openpark_google_maps_key', k);
+              ParkingApp.showToast(k ? 'Google Maps API Key saved! Live Google Maps Places search active.' : 'Google Maps Key cleared.');
             };
           }
 
