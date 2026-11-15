@@ -5872,10 +5872,10 @@
 
         setDestinationMarker(place) {
           if (this.destinationMarker) {
-            this.destinationMarker.remove();
+            try { this.destinationMarker.remove(); } catch (e) {}
             this.destinationMarker = null;
           }
-          if (!place) return;
+          if (!place || !this.map) return;
 
           const lon = Number(place.lon !== undefined ? place.lon : (place.lng !== undefined ? place.lng : place.longitude));
           const lat = Number(place.lat !== undefined ? place.lat : place.latitude);
@@ -5891,13 +5891,17 @@
             </svg>
           `;
 
-          this.destinationMarker = new maplibregl.Marker({
-            element: el,
-            anchor: 'bottom',
-            offset: [0, 0]
-          })
-            .setLngLat([lon, lat])
-            .addTo(this.map);
+          try {
+            this.destinationMarker = new maplibregl.Marker({
+              element: el,
+              anchor: 'bottom',
+              offset: [0, 0]
+            })
+              .setLngLat([lon, lat])
+              .addTo(this.map);
+          } catch (e) {
+            console.warn("[MapEngine] Destination pin attach notice:", e);
+          }
 
           if (typeof ParkingApp !== 'undefined' && ParkingApp.updateAiScanVisibility) {
             ParkingApp.updateAiScanVisibility();
@@ -5906,7 +5910,7 @@
 
         clearDestinationMarker() {
           if (this.destinationMarker) {
-            this.destinationMarker.remove();
+            try { this.destinationMarker.remove(); } catch (e) {}
             this.destinationMarker = null;
           }
           STATE.selectedPlace = null;
@@ -7053,13 +7057,20 @@
         },
 
         async fetchSuggestions(query, selectFirstOnFetch = false) {
-          const center = MapEngine.map ? MapEngine.map.getCenter() : { lat: CONFIG.DEFAULT_COORDS[1], lng: CONFIG.DEFAULT_COORDS[0] };
+          const center = (MapEngine.map && typeof MapEngine.map.getCenter === 'function')
+            ? MapEngine.map.getCenter()
+            : { lat: CONFIG.DEFAULT_COORDS[1], lng: CONFIG.DEFAULT_COORDS[0] };
           this.lastQuery = query;
-          this.results = await API.searchTraccar(query, center.lat, center.lng);
+          try {
+            this.results = await API.searchTraccar(query, center.lat, center.lng);
+          } catch (e) {
+            console.warn("[SearchEngine] Search notice:", e);
+            this.results = [];
+          }
           this.renderAutocomplete();
 
           // Render Google Maps category POI markers on vector map
-          if (MapEngine.map && this.results.length > 0) {
+          if (MapEngine.map && typeof MapEngine.renderPoiMarkers === 'function' && this.results.length > 0) {
             MapEngine.renderPoiMarkers(this.results);
           }
 
@@ -7141,33 +7152,51 @@
         },
 
         selectResult(rawItem) {
-          document.getElementById('search-autocomplete-box').classList.remove('open');
-          const input = document.getElementById('search-input');
-          if (input) input.value = rawItem.name;
-          if (rawItem && rawItem.name) this.saveRecentSearch(rawItem.name);
+          try {
+            const list = document.getElementById('search-autocomplete-box');
+            if (list) list.classList.remove('open');
+            const wList = document.getElementById('welcome-autocomplete-box');
+            if (wList) wList.classList.remove('open');
 
-          const item = enrichPlaceDetails(rawItem);
-          STATE.selectedPlace = item;
-          STATE.selectedLot = null;
-          if (typeof AIScannerEngine !== 'undefined' && AIScannerEngine.clear) {
-            AIScannerEngine.clear();
-          }
+            const input = document.getElementById('search-input');
+            if (input) input.value = rawItem.name;
+            const wInput = document.getElementById('welcome-search-input');
+            if (wInput) wInput.value = rawItem.name;
 
-          // Drop high-visibility destination pin
-          MapEngine.setDestinationMarker(item);
+            if (rawItem && rawItem.name) this.saveRecentSearch(rawItem.name);
 
-          // Fly map smoothly to place coordinates
-          MapEngine.map.flyTo({
-            center: [item.lon, item.lat],
-            zoom: 15.5,
-            pitch: 35,
-            duration: 900
-          });
+            const item = enrichPlaceDetails(rawItem);
+            STATE.selectedPlace = item;
+            STATE.selectedLot = null;
+            if (typeof AIScannerEngine !== 'undefined' && AIScannerEngine.clear) {
+              AIScannerEngine.clear();
+            }
 
-          // Calculate driving distance & ETA from current vehicle position
-          const distMeters = calculateDistanceMeters(STATE.userLocation.lat, STATE.userLocation.lng, item.lat, item.lon);
-          const distKm = (distMeters / 1000).toFixed(1);
-          const etaMins = Math.max(1, Math.round((distMeters / 1000 / 30) * 60)); // ~30 km/h city speed
+            // Drop high-visibility destination pin
+            if (MapEngine && MapEngine.setDestinationMarker) {
+              MapEngine.setDestinationMarker(item);
+            }
+
+            // Fly map smoothly to place coordinates
+            if (MapEngine.map && typeof MapEngine.map.flyTo === 'function') {
+              try {
+                MapEngine.map.flyTo({
+                  center: [item.lon, item.lat],
+                  zoom: 15.5,
+                  pitch: 35,
+                  duration: 900
+                });
+              } catch (e) {
+                console.warn("[SearchEngine] flyTo notice:", e);
+              }
+            }
+
+            // Calculate driving distance & ETA from current vehicle position
+            const uLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
+            const uLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
+            const distMeters = calculateDistanceMeters(uLat, uLng, item.lat, item.lon);
+            const distKm = (distMeters / 1000).toFixed(1);
+            const etaMins = Math.max(1, Math.round((distMeters / 1000 / 30) * 60)); // ~30 km/h city speed
 
           // 1. Populate Google Maps Place Header & Banner
           const bannerEl = document.getElementById('pv-banner-img');
@@ -7322,7 +7351,7 @@
           };
 
           // Auto-draw driving route to selected destination so user sees the way immediately
-          if (STATE.userLocation && STATE.userLocation.lat && MapEngine.map && MapEngine.map.getSource) {
+          if (STATE.userLocation && STATE.userLocation.lat && MapEngine.map && typeof MapEngine.map.getSource === 'function') {
             const destObj = {
               id: item.lot_id || ('place-' + Date.now()),
               name: item.name,
@@ -7409,7 +7438,11 @@
             if (sidebar) sidebar.style.transform = 'translateY(calc(100% - 380px))';
           }
           ParkingApp.showToast(`Selected ${item.name}`);
+        } catch (err) {
+          console.error("[SearchEngine] selectResult error:", err);
+          try { UIController.showPlaceView(); } catch (e) {}
         }
+      }
       };
 
       // --------------------------------------------------------------------------
@@ -7671,8 +7704,10 @@
 
           // Move route layers to the very top so they are never hidden under raster Google tiles
           try {
-            if (MapEngine.map.getLayer('route-casing')) MapEngine.map.moveLayer('route-casing');
-            if (MapEngine.map.getLayer('route-line')) MapEngine.map.moveLayer('route-line');
+            if (MapEngine.map && typeof MapEngine.map.getLayer === 'function') {
+              if (MapEngine.map.getLayer('route-casing')) MapEngine.map.moveLayer('route-casing');
+              if (MapEngine.map.getLayer('route-line')) MapEngine.map.moveLayer('route-line');
+            }
           } catch (e) {}
 
           // Fit bounds to show entire route from device location to destination
@@ -8948,8 +8983,15 @@
               if (wList) wList.classList.remove('open');
               return;
             }
-            const center = MapEngine.map ? MapEngine.map.getCenter() : { lat: CONFIG.DEFAULT_COORDS[1], lng: CONFIG.DEFAULT_COORDS[0] };
-            this.results = await API.searchTraccar(q, center.lat, center.lng);
+            const center = (MapEngine.map && typeof MapEngine.map.getCenter === 'function')
+              ? MapEngine.map.getCenter()
+              : { lat: CONFIG.DEFAULT_COORDS[1], lng: CONFIG.DEFAULT_COORDS[0] };
+            try {
+              this.results = await API.searchTraccar(q, center.lat, center.lng);
+            } catch (err) {
+              console.warn("[WelcomeController] Search notice:", err);
+              this.results = [];
+            }
             this.renderAutocomplete(q);
 
             if (selectFirst && this.results.length > 0) {
@@ -9534,6 +9576,10 @@
         window.ParkingApp = ParkingApp;
         window.NavigationEngine = NavigationEngine;
         window.DynamicIslandNav = DynamicIslandNav;
+        window.API = API;
+        window.SearchEngine = SearchEngine;
+        window.WelcomeController = WelcomeController;
+        window.enrichPlaceDetails = enrichPlaceDetails;
         window.testDynamicIsland = () => NavigationEngine.demoDynamicIsland();
         ParkingApp.init();
         AIScannerEngine.init();

@@ -773,40 +773,52 @@ async def traccar_routes_compare_endpoint(
 
 @app.get("/api/traccar/search")
 async def traccar_search_endpoint(
-    query: str = Query(..., min_length=1),
+    query: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
     lat: float = Query(12.9716),
     lon: float = Query(77.5946),
     google_key: Optional[str] = Query(None),
     india_only: bool = Query(True)
 ):
     """Universal Place Search Engine (Google Maps Places API + Global OSM + Places Catalog)."""
-    results = await search_traccar_places(query=query, lat=lat, lon=lon, google_key=google_key, india_only=india_only)
-    return {"status": "ok", "query": query, "results": results}
+    search_term = (query or q or "").strip()
+    if not search_term:
+        return {"status": "ok", "query": "", "results": []}
+    results = await search_traccar_places(query=search_term, lat=lat, lon=lon, google_key=google_key, india_only=india_only)
+    return {"status": "ok", "query": search_term, "results": results}
 
 
 @app.get("/api/google/places/search")
 async def google_places_search_endpoint(
-    query: str = Query(..., min_length=1),
+    query: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
     lat: float = Query(12.9716),
     lon: float = Query(77.5946),
     api_key: Optional[str] = Query(None),
     limit: int = Query(15, ge=1, le=20)
 ):
     """Direct Google Maps Platform Places API (New) Search Proxy."""
+    search_term = (query or q or "").strip()
+    if not search_term:
+        return {"status": "ok", "query": "", "total": 0, "results": []}
     from google_places_service import search_google_places
-    results = await search_google_places(query=query, lat=lat, lon=lon, api_key=api_key, limit=limit)
-    return {"status": "ok", "query": query, "total": len(results), "results": results}
+    results = await search_google_places(query=search_term, lat=lat, lon=lon, api_key=api_key, limit=limit)
+    return {"status": "ok", "query": search_term, "total": len(results), "results": results}
 
 
 @app.get("/api/places/search")
 async def places_search_endpoint(
-    query: str = Query(..., min_length=1),
+    query: Optional[str] = Query(None),
+    q: Optional[str] = Query(None),
     limit: int = Query(15, ge=1, le=50)
 ):
     """Searches the offline SQLite FTS5 database of all places."""
+    search_term = (query or q or "").strip()
+    if not search_term:
+        return {"status": "ok", "query": "", "total": 0, "results": []}
     from places_db import search_places_fts
-    results = search_places_fts(query=query, limit=limit)
-    return {"status": "ok", "query": query, "total": len(results), "results": results}
+    results = search_places_fts(query=search_term, limit=limit)
+    return {"status": "ok", "query": search_term, "total": len(results), "results": results}
 
 
 @app.get("/api/places/nearby")
