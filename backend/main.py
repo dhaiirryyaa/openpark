@@ -37,7 +37,7 @@ import logging
 from fastapi import FastAPI, HTTPException, Header, WebSocket, WebSocketDisconnect, status, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, PlainTextResponse
+from fastapi.responses import RedirectResponse, PlainTextResponse, Response
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("traccar")
@@ -512,6 +512,18 @@ async def root_redirect(
     return RedirectResponse(url="/app/")
 
 
+FAVICON_SVG = """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="7" fill="#09090b"/>
+  <path d="M11 7h5.5a5.5 5.5 0 0 1 0 11H14v7h-3V7zm3 3v5h2.5a2.5 2.5 0 0 0 0-5H14z" fill="#ffffff"/>
+  <circle cx="23" cy="9" r="2.5" fill="#10b981"/>
+</svg>"""
+
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
+async def favicon_endpoint():
+    """Returns SVG favicon for browser tabs to eliminate 404 console errors."""
+    return Response(content=FAVICON_SVG, media_type="image/svg+xml")
+
+
 class TraccarPingPayload(BaseModel):
     id: Optional[str] = None
     deviceId: Optional[str] = None
@@ -896,6 +908,8 @@ async def mappls_route_endpoint(
 
 
 @app.get("/api/ai/scan-parking")
+@app.get("/api/ai/parking/scan")
+@app.get("/api/ai/scan")
 async def ai_scan_parking_endpoint(
     lat: float = Query(12.9716, ge=-90.0, le=90.0),
     lon: float = Query(77.5946, ge=-180.0, le=180.0),
@@ -1420,12 +1434,14 @@ async def traccar_client_endpoint(
 
 
 @app.get("/api/devices")
+@app.get("/api/traccar/devices")
 def traccar_devices():
     """Traccar REST API: List all registered GPS tracking devices."""
     return get_all_devices()
 
 
 @app.get("/api/positions")
+@app.get("/api/traccar/positions")
 def traccar_positions():
     """Traccar REST API: List latest positions for all devices."""
     return get_all_positions()

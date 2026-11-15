@@ -6,6 +6,7 @@
   <title>OpenPark — Next-Gen Urban Parking & Live GPS Telemetry</title>
 
   <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
 
   <!-- Typography: Local Inter & JetBrains Mono Fonts + Apple System Fallbacks -->
   <link rel="stylesheet" href="vendor/fonts/fonts.css" />
@@ -2890,10 +2891,10 @@
             <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.4;">
               Access 100% of Google Maps places, stores, addresses & landmarks worldwide. Works with free Demo Key (no credit card needed).
             </div>
-            <div style="display: flex; gap: 8px; width: 100%;">
-              <input type="password" id="setting-googlemaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Google Maps API Key or Demo Key (AIzaSy...)" />
+            <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
+              <input type="password" id="setting-googlemaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Google Maps API Key or Demo Key (AIzaSy...)" autocomplete="off" />
               <button class="btn-pill-primary" id="btn-save-googlemaps-key" style="padding: 6px 14px; font-size: 13px; width: auto; background: #0066ff;">Save</button>
-            </div>
+            </form>
           </div>
 
           <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
@@ -2901,10 +2902,10 @@
               <span>Outscraper API Key (Google Reviews & Places)</span>
               <a href="https://app.outscraper.com" target="_blank" style="color: var(--color-primary); font-size: 12px; text-decoration: underline;">app.outscraper.com</a>
             </div>
-            <div style="display: flex; gap: 8px; width: 100%;">
-              <input type="password" id="setting-outscraper-key" class="styled-input" style="flex: 1;" placeholder="Enter Outscraper API Key" />
+            <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
+              <input type="password" id="setting-outscraper-key" class="styled-input" style="flex: 1;" placeholder="Enter Outscraper API Key" autocomplete="off" />
               <button class="btn-pill-secondary" id="btn-save-outscraper-key" style="padding: 6px 14px; font-size: 13px; width: auto;">Save</button>
-            </div>
+            </form>
           </div>
         </div>
 
@@ -9541,14 +9542,14 @@
       });
     })();
   </script>
-  <script src="js/animated-list.js?v=20261114_09"></script>
-  <script src="js/target-cursor.js?v=20261114_09"></script>
-  <script src="js/ui-polish.js?v=20261114_09"></script>
-  <script src="js/jelly-radio.js?v=20261114_09"></script>
+  <script src="js/animated-list.js?v=20261115_01"></script>
+  <script src="js/target-cursor.js?v=20261115_01"></script>
+  <script src="js/ui-polish.js?v=20261115_01"></script>
+  <script src="js/jelly-radio.js?v=20261115_01"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20261114_09', { scope: './' })
+        navigator.serviceWorker.register('sw.js?v=20261115_01', { scope: './' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
