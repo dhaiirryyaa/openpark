@@ -5271,8 +5271,50 @@
               document.getElementById('btn-recenter-nav').classList.add('visible');
             }
           };
-          this.map.on('dragstart', onUserPan);
-          this.map.on('touchstart', onUserPan);
+
+          // Robust map gesture tracking to distinguish scrolling, panning, pinching, & zooming from intentional clicks
+          let _lastMapGestureTime = 0;
+          let _isMapGestureActive = false;
+          let _pointerDownPos = null;
+
+          const markMapGesture = () => {
+            _lastMapGestureTime = Date.now();
+            _isMapGestureActive = true;
+          };
+
+          const endMapGesture = () => {
+            _lastMapGestureTime = Date.now();
+            setTimeout(() => { _isMapGestureActive = false; }, 220);
+          };
+
+          this.map.on('movestart', markMapGesture);
+          this.map.on('move', markMapGesture);
+          this.map.on('moveend', endMapGesture);
+          this.map.on('dragstart', () => { markMapGesture(); onUserPan(); });
+          this.map.on('drag', markMapGesture);
+          this.map.on('dragend', endMapGesture);
+          this.map.on('zoomstart', markMapGesture);
+          this.map.on('zoom', markMapGesture);
+          this.map.on('zoomend', endMapGesture);
+          this.map.on('rotatestart', markMapGesture);
+          this.map.on('rotate', markMapGesture);
+          this.map.on('rotateend', endMapGesture);
+          this.map.on('pitchstart', markMapGesture);
+          this.map.on('pitch', markMapGesture);
+          this.map.on('pitchend', endMapGesture);
+          this.map.on('wheel', markMapGesture);
+
+          this.map.on('touchstart', (e) => {
+            markMapGesture();
+            onUserPan();
+            if (e && e.point) _pointerDownPos = { x: e.point.x, y: e.point.y, t: Date.now() };
+          });
+          this.map.on('touchmove', markMapGesture);
+          this.map.on('touchend', endMapGesture);
+
+          this.map.on('mousedown', (e) => {
+            if (e && e.point) _pointerDownPos = { x: e.point.x, y: e.point.y, t: Date.now() };
+          });
 
           // Interactive cursor for buildings
           try {
@@ -5280,12 +5322,26 @@
             this.map.on('mouseleave', 'building', () => { this.map.getCanvas().style.cursor = ''; });
           } catch (e) {}
 
-          // Click anywhere on map / any building to inspect & get full Google Maps place details
-          // Shift+click or Alt+click instantly sets your device location to that spot
+          // Map Click Handler: Safe, non-disruptive, never forgets active destination while scrolling or panning
           this.map.on('click', async (e) => {
+            // 1. Strict scroll / drag / wheel gesture rejection: ignore if map was recently scrolled or dragged
+            const timeSinceGesture = Date.now() - _lastMapGestureTime;
+            if (_isMapGestureActive || timeSinceGesture < 320) {
+              return; // Scrolling or panning gesture; DO NOT register as click
+            }
+
+            // 2. Reject if pointer moved more than 5px during touch/press (was a pan gesture)
+            if (_pointerDownPos && e && e.point) {
+              const distMoved = Math.hypot(e.point.x - _pointerDownPos.x, e.point.y - _pointerDownPos.y);
+              if (distMoved > 5) {
+                return; // Dragged/scrolled; ignore
+              }
+            }
+
             const clickLng = e.lngLat.lng;
             const clickLat = e.lngLat.lat;
 
+            // Shift+click or Alt+click sets your device location to that spot
             if (e.originalEvent && (e.originalEvent.shiftKey || e.originalEvent.altKey)) {
               ParkingApp.setUserLocation(clickLat, clickLng, 'shift-click');
               return;
@@ -5293,7 +5349,7 @@
 
             // Check if user clicked an AI parking polygon or near an AI bay
             if (e.originalEvent && e.originalEvent._handledByAiBay) return;
-            if (this.map.getLayer('ai-scan-fill')) {
+            if (this.map.getLayer && this.map.getLayer('ai-scan-fill')) {
               const bbox = [[e.point.x - 8, e.point.y - 8], [e.point.x + 8, e.point.y + 8]];
               const aiFeatures = this.map.queryRenderedFeatures(bbox, { layers: ['ai-scan-fill'] });
               if (aiFeatures && aiFeatures.length > 0) {
@@ -5308,19 +5364,25 @@
               }
             }
 
-            // Place destination pointer on map and fetch full place details
-            this.setDestinationMarker({
-              lat: clickLat,
-              lon: clickLng,
-              name: 'Selected Location'
-            });
+            // Dismiss autocomplete dropdowns if open
+            const sBox = document.getElementById('search-autocomplete-box');
+            if (sBox) sBox.classList.remove('open');
+            const wBox = document.getElementById('welcome-autocomplete-box');
+            if (wBox) wBox.classList.remove('open');
 
-            // Fetch reverse-geocoded building & place details
+            // 3. CRITICAL: If a destination is already selected or a trip is active,
+            // DO NOT wipe or forget the old location when tapping empty map space!
+            if (STATE.activeTrip || STATE.selectedPlace || STATE.selectedLot) {
+              return; // Keep existing searched destination and route completely safe and intact
+            }
+
+            // 4. Only if NO destination is currently selected: inspect if user explicitly tapped a real building/POI
             try {
               const resp = await fetch(`/api/places/lookup?lat=${clickLat.toFixed(6)}&lon=${clickLng.toFixed(6)}`);
               if (resp.ok) {
                 const data = await resp.json();
-                if (data.place) {
+                if (data && data.place && data.place.name && !data.place.name.toLowerCase().includes('pinned')) {
+                  this.setDestinationMarker(data.place);
                   SearchEngine.selectResult(data.place);
                   return;
                 }
@@ -5329,22 +5391,7 @@
               console.warn('[MapEngine] building lookup error:', err);
             }
 
-            // Fallback: If no commercial entity exists at exact coordinates, show place details for location and ask for directions
-            const fallbackPlace = {
-              id: `pin-${Date.now()}`,
-              name: `Pinned Location`,
-              address: `${clickLat.toFixed(5)}° N, ${clickLng.toFixed(5)}° E • Bengaluru`,
-              lat: clickLat,
-              lon: clickLng,
-              category: 'Location',
-              badge: 'place',
-              rating: 4.8,
-              reviews_count: 50,
-              price_tier: 'Public Area',
-              is_open: true,
-              open_status: 'Accessible'
-            };
-            SearchEngine.selectResult(fallbackPlace);
+            // If tapped on blank ground and nothing was found, do NOT drop a disruptive pin or hijack screen.
           });
 
           // Right-click / Context menu anywhere on the map to place user device location
@@ -9588,14 +9635,14 @@
       });
     })();
   </script>
-  <script src="js/animated-list.js?v=20261115_01"></script>
-  <script src="js/target-cursor.js?v=20261115_01"></script>
-  <script src="js/ui-polish.js?v=20261115_01"></script>
-  <script src="js/jelly-radio.js?v=20261115_01"></script>
+  <script src="js/animated-list.js?v=20261116_02"></script>
+  <script src="js/target-cursor.js?v=20261116_02"></script>
+  <script src="js/ui-polish.js?v=20261116_02"></script>
+  <script src="js/jelly-radio.js?v=20261116_02"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20261115_01', { scope: './' })
+        navigator.serviceWorker.register('sw.js?v=20261116_02', { scope: './' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
