@@ -1,0 +1,5 @@
+Urban drivers in tier-1 Indian cities lose 20+ minutes per trip hunting for parking, causing massive traffic congestion, fuel waste, and roadside chaos.
+Fragmented commercial lots, lack of real-time occupancy data, and thousands of unindexed urban spaces leave over 30% of downtown traffic composed solely of vehicles searching for parking.
+OpenPark is an open-source, AI-powered smart mobility platform providing instant parking discovery, guaranteed 15-minute slot reservations, and turn-by-turn OSRM road guidance.
+Its proprietary spatial engine continuously indexes city landmarks and scans a strict 1 km radius to uncover commercial parking lots alongside hidden 45–550 m² vacant grounds and legal roadside bays.
+Unlike static navigation directories, OpenPark combines live Traccar GPS vehicle telemetry, offline-first SQLite FTS5 search, and edge vision verification into a unified driver PWA and operator dashboard with zero proprietary hardware lock-in.

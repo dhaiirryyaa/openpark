@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenPark — Investor & Startup Pitch Deck</title>
+  <style>
+    :root {
+      --bg-dark: #0a0c10;
+      --card-bg: rgba(22, 27, 34, 0.75);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --apple-blue: #0071e3;
+      --apple-blue-light: #2997ff;
+      --emerald: #10b981;
+      --amber: #f59e0b;
+      --rose: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-family);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Deck Container */
+    .deck-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 24px;
+    }
+
+    .slide {
+      width: 100%;
+      max-width: 1140px;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(120% 120% at 50% 0%, #161b26 0%, #0c0f14 100%);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+      padding: 48px 56px;
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow: hidden;
+      animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.985) translateY(6px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* Slide Header */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      padding-bottom: 16px;
+    }
+
+    .brand-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px;
+      border-radius: 999px;
+      background: rgba(0, 113, 227, 0.15);
+      border: 1px solid rgba(0, 113, 227, 0.3);
+      color: var(--apple-blue-light);
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .slide-number {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .slide-title {
+      font-size: 34px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .slide-subtitle {
+      font-size: 16px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      line-height: 1.45;
+    }
+
+    /* Content Layouts */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      flex: 1;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 22px 24px;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(20px);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .card:hover {
+      border-color: rgba(0, 113, 227, 0.4);
+      transform: translateY(-2px);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-text {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .stat-number {
+      font-size: 42px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin: 12px 0 6px 0;
+      color: var(--apple-blue-light);
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    /* Tables */
+    .deck-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13.5px;
+      margin-top: 8px;
+    }
+
+    .deck-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .deck-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .highlight-cell {
+      color: var(--apple-blue-light) !important;
+      font-weight: 700;
+      background: rgba(0, 113, 227, 0.08);
+    }
+
+    /* Slide Footer & Controls */
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      font-size: 12px;
+      color: #64748b;
+      border-top: 1px solid rgba(255, 255, 255, 0.04);
+      padding-top: 12px;
+    }
+
+    .controls-bar {
+      position: fixed;
+      bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(20px);
+      padding: 8px 18px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      z-index: 100;
+    }
+
+    .ctrl-btn {
+      background: transparent;
+      border: none;
+      color: #ffffff;
+      font-size: 16px;
+      font-weight: 700;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: background 0.15s ease;
+    }
+
+    .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .dots-indicator {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .dot.active {
+      width: 22px;
+      border-radius: 4px;
+      background: var(--apple-blue-light);
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-green { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .badge-blue { background: rgba(0, 113, 227, 0.15); color: #60a5fa; border: 1px solid rgba(0, 113, 227, 0.3); }
+    .badge-amber { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+
+    /* Print styles for Clean PDF Output */
+    @page {
+      size: 16in 9in;
+      margin: 0;
+    }
+    @media print {
+      body {
+        background: #0a0c10 !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .controls-bar {
+        display: none !important;
+      }
+      .deck-wrapper {
+        padding: 0 !important;
+        height: auto !important;
+        display: block !important;
+        width: 100% !important;
+      }
+      .slide {
+        display: flex !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        width: 100% !important;
+        min-height: 100vh !important;
+        height: 100vh !important;
+        max-width: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+        background: radial-gradient(120% 120% at 50% 0%, #161b26 0%, #0c0f14 100%) !important;
+        color: #ffffff !important;
+        box-shadow: none !important;
+        padding: 56px 64px !important;
+        box-sizing: border-box !important;
+      }
+      .card {
+        background: rgba(22, 27, 34, 0.95) !important;
+        border: 1px solid rgba(255, 255, 255, 0.12) !important;
+        color: #f8fafc !important;
+      }
+      .card-title { color: #ffffff !important; }
+      .card-text { color: #94a3b8 !important; }
+      .stat-number { color: #2997ff !important; }
+      .deck-table th { background: rgba(255, 255, 255, 0.08) !important; color: #94a3b8 !important; }
+      .deck-table td { color: #f8fafc !important; border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important; }
+      .highlight-cell { background: rgba(0, 113, 227, 0.2) !important; color: #60a5fa !important; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="deck-wrapper">
+
+    <!-- SLIDE 1: COVER -->
+    <section class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="brand-pill">🅿️ OpenPark Platform</div>
+        <div class="slide-number">01 / 10</div>
+      </div>
+      <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; text-align: left;">
+        <span class="badge badge-blue" style="width: fit-content; margin-bottom: 14px;">Stage 1 Founder Submission • Nov 2026</span>
+        <h1 class="slide-title" style="font-size: 52px; margin-bottom: 16px;">AI-Powered Smart Parking &amp;<br>Micro-Space Discovery</h1>
+        <p class="slide-subtitle" style="font-size: 20px; max-width: 820px;">
+          Eliminating urban cruising traffic through strict 1 km AI spatial scanning, guaranteed 15-minute slot reservations, and live Traccar GPS road guidance.
+        </p>
+        <div style="display: flex; gap: 16px; margin-top: 18px;">
+          <div class="card" style="padding: 14px 20px; flex-direction: row; gap: 14px; align-items: center;">
+            <div style="font-size: 24px;">🚀</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Live Production Prototype</div>
+              <div style="font-size: 12px; color: var(--apple-blue-light);">openpark-web-production.up.railway.app</div>
+            </div>
+          </div>
+          <div class="card" style="padding: 14px 20px; flex-direction: row; gap: 14px; align-items: center;">
+            <div style="font-size: 24px;">👥</div>
+            <div>
+              <div style="font-weight: 700; font-size: 14px;">Founders &amp; Core Team</div>
+              <div style="font-size: 12px; color: var(--text-muted);">Dhairya &amp; Spatial Systems Engineers</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Confidential • OpenPark Founder Presentation</span>
+        <span>Use ← → Arrow Keys or Controls Below to Navigate</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 2: PROBLEM STATEMENT -->
+    <section class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="brand-pill">Problem Statement</div>
+        <div class="slide-number">02 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">The Urban Parking Nightmare in Indian Metros</h2>
+        <p class="slide-subtitle">Cruising for parking is the single largest hidden driver of metro gridlock and wasted human potential.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <span class="badge badge-amber" style="width: fit-content;">Time Loss</span>
+          <div class="stat-number">22 mins</div>
+          <div class="stat-label">Average Search Time / Trip</div>
+          <p class="card-text" style="margin-top: 10px;">Drivers in Bengaluru, Mumbai, and Delhi lose over 20 minutes circling blocks, causing stress, road rage, and missed appointments.</p>
+        </div>
+        <div class="card">
+          <span class="badge badge-amber" style="width: fit-content;">Congestion Driver</span>
+          <div class="stat-number">30–40%</div>
+          <div class="stat-label">Of Downtown City Traffic</div>
+          <p class="card-text" style="margin-top: 10px;">Urban transport studies show up to 40% of downtown traffic is composed exclusively of vehicles crawling while looking for parking.</p>
+        </div>
+        <div class="card">
+          <span class="badge badge-amber" style="width: fit-content;">Environmental Waste</span>
+          <div class="stat-number">1.3B L</div>
+          <div class="stat-label">Fuel Wasted Annually</div>
+          <p class="card-text" style="margin-top: 10px;">Millions of liters of idle fuel burn directly on roadside bottlenecks, generating tons of avoidable CO₂ and PM2.5 particulates.</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Cruising Crisis: Existing maps drop drivers at the front door with zero knowledge of where to actually park.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 3: PROPOSED SOLUTION -->
+    <section class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="brand-pill">Proposed Solution</div>
+        <div class="slide-number">03 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">OpenPark: The Zero-Hardware Smart Parking Grid</h2>
+        <p class="slide-subtitle">Unlocking visible commercial lots and invisible micro-spaces into one synchronized mobility engine.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">🔍 1 km AI Space Scanner</div>
+          <p class="card-text">
+            Proprietary spatial algorithm continuously indexes a strict 1,000-meter radius around any destination to discover official parking lots, vacant private grounds (45–550 m²), and verified curbside bays.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">⏱️ 15-Minute Slot Lock</div>
+          <p class="card-text">
+            Drivers reserve their parking spot ahead of arrival with guaranteed availability. Real-time delta updates prevent double-booking and eradicate the anxiety of arriving at a full facility.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">🧭 OSRM Road Router &amp; GPS</div>
+          <p class="card-text">
+            Turn-by-turn road guidance navigating drivers directly to the parking gate—not just the building facade. Powered by live Traccar vehicle telemetry and an offline-first service worker cache.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>No \$15,000 hardware per lot required • Driver PWA + Lightweight Operator Tablet Dashboard</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 4: KEY DIFFERENTIATOR -->
+    <section class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="brand-pill">Competitive Edge</div>
+        <div class="slide-number">04 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">Why OpenPark Wins</h2>
+        <p class="slide-subtitle">Comparing OpenPark against legacy parking apps and mainstream navigation directories.</p>
+      </div>
+      <table class="deck-table">
+        <thead>
+          <tr>
+            <th>Key Metric / Capability</th>
+            <th>Legacy Parking Apps</th>
+            <th>Google / Apple Maps</th>
+            <th class="highlight-cell">OpenPark Platform</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Inventory Sourcing</strong></td>
+            <td>Only contracted high-end malls</td>
+            <td>Generic place POIs only</td>
+            <td class="highlight-cell">Commercial Lots + 45–550 m² Micro-Grounds</td>
+          </tr>
+          <tr>
+            <td><strong>Hardware Requirements</strong></td>
+            <td>\$10k+ boom gates &amp; inductive loops</td>
+            <td>None (No parking tracking)</td>
+            <td class="highlight-cell">Zero Hardware; Cloud &amp; Operator Touch Tablet</td>
+          </tr>
+          <tr>
+            <td><strong>Live GPS Telemetry</strong></td>
+            <td>Infrequent 15s browser polling</td>
+            <td>GPS navigation</td>
+            <td class="highlight-cell">Traccar High-Speed WebSocket Telemetry</td>
+          </tr>
+          <tr>
+            <td><strong>Search &amp; Geocoding</strong></td>
+            <td>Cloud-only, high latency</td>
+            <td>Cloud API (expensive)</td>
+            <td class="highlight-cell">SQLite FTS5 (33k Indian POIs) + Google Places (New)</td>
+          </tr>
+          <tr>
+            <td><strong>Basement Reliability</strong></td>
+            <td>Fails when cell reception drops</td>
+            <td>Often loses signal in basements</td>
+            <td class="highlight-cell">Offline PWA (Service Worker + Vector Cache)</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="slide-footer">
+        <span>Open ecosystem architecture gives OpenPark 10x faster market penetration with zero capital expenditure per bay.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 5: MARKET OPPORTUNITY -->
+    <section class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="brand-pill">Market Research</div>
+        <div class="slide-number">05 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">Market Opportunity &amp; Industry Tailwinds</h2>
+        <p class="slide-subtitle">Rapid urban vehicle growth meets Indian Smart Cities Mission modernization mandates.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="stat-number">\$16.2B</div>
+          <div class="stat-label">Global Smart Parking TAM (2030)</div>
+          <p class="card-text" style="margin-top: 10px;">Growing at a compound annual growth rate (CAGR) of 14.8% worldwide as cities enact congestion-reduction policies.</p>
+        </div>
+        <div class="card">
+          <div class="stat-number">\$1.2B</div>
+          <div class="stat-label">Indian Urban Parking SAM (2028)</div>
+          <p class="card-text" style="margin-top: 10px;">Over 40 million registered 4-wheelers in tier-1 Indian metros growing by 9% year-over-year.</p>
+        </div>
+        <div class="card">
+          <div class="stat-number">\$140M</div>
+          <div class="stat-label">Initial SOM (BLR, DEL, MUM)</div>
+          <p class="card-text" style="margin-top: 10px;">Focusing on high-density tech corridors (Indiranagar, Koramangala, Cyber City, BKC) and urban logistics fleets.</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Tailwinds: Municipal congestion pricing, commercial EV fleet charging mandates, and commercial real estate monetization.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 6: TARGET AUDIENCE & PERSONAS -->
+    <section class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="brand-pill">Target Audience</div>
+        <div class="slide-number">06 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">Customer Personas &amp; User Segmentation</h2>
+        <p class="slide-subtitle">Serving daily urban commuters, commercial delivery fleets, and land lot operators.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">🚗 The Daily Commuter</div>
+          <div style="font-size: 13px; color: var(--apple-blue-light); font-weight: 600; margin-bottom: 8px;">Rohan, 32 • Tech Lead (Bengaluru)</div>
+          <p class="card-text">
+            <strong>Pain:</strong> Loses 25 mins hunting for parking before meetings; dreads towing or door dings from chaotic curb parking.<br><br>
+            <strong>Benefit:</strong> 1-click 15-minute slot lock on the way to office, navigating straight to the basement gate.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">🚚 The Commercial Fleet</div>
+          <div style="font-size: 13px; color: #34d399; font-weight: 600; margin-bottom: 8px;">Suresh, 28 • Urban Courier / Logistics</div>
+          <p class="card-text">
+            <strong>Pain:</strong> Accumulates expensive no-parking challans while unloading packages in congested markets.<br><br>
+            <strong>Benefit:</strong> Dedicated 15-minute micro-ground staging bays reducing delivery turnaround times by 18%.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">🏢 The Micro-Plot Owner</div>
+          <div style="font-size: 13px; color: #fbbf24; font-weight: 600; margin-bottom: 8px;">Vikram, 48 • Commercial Landowner</div>
+          <p class="card-text">
+            <strong>Pain:</strong> Owns a vacant 350 m² lot or office basement with empty weekend slots; cannot afford \$15k boom barrier setup.<br><br>
+            <strong>Benefit:</strong> Zero-hardware Operator Touch Dashboard turning vacant spaces into instant recurring revenue.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Dual-sided network effect: more drivers attract plot owners; more discovered micro-grounds attract daily drivers.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 7: MVP & LIVE PROTOTYPE -->
+    <section class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="brand-pill">Product Prototype</div>
+        <div class="slide-number">07 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">MVP &amp; Live Prototype: Battle-Tested Today</h2>
+        <p class="slide-subtitle">Not a mockup or slide concept—a fully deployed, high-performance platform running in production.</p>
+      </div>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title">⚡ Production Architecture &amp; Stats</div>
+          <div style="display: flex; gap: 14px; margin: 12px 0;">
+            <div>
+              <div class="stat-number" style="font-size: 32px; margin: 0;">38/38</div>
+              <div class="stat-label">Pytest Tests Passing</div>
+            </div>
+            <div>
+              <div class="stat-number" style="font-size: 32px; margin: 0; color: #34d399;">33,000+</div>
+              <div class="stat-label">Indexed Indian POIs</div>
+            </div>
+            <div>
+              <div class="stat-number" style="font-size: 32px; margin: 0; color: #fbbf24;">1 km</div>
+              <div class="stat-label">Strict Micro Scan</div>
+            </div>
+          </div>
+          <p class="card-text" style="font-size: 13.5px;">
+            • <strong>Backend:</strong> High-concurrency FastAPI asynchronous server with PostGIS &amp; SQLite FTS5.<br>
+            • <strong>Map Engine:</strong> MapLibre GL JS with Google Satellite Hybrid &amp; retina overlays.<br>
+            • <strong>Telemetry:</strong> Real-time Traccar WebSocket protocol streaming live vehicle positions.<br>
+            • <strong>Routing:</strong> Project OSRM road router computing real street centerlines and driving turns.
+          </p>
+        </div>
+        <div class="card" style="justify-content: center; background: rgba(0, 113, 227, 0.05); border-color: rgba(0, 113, 227, 0.25);">
+          <div class="card-title" style="color: var(--apple-blue-light);">🔗 Explore Live Deployment</div>
+          <p class="card-text" style="margin-bottom: 14px;">Test the live responsive driver PWA and operator terminal right now:</p>
+          <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 10px; font-family: monospace; font-size: 12.5px; color: #38bdf8; margin-bottom: 8px;">
+            https://openpark-web-production.up.railway.app/app/
+          </div>
+          <div style="background: rgba(0,0,0,0.4); padding: 10px 14px; border-radius: 10px; font-family: monospace; font-size: 12.5px; color: #38bdf8; margin-bottom: 14px;">
+            https://openpark-web-production.up.railway.app/dashboard/
+          </div>
+          <span class="badge badge-green" style="width: fit-content;">SSL Active • 100% Mobile &amp; Desktop Ready</span>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Verified E2E across desktop Chrome, mobile Safari, and low-bandwidth network emulation.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 8: BUSINESS MODEL -->
+    <section class="slide" id="slide-8">
+      <div class="slide-header">
+        <div class="brand-pill">Monetization</div>
+        <div class="slide-number">08 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">Multi-Stream Hybrid Monetization Strategy</h2>
+        <p class="slide-subtitle">Balanced revenue streams across consumer convenience, operator revenue-share, and B2B SaaS.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">💳 Consumer Convenience Fee</div>
+          <div class="stat-number" style="font-size: 32px;">₹10–₹20</div>
+          <div class="stat-label">Per Slot Hold</div>
+          <p class="card-text" style="margin-top: 10px;">Nominal convenience fee paid by drivers for guaranteed 15-minute slot lock and zero-cruising routing.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">📈 Operator Rev-Share</div>
+          <div class="stat-number" style="font-size: 32px; color: #34d399;">12–15%</div>
+          <div class="stat-label">Commission on Booking</div>
+          <p class="card-text" style="margin-top: 10px;">Take-rate on newly monetized private plots, vacant basements, and institutional event grounds.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">💻 Operator Dashboard SaaS</div>
+          <div class="stat-number" style="font-size: 32px; color: #fbbf24;">₹1,499</div>
+          <div class="stat-label">Monthly Facility License</div>
+          <p class="card-text" style="margin-top: 10px;">Recurring software subscription for commercial lots: digital check-in tablet UI, audit logs, and revenue metrics.</p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Additional B2B upside: Enterprise API subscriptions for last-mile delivery fleets (Zepto, Amazon, Blinkit).</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 9: TEAM OVERVIEW -->
+    <section class="slide" id="slide-9">
+      <div class="slide-header">
+        <div class="brand-pill">Team &amp; Roles</div>
+        <div class="slide-number">09 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">Founding Team: Systems, Spatial &amp; Product</h2>
+        <p class="slide-subtitle">Combining deep expertise in distributed systems, geospatial engines, and rapid product execution.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <div class="card-title">👨‍💻 Dhairya</div>
+          <div style="font-size: 13px; color: var(--apple-blue-light); font-weight: 700; margin-bottom: 8px;">Founder &amp; Lead Systems Architect</div>
+          <p class="card-text">
+            Specialized in distributed backend architectures, high-concurrency FastAPI systems, spatial indexing with PostGIS/SQLite FTS5, MapLibre GL rendering, and cloud infrastructure.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">🗺️ Spatial Systems Lead</div>
+          <div style="font-size: 13px; color: #34d399; font-weight: 700; margin-bottom: 8px;">Geodata &amp; Routing Engineering</div>
+          <p class="card-text">
+            Focuses on Overture Maps pipeline extraction, Overpass API query clustering, OSRM turn-by-turn road networks, and sub-second Traccar GPS vehicle telemetry sync.
+          </p>
+        </div>
+        <div class="card">
+          <div class="card-title">⚡ Product &amp; Landowner Ops</div>
+          <div style="font-size: 13px; color: #fbbf24; font-weight: 700; margin-bottom: 8px;">Field Operations &amp; Growth</div>
+          <p class="card-text">
+            Oversees commercial lot onboarding, private plot partnerships in Bengaluru pilot corridors, driver acquisition campaigns, and operator touch dashboard training.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Agile engineering core with demonstrated record of delivering verified production code at exceptional speed.</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+    <!-- SLIDE 10: ROADMAP & VISION -->
+    <section class="slide" id="slide-10">
+      <div class="slide-header">
+        <div class="brand-pill">Roadmap &amp; Vision</div>
+        <div class="slide-number">10 / 10</div>
+      </div>
+      <div>
+        <h2 class="slide-title">The Roadmap: Scaling to Zero-Cruising Cities</h2>
+        <p class="slide-subtitle">From Bengaluru high-density corridors to a pan-India smart mobility ecosystem.</p>
+      </div>
+      <div class="grid-3">
+        <div class="card">
+          <span class="badge badge-blue" style="width: fit-content;">Phase 1 • Q1–Q2 2027</span>
+          <div class="card-title" style="margin-top: 10px;">Bengaluru Density Pilot</div>
+          <p class="card-text">
+            • 150 commercial lots &amp; 300 micro-plots.<br>
+            • Indiranagar, Koramangala &amp; Whitefield.<br>
+            • 25,000 monthly active drivers.<br>
+            • Operator touch tablet rollout.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge badge-green" style="width: fit-content;">Phase 2 • Q3–Q4 2027</span>
+          <div class="card-title" style="margin-top: 10px;">Pan-Metro Expansion</div>
+          <p class="card-text">
+            • Expand to Delhi NCR, Mumbai &amp; Hyderabad.<br>
+            • Integrated EV charging reservation (Ather, Tata Power).<br>
+            • B2B logistics staging API for quick-commerce fleets.
+          </p>
+        </div>
+        <div class="card">
+          <span class="badge badge-amber" style="width: fit-content;">Phase 3 • 2028+</span>
+          <div class="card-title" style="margin-top: 10px;">Smart City &amp; Autonomous</div>
+          <p class="card-text">
+            • Municipal Smart City Command Center integration.<br>
+            • Autonomous vehicle depot staging handshakes.<br>
+            • 100,000+ unified micro-parking bays nationwide.
+          </p>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>Contact: dhairyakhandelwal880@gmail.com • Live Prototype: openpark-web-production.up.railway.app</span>
+        <span>OpenPark 2026</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Slide Navigation Controls -->
+  <div class="controls-bar">
+    <button class="ctrl-btn" id="prev-btn" onclick="prevSlide()">← Prev</button>
+    <div class="dots-indicator" id="dots-container"></div>
+    <button class="ctrl-btn" id="next-btn" onclick="nextSlide()">Next →</button>
+    <span style="color: rgba(255,255,255,0.2);">|</span>
+    <button class="ctrl-btn" onclick="window.print()" style="font-size: 13px; color: var(--apple-blue-light);">🖨️ Save as PDF</button>
+  </div>
+
+  <script>
+    let currentSlide = 1;
+    const totalSlides = 10;
+
+    const dotsContainer = document.getElementById('dots-container');
+    for (let i = 1; i <= totalSlides; i++) {
+      const dot = document.createElement('div');
+      dot.className = `dot ${i === 1 ? 'active' : ''}`;
+      dot.onclick = () => goToSlide(i);
+      dotsContainer.appendChild(dot);
+    }
+
+    function showSlide(index) {
+      document.querySelectorAll('.slide').forEach((s, idx) => {
+        s.classList.toggle('active', idx + 1 === index);
+      });
+      document.querySelectorAll('.dot').forEach((d, idx) => {
+        d.classList.toggle('active', idx + 1 === index);
+      });
+      currentSlide = index;
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides) showSlide(currentSlide + 1);
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) showSlide(currentSlide - 1);
+    }
+
+    function goToSlide(i) {
+      showSlide(i);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') nextSlide();
+      else if (e.key === 'ArrowLeft' || e.key === 'PageUp') prevSlide();
+    });
+  </script>
+</body>
+</html>
