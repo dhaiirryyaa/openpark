@@ -678,6 +678,37 @@ def test_nearby_strict_radius_hold_verify_and_config():
     assert len(c) == 5
 
 
+def test_ai_copilot_and_vision_inspector():
+    """Verify AI Copilot query reasoning, temporal vacancy model, and satellite vision inspection."""
+    # 1. Vision Inspection endpoint
+    r_vis = client.get("/api/ai/vision-inspect?lat=12.9716&lon=77.5946&name=Test+Ground&category=empty_ground")
+    assert r_vis.status_code == 200
+    d_vis = r_vis.json()
+    assert d_vis["status"] == "ok"
+    assert d_vis["vision_verified"] is True
+    assert 85 <= d_vis["confidence_score"] <= 98
+    assert "metrics" in d_vis
+    assert "surface_type" in d_vis["metrics"]
+    assert "ingress_quality" in d_vis["metrics"]
+
+    # 2. AI Copilot Natural Language Endpoint
+    r_copilot = client.post("/api/ai/copilot", json={
+        "query": "find covered basement parking for my SUV near mall",
+        "lat": 12.9716,
+        "lon": 77.5946,
+        "radius_m": 1000
+    })
+    assert r_copilot.status_code == 200
+    d_copilot = r_copilot.json()
+    assert d_copilot["status"] == "ok"
+    assert d_copilot["parsed_intent"]["vehicle_type"] == "suv"
+    assert d_copilot["parsed_intent"]["needs_covered"] is True
+    assert d_copilot["best_spot"] is not None
+    assert "copilot_justification" in d_copilot["best_spot"]
+    assert "audio_speech_text" in d_copilot
+    assert len(d_copilot["ranked_spots"]) > 0
+
+
 
 
 
