@@ -1,13 +1,13 @@
 [
   {
-    "osm_ref": "opencity/node_debrecan_bgs",
-    "name": "BGS Hospital & Debrecan Smart Parking",
+    "osm_ref": "opencity/node_mg_road_cbd",
+    "name": "MG Road & Brigade Smart Parking",
     "city": "Bengaluru",
-    "lat": 12.9031,
-    "lon": 77.4975,
+    "lat": 12.9756,
+    "lon": 77.6066,
     "capacity": 150,
     "free_spots": 68,
-    "price_note": "\u20b920/hr",
+    "price_note": "\u20b940/hr",
     "source": "opencity",
     "id": 148,
     "status": "available",
