@@ -11,8 +11,8 @@
     thickness: 2,
     padding: 6,
     dotSize: 4,
-    cursorColor: "#00f2fe",
-    cursorColorOnTarget: "#00f2fe",
+    cursorColor: "#0071e3",
+    cursorColorOnTarget: "#0071e3",
     blendMode: "normal",
     matchRadius: true,
     showLabel: true,
@@ -97,7 +97,7 @@
         border-radius: 4px;
         background: rgba(10, 16, 28, 0.92);
         border: 1px solid rgba(0, 242, 254, 0.45);
-        color: #00f2fe;
+        color: #0071e3;
         font-family: "JetBrains Mono", ui-monospace, monospace;
         font-size: 10px;
         font-weight: 700;
