@@ -575,7 +575,53 @@
   box-shadow: var(--glass-shadow), var(--glass-highlight);
   border-radius: 20px;
   overflow: hidden;
-  transform: translateZ(0);
+  will-change: transform, opacity;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease, visibility 0s 0s !important;
+}
+
+#sidebar.is-collapsed,
+body.sidebar-collapsed #sidebar {
+  transform: translateX(calc(-100% - 32px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease, visibility 0s 380ms !important;
+}
+
+@media (max-width: 899px) {
+  #sidebar.is-collapsed,
+  body.sidebar-collapsed #sidebar {
+    transform: translateY(100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+}
+
+.sidebar-collapse-toggle {
+  transition: left 380ms cubic-bezier(0.16, 1, 0.3, 1),
+              transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
+              background 0.2s ease,
+              border-color 0.2s ease,
+              box-shadow 0.2s ease !important;
+  will-change: left, transform;
+}
+
+body.sidebar-collapsed .sidebar-collapse-toggle,
+#sidebar.is-collapsed + .sidebar-collapse-toggle,
+#sidebar.is-collapsed ~ .sidebar-collapse-toggle,
+.sidebar-collapse-toggle.is-collapsed {
+  left: 16px !important;
+  background: var(--glass-bg) !important;
+  border-color: var(--glass-border-color) !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+}
+
+body.sidebar-collapsed .sidebar-toggle-arrow,
+#sidebar.is-collapsed + .sidebar-collapse-toggle .sidebar-toggle-arrow,
+#sidebar.is-collapsed ~ .sidebar-collapse-toggle .sidebar-toggle-arrow,
+.sidebar-collapse-toggle.is-collapsed .sidebar-toggle-arrow {
+  transform: rotate(180deg) !important;
 }
 
 /* 2. Executive Brand Header */

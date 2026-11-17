@@ -211,9 +211,12 @@
       transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
     }
 
-    #sidebar.is-collapsed {
-      transform: translateX(calc(-100% - 28px));
-      pointer-events: none;
+    #sidebar.is-collapsed,
+    body.sidebar-collapsed #sidebar {
+      transform: translateX(calc(-100% - 32px)) !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
     }
 
     .sidebar-collapse-toggle {
@@ -2234,7 +2237,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_01" />
+  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_02" />
 </head>
 <body>
 
