@@ -2237,7 +2237,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_04" />
+  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_06" />
 </head>
 <body>
 
@@ -2500,10 +2500,6 @@
               <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
               <span>AI Copilot Recommendation</span>
             </div>
-            <button id="btn-copilot-speak" class="copilot-audio-btn" title="Read Aloud">
-              <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
-              <span id="copilot-speak-label">Listen</span>
-            </button>
           </div>
           <div id="copilot-speech-text" class="copilot-speech-text"></div>
         </div>
@@ -2821,48 +2817,15 @@
         </button>
       </div>
 
-      <!-- 5. Settings & Traccar GPS Configuration View -->
+      <!-- 5. Settings & System Preferences View -->
       <div id="view-more">
+        <!-- Clean Consumer-Facing Map & App Preferences -->
         <div class="setting-group">
-          <div class="setting-group-title">Traccar GPS Engine & Device Hub</div>
-          <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; width: 100%;">
-              <span style="font-weight:600; font-size:13px;">Traccar Server Status</span>
-              <span id="traccar-server-status" class="status-pill status-available" style="font-size: 10px; padding: 2px 8px;">Active (Ports 5055 & 8000)</span>
-            </div>
-            <div style="width: 100%;">
-              <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 3px;">Traccar Server URL:</div>
-              <div style="display: flex; gap: 6px;">
-                <input type="text" id="setting-traccar-server-url" class="styled-input" readonly style="font-size: 11.5px; font-family: var(--font-mono); flex: 1;" />
-                <button class="btn-pill-secondary" id="btn-copy-setting-url" style="width: auto; padding: 6px 12px; font-size: 12px; white-space: nowrap;">Copy URL</button>
-              </div>
-            </div>
-            <div style="width: 100%; margin-top: 4px;">
-              <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 3px;">Active Device Identifier:</div>
-              <div style="display: flex; gap: 6px;">
-                <input type="text" id="setting-traccar-device-id" class="styled-input" value="OP-TRACKER-01" style="font-size: 12px; font-family: var(--font-mono); flex: 1;" />
-                <button class="btn-pill-primary" id="btn-save-setting-device" style="width: auto; padding: 6px 14px; font-size: 12px;">Save</button>
-              </div>
-            </div>
-            <div style="font-size: 11px; color: var(--color-text-tertiary); margin-top: 4px; line-height: 1.4;">
-              Powered by <a href="https://www.traccar.org/" target="_blank" style="color: var(--accent-subtle); text-decoration: underline;">Traccar</a>. Connect phones using free Traccar Client (iOS/Android) or hardware GPS trackers.
-            </div>
-          </div>
-        </div>
-
-        <div class="setting-group">
-          <div class="setting-group-title">Map & Navigation Preferences</div>
-          <div class="setting-row">
-            <span>Voice navigation alerts</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggle-voice-alerts" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
+          <div class="setting-group-title">Map &amp; Display Preferences</div>
           <div class="setting-row">
             <div>
-              <div>Show parking pins on map</div>
-              <div style="font-size: 11px; color: var(--color-text-tertiary);">Display floating availability pills directly over map</div>
+              <div style="font-weight: 500;">Show parking pins on map</div>
+              <div style="font-size: 11px; color: var(--color-text-tertiary);">Display live availability badges directly over the map</div>
             </div>
             <label class="toggle-switch">
               <input type="checkbox" id="toggle-lot-pins" checked />
@@ -2871,7 +2834,7 @@
           </div>
           <div class="setting-row">
             <div>
-              <div>Auto Day / Night Basemap</div>
+              <div style="font-weight: 500;">Auto Day / Night Basemap</div>
               <div style="font-size: 11px; color: var(--color-text-tertiary);">Switches to dark mode at sunset (6:30 PM)</div>
             </div>
             <label class="toggle-switch">
@@ -2880,10 +2843,10 @@
             </label>
           </div>
           <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <span>Map Style & Detail Level</span>
+            <span style="font-weight: 500;">Map Style &amp; Detail Level</span>
             <select id="select-map-style" class="styled-input" style="width: 100%;">
               <option value="google-hybrid" selected>Google Maps Satellite Hybrid (Default)</option>
-              <option value="google-roadmap">Google Maps Full Detail Retina (Roads, Buildings, PGs &amp; Shops)</option>
+              <option value="google-roadmap">Google Maps Full Detail Retina (Roads, Buildings &amp; Shops)</option>
               <option value="google-traffic">Google Maps Live Traffic &amp; Congestion Flow</option>
               <option value="ola-maps">Ola Maps India Vector (api.olamaps.io)</option>
               <option value="openfreemap-vector">OpenFreeMap Ultra-Detail Vector</option>
@@ -2893,78 +2856,129 @@
           </div>
           <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
             <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-              <span>3D Camera Pitch Angle</span>
+              <span style="font-weight: 500;">3D Camera Pitch Angle</span>
               <span id="label-pitch-angle" style="font-weight: 700; color: var(--accent-subtle); font-family: ui-monospace, monospace;">45°</span>
             </div>
             <input type="range" id="slider-pitch-angle" min="20" max="65" value="45" style="width: 100%; accent-color: var(--accent-subtle); cursor: pointer;" />
           </div>
-          <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-              <span>Ola Maps API Key</span>
-              <a href="https://cloud.olakrutrim.com" target="_blank" style="color: var(--color-primary); font-size: 12px; text-decoration: underline;">cloud.olakrutrim.com</a>
+          <div class="setting-row">
+            <div>
+              <div style="font-weight: 500;">Voice navigation alerts</div>
+              <div style="font-size: 11px; color: var(--color-text-tertiary);">Turn-by-turn spoken guidance prompts</div>
             </div>
-            <div style="display: flex; gap: 8px; width: 100%;">
-              <input type="text" id="setting-olamaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Ola Maps api_key" value="" />
-              <button class="btn-pill-secondary" id="btn-save-olamaps-key" style="padding: 6px 14px; font-size: 13px; width: auto;">Save</button>
-            </div>
-          </div>
-
-          <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-              <span>Google Maps Platform API / Demo Key</span>
-              <a href="https://mapsplatform.google.com/maps-demo-key" target="_blank" style="color: var(--apple-blue); font-size: 12px; text-decoration: underline;">Get Free Demo Key</a>
-            </div>
-            <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.4;">
-              Access 100% of Google Maps places, stores, addresses & landmarks worldwide. Works with free Demo Key (no credit card needed).
-            </div>
-            <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
-              <input type="password" id="setting-googlemaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Google Maps API Key or Demo Key (AIzaSy...)" autocomplete="off" />
-              <button class="btn-pill-primary" id="btn-save-googlemaps-key" style="padding: 6px 14px; font-size: 13px; width: auto; background: #0066ff;">Save</button>
-            </form>
-          </div>
-
-          <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
-            <div style="display: flex; justify-content: space-between; width: 100%; align-items: center;">
-              <span>Outscraper API Key (Google Reviews & Places)</span>
-              <a href="https://app.outscraper.com" target="_blank" style="color: var(--color-primary); font-size: 12px; text-decoration: underline;">app.outscraper.com</a>
-            </div>
-            <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
-              <input type="password" id="setting-outscraper-key" class="styled-input" style="flex: 1;" placeholder="Enter Outscraper API Key" autocomplete="off" />
-              <button class="btn-pill-secondary" id="btn-save-outscraper-key" style="padding: 6px 14px; font-size: 13px; width: auto;">Save</button>
-            </form>
+            <label class="toggle-switch">
+              <input type="checkbox" id="toggle-voice-alerts" />
+              <span class="slider"></span>
+            </label>
           </div>
         </div>
 
-        <div class="setting-group">
-          <div class="setting-group-title">Traccar & Developer Tools</div>
-          <div class="setting-row">
-            <span>Simulate vehicle movement</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggle-sim-drive" />
-              <span class="slider"></span>
-            </label>
+        <!-- Clean App Info Card -->
+        <div class="setting-group" style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--color-border-subtle); border-radius: 12px; padding: 12px 14px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <span style="font-size: 12px; font-weight: 700; color: var(--color-text-primary); letter-spacing: -0.01em;">OpenPark Enterprise</span>
+            <span class="status-pill status-available" style="font-size: 10px; padding: 2px 8px;">v2.4.2 • Live</span>
           </div>
-          <div class="setting-row">
-            <span>Live telemetry HUD</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggle-hud" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <span>GPS Breadcrumb trail</span>
-            <label class="toggle-switch">
-              <input type="checkbox" id="toggle-breadcrumbs" checked />
-              <span class="slider"></span>
-            </label>
-          </div>
-          <div class="setting-row">
-            <span>Refresh parking live feeds</span>
-            <button class="btn-pill-secondary" id="btn-refresh-lots" style="width: auto; padding: 6px 12px; font-size: 13px;">
-              Refresh Now
-            </button>
+          <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.45;">
+            High-density urban parking intelligence engine. Real-time vacancy prediction, live aerial vision scanner, and turn-by-turn routing active.
           </div>
         </div>
+
+        <!-- Hidden Developer & Integration Settings (Collapsed Accordion) -->
+        <details class="advanced-settings-accordion" style="margin-top: 14px; border: 1px dashed rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 12px; background: rgba(0,0,0,0.18);">
+          <summary style="font-size: 11.5px; font-weight: 600; color: var(--color-text-tertiary); cursor: pointer; user-select: none; display: flex; justify-content: space-between; align-items: center; list-style: none;">
+            <span style="display: flex; align-items: center; gap: 6px;">
+              <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1Z"/></svg>
+              <span>Developer &amp; Integration Settings</span>
+            </span>
+            <span style="font-size: 10px; opacity: 0.6;">(Click to reveal)</span>
+          </summary>
+
+          <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 14px;">
+            <!-- Traccar GPS Engine -->
+            <div class="setting-group" style="margin: 0; padding: 0; border: none;">
+              <div class="setting-group-title" style="font-size: 10.5px;">Traccar GPS Engine &amp; Device Hub</div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div style="display: flex; justify-content: space-between; width: 100%;">
+                  <span style="font-weight:600; font-size:12px;">Traccar Server Status</span>
+                  <span id="traccar-server-status" class="status-pill status-available" style="font-size: 10px; padding: 2px 8px;">Active (Ports 5055 &amp; 8000)</span>
+                </div>
+                <div style="width: 100%;">
+                  <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 3px;">Traccar Server URL:</div>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="setting-traccar-server-url" class="styled-input" readonly style="font-size: 11.5px; font-family: var(--font-mono); flex: 1;" />
+                    <button class="btn-pill-secondary" id="btn-copy-setting-url" style="width: auto; padding: 6px 12px; font-size: 12px; white-space: nowrap;">Copy URL</button>
+                  </div>
+                </div>
+                <div style="width: 100%; margin-top: 4px;">
+                  <div style="font-size: 11px; color: var(--color-text-secondary); margin-bottom: 3px;">Active Device Identifier:</div>
+                  <div style="display: flex; gap: 6px;">
+                    <input type="text" id="setting-traccar-device-id" class="styled-input" value="OP-TRACKER-01" style="font-size: 12px; font-family: var(--font-mono); flex: 1;" />
+                    <button class="btn-pill-primary" id="btn-save-setting-device" style="width: auto; padding: 6px 14px; font-size: 12px;">Save</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- API Keys -->
+            <div class="setting-group" style="margin: 0; padding: 0; border: none;">
+              <div class="setting-group-title" style="font-size: 10.5px;">External Provider API Keys</div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px;">
+                <span style="font-size: 12px;">Ola Maps API Key</span>
+                <div style="display: flex; gap: 8px; width: 100%;">
+                  <input type="text" id="setting-olamaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Ola Maps api_key" value="" />
+                  <button class="btn-pill-secondary" id="btn-save-olamaps-key" style="padding: 6px 14px; font-size: 12px; width: auto;">Save</button>
+                </div>
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 8px;">
+                <span style="font-size: 12px;">Google Maps Platform API Key</span>
+                <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
+                  <input type="password" id="setting-googlemaps-key" class="styled-input" style="flex: 1;" placeholder="Enter Google Maps API Key" autocomplete="off" />
+                  <button class="btn-pill-primary" id="btn-save-googlemaps-key" style="padding: 6px 14px; font-size: 12px; width: auto; background: #0066ff;">Save</button>
+                </form>
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 6px; margin-top: 8px;">
+                <span style="font-size: 12px;">Outscraper API Key</span>
+                <form onsubmit="return false;" autocomplete="off" style="display: flex; gap: 8px; width: 100%;">
+                  <input type="password" id="setting-outscraper-key" class="styled-input" style="flex: 1;" placeholder="Enter Outscraper API Key" autocomplete="off" />
+                  <button class="btn-pill-secondary" id="btn-save-outscraper-key" style="padding: 6px 14px; font-size: 12px; width: auto;">Save</button>
+                </form>
+              </div>
+            </div>
+
+            <!-- Simulation & Developer Diagnostics -->
+            <div class="setting-group" style="margin: 0; padding: 0; border: none;">
+              <div class="setting-group-title" style="font-size: 10.5px;">Simulation &amp; Developer Tools</div>
+              <div class="setting-row">
+                <span style="font-size: 12px;">Simulate vehicle movement</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-sim-drive" />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <span style="font-size: 12px;">Live telemetry HUD</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-hud" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <span style="font-size: 12px;">GPS Breadcrumb trail</span>
+                <label class="toggle-switch">
+                  <input type="checkbox" id="toggle-breadcrumbs" checked />
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div class="setting-row">
+                <span style="font-size: 12px;">Refresh parking live feeds</span>
+                <button class="btn-pill-secondary" id="btn-refresh-lots" style="width: auto; padding: 5px 12px; font-size: 12px;">
+                  Refresh
+                </button>
+              </div>
+            </div>
+          </div>
+        </details>
       </div>
 
     </div>
@@ -3550,11 +3564,9 @@
       // --------------------------------------------------------------------------
       // 5.1 Config & Constants
       // --------------------------------------------------------------------------
-      // Restore user-calibrated Debrecan coordinates or last known device GPS fix
-      let savedDebrecan = null;
+      // Ensure local storage is cleaned of legacy personal/test coordinates
       try {
-        const raw = localStorage.getItem('openpark_debrecan_coords');
-        if (raw) savedDebrecan = JSON.parse(raw);
+        localStorage.removeItem('openpark_debrecan_coords');
       } catch {}
 
       let lastKnownFix = null;
@@ -7104,17 +7116,32 @@
         },
 
         getRecentSearches() {
+          const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'stanza living', 'stanza', 'nift'];
+          const isPersonal = (str) => {
+            if (!str || typeof str !== 'string') return true;
+            const lower = str.toLowerCase();
+            return FORBIDDEN.some(f => lower.includes(f));
+          };
           try {
-            return JSON.parse(localStorage.getItem('openpark_recents') || '[]');
-          } catch { return []; }
+            const raw = JSON.parse(localStorage.getItem('openpark_recents') || '[]');
+            const filtered = Array.isArray(raw) ? raw.filter(q => !isPersonal(q)) : [];
+            if (raw.length !== filtered.length) {
+              localStorage.setItem('openpark_recents', JSON.stringify(filtered));
+            }
+            if (filtered.length > 0) return filtered;
+            return ['MG Road', 'Indiranagar', 'Koramangala', 'Forum Mall'];
+          } catch { return ['MG Road', 'Indiranagar', 'Koramangala', 'Forum Mall']; }
         },
 
         saveRecentSearch(query) {
           if (!query || typeof query !== 'string') return;
           const trimmed = query.trim();
           if (trimmed.length < 2) return;
+          const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'stanza living', 'stanza', 'nift'];
+          const lower = trimmed.toLowerCase();
+          if (FORBIDDEN.some(f => lower.includes(f))) return;
           try {
-            const list = this.getRecentSearches().filter(q => q.toLowerCase() !== trimmed.toLowerCase());
+            const list = this.getRecentSearches().filter(q => q.toLowerCase() !== trimmed.toLowerCase() && !FORBIDDEN.some(f => q.toLowerCase().includes(f)));
             list.unshift(trimmed);
             localStorage.setItem('openpark_recents', JSON.stringify(list.slice(0, 6)));
           } catch {}
@@ -8795,10 +8822,10 @@
           this.startRealtimeDeviceLocation();
         },
 
-        snapToDebrecan() {
+        snapToDefaultLocation() {
           const lat = CONFIG.DEFAULT_COORDS[1];
           const lng = CONFIG.DEFAULT_COORDS[0];
-          const debrecanFix = {
+          const fix = {
             lat,
             lng,
             speed: 0,
@@ -8808,43 +8835,16 @@
             accuracy: 3,
             timestamp: Date.now()
           };
-          this.setUserLocation(debrecanFix.lat, debrecanFix.lng, 'debrecan');
+          this.setUserLocation(fix.lat, fix.lng, 'default');
           if (MapEngine.map) {
             MapEngine.map.flyTo({
-              center: [debrecanFix.lng, debrecanFix.lat],
+              center: [fix.lng, fix.lat],
               zoom: 17.5,
               pitch: 40,
               duration: 800
             });
           }
-          this.showToast(`Centered at Stanza Living Debrecan House: [${lat.toFixed(5)}, ${lng.toFixed(5)}]`, "success", 3000);
-        },
-
-        calibrateDebrecanHouse() {
-          const currentLat = STATE.userLocation?.lat || CONFIG.DEFAULT_COORDS[1];
-          const currentLng = STATE.userLocation?.lng || CONFIG.DEFAULT_COORDS[0];
-
-          const input = prompt(
-            "Calibrate Stanza Living Debrecan House\n\n" +
-            "Current position: " + currentLat.toFixed(5) + ", " + currentLng.toFixed(5) + "\n\n" +
-            "Click OK to save current device GPS as Debrecan House, or enter exact Google Maps coordinates (lat, lon):",
-            `${currentLat.toFixed(5)}, ${currentLng.toFixed(5)}`
-          );
-
-          if (!input) return;
-          const parts = input.split(',').map(s => parseFloat(s.trim()));
-          if (parts.length === 2 && Number.isFinite(parts[0]) && Number.isFinite(parts[1])) {
-            const [newLat, newLng] = parts;
-            CONFIG.DEFAULT_COORDS = [newLng, newLat];
-            try {
-              localStorage.setItem('openpark_debrecan_coords', JSON.stringify({ lat: newLat, lng: newLng }));
-            } catch {}
-            this.setUserLocation(newLat, newLng, 'calibrated');
-            fetch(`/api/places/calibrate?name=Debrecan&lat=${newLat}&lon=${newLng}`, { method: 'POST' }).catch(() => {});
-            this.showToast(`Stanza Living Debrecan House updated to [${newLat.toFixed(5)}, ${newLng.toFixed(5)}]`, 'success', 3500);
-          } else {
-            this.showToast("Invalid coordinates format. Please enter as: latitude, longitude", "error", 3000);
-          }
+          this.showToast(`Centered at Central Bengaluru: [${lat.toFixed(5)}, ${lng.toFixed(5)}]`, "success", 3000);
         },
 
         setUserLocation(lat, lng, source = 'manual') {
@@ -9404,7 +9404,8 @@
               speechEl.textContent = data.copilot_summary || data.audio_speech_text || 'Recommendation ready.';
             }
 
-            this.speakResponse();
+            // Voice speech disabled per user preference
+            if (window.speechSynthesis) window.speechSynthesis.cancel();
 
             if (data.best_spot) {
               AIScannerEngine.selectDiscoveredSpot(data.best_spot);
@@ -9417,22 +9418,9 @@
         },
 
         speakResponse() {
-          if (!this.lastQueryResult || !window.speechSynthesis) return;
-          const text = this.lastQueryResult.audio_speech_text || this.lastQueryResult.copilot_summary;
-          if (!text) return;
-
-          try {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.rate = 1.05;
-            utterance.pitch = 1.0;
-            const speakLbl = document.getElementById('copilot-speak-label');
-            if (speakLbl) speakLbl.textContent = 'Playing...';
-            utterance.onend = () => { if (speakLbl) speakLbl.textContent = 'Listen'; };
-            window.speechSynthesis.speak(utterance);
-          } catch (e) {
-            console.warn('Speech synth error:', e);
-          }
+          // Voice speech disabled per user preference
+          if (window.speechSynthesis) window.speechSynthesis.cancel();
+          return;
         },
 
         async openVisionInspector(spotId) {
@@ -9951,7 +9939,7 @@
   </script>
   <script src="js/animated-list.js?v=20261116_02"></script>
   <script src="js/target-cursor.js?v=20261116_02"></script>
-  <script src="js/ui-polish.js?v=20261117_01"></script>
+  <script src="js/ui-polish.js?v=20261117_06"></script>
   <script src="js/jelly-radio.js?v=20261116_02"></script>
   <script>
     if ('serviceWorker' in navigator) {

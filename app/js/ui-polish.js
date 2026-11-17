@@ -281,21 +281,40 @@
 
   UIPolish.register('recentSearchesStore', () => {
     const KEY = 'openpark_recent_searches_v1';
+    const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'stanza living', 'stanza', 'nift'];
+    const isPersonal = (str) => {
+      if (!str || typeof str !== 'string') return true;
+      const lower = str.toLowerCase();
+      return FORBIDDEN.some((f) => lower.includes(f));
+    };
+
     window.__openparkRecent = {
       load() {
         try {
-          return JSON.parse(localStorage.getItem(KEY) || '[]').slice(0, 5);
-        } catch { return []; }
+          const raw = JSON.parse(localStorage.getItem(KEY) || '[]');
+          const filtered = Array.isArray(raw) ? raw.filter((x) => !isPersonal(x)) : [];
+          if (raw.length !== filtered.length) {
+            localStorage.setItem(KEY, JSON.stringify(filtered));
+          }
+          if (filtered.length > 0) return filtered.slice(0, 5);
+          return ['MG Road', 'Indiranagar', 'Koramangala', 'Forum Mall'];
+        } catch { 
+          return ['MG Road', 'Indiranagar', 'Koramangala', 'Forum Mall']; 
+        }
       },
       save(query) {
         const clean = (query || '').trim();
-        if (clean.length < 2) return;
-        const items = [clean, ...this.load().filter((x) => x.toLowerCase() !== clean.toLowerCase())].slice(0, 5);
+        if (clean.length < 2 || isPersonal(clean)) return;
+        const current = this.load().filter((x) => !isPersonal(x) && x.toLowerCase() !== clean.toLowerCase());
+        const items = [clean, ...current].slice(0, 5);
         try { localStorage.setItem(KEY, JSON.stringify(items)); } catch {}
         window.dispatchEvent(new CustomEvent('openpark:recent-updated'));
       },
       clear() {
-        try { localStorage.removeItem(KEY); } catch {}
+        try { 
+          localStorage.removeItem(KEY); 
+          localStorage.removeItem('openpark_recents');
+        } catch {}
         window.dispatchEvent(new CustomEvent('openpark:recent-updated'));
       }
     };
