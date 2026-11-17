@@ -75,28 +75,9 @@ def init_default_devices():
             model="Traccar GPS / OBD-II Pro",
             status="online",
             category="car",
-            attributes={"color": "#2563eb", "driver": "Dhairya", "fuel": "Electric (EV)"}
+            attributes={"color": "#2563eb", "fuel": "Electric (EV)"}
         )
         DEVICES["OP-TRACKER-01"] = dev
-        
-        pos = TraccarPosition(
-            deviceId="OP-TRACKER-01",
-            latitude=12.90310,
-            longitude=77.49750,
-            altitude=920.0,
-            speed=0.0,
-            course=0.0,
-            accuracy=2.8,
-            attributes={
-                "batteryLevel": 98.0,
-                "charging": False,
-                "motion": False,
-                "odometer": 0.0,
-                "satellites": 12,
-            }
-        )
-        LATEST_POSITIONS["OP-TRACKER-01"] = pos
-        POSITION_HISTORY["OP-TRACKER-01"] = [pos]
         ODOMETERS["OP-TRACKER-01"] = 0.0
 
 

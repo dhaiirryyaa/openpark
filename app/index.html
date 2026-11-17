@@ -2237,7 +2237,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_07" />
+  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_08" />
 </head>
 <body>
 
@@ -2740,11 +2740,15 @@
           </div>
         </div>
 
-        <!-- Google Maps 4-Pill Action Row -->
+        <!-- Google Maps Action Row -->
         <div class="pv-action-grid">
           <button class="pv-action-btn primary" id="btn-pv-navigate" title="Start turn-by-turn navigation">
             <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             <span>Directions</span>
+          </button>
+          <button class="pv-action-btn" id="btn-pv-set-loc" title="Set this place as my current location">
+            <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+            <span>Set As Mine</span>
           </button>
           <a class="pv-action-btn" id="btn-pv-call" href="#" title="Call place">
             <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
@@ -4102,17 +4106,18 @@
         _stopPing() { clearInterval(this.pingTimer); }
 
         _onMessage(raw) {
+          // If the user is navigating with their own browser device GPS, 
+          // NEVER let external demo socket positions overwrite the user's location!
+          if (!NavigationEngine.isSimulating) {
+            return;
+          }
+
           let m;
           try { m = JSON.parse(raw); } catch { return; }
           if (!m || m.type === 'pong') return;
           const pos = (m.positions && m.positions[0]) || m.position || m;
           const id = pos.id ?? pos.deviceId ?? m.id ?? m.deviceId;
           if (this.o.deviceId && id !== undefined && String(id) !== String(this.o.deviceId)) return;
-
-          // If local device GPS has acquired a fix or is actively tracking, NEVER let server echo overwrite local physical device location!
-          if (STATE.hasRealDeviceFix || STATE.isTrackingLocation || (this.lastLocalFixTs && (Date.now() - this.lastLocalFixTs < 60000))) {
-            return;
-          }
 
           let ts = toNum(pos.ts ?? pos.timestamp ?? pos.fixTime ?? pos.deviceTime ?? m.ts);
           if (!Number.isFinite(ts)) ts = Date.now();
@@ -7600,6 +7605,14 @@
               };
             }
 
+            const btnSetLoc = document.getElementById('btn-pv-set-loc');
+            if (btnSetLoc) {
+              btnSetLoc.onclick = () => {
+                ParkingApp.setUserLocation(item.lat, item.lon, 'search-set');
+                ParkingApp.showToast(`Current location set to ${item.name}`, 'success', 3000);
+              };
+            }
+
             ParkingApp.updateAiScanVisibility();
           });
 
@@ -9138,8 +9151,12 @@
           // Skip / Open Map buttons
           const btnSkip = document.getElementById('btn-welcome-skip');
           const btnSkipBottom = document.getElementById('btn-welcome-skip-bottom');
-          if (btnSkip) btnSkip.onclick = () => this.hide();
-          if (btnSkipBottom) btnSkipBottom.onclick = () => this.hide();
+          const handleExploreMap = () => {
+            this.hide();
+            ParkingApp.locateAndCenterDevice(true, false);
+          };
+          if (btnSkip) btnSkip.onclick = handleExploreMap;
+          if (btnSkipBottom) btnSkipBottom.onclick = handleExploreMap;
 
           // Re-open Welcome screen from sidebar header
           const btnOpenWelcome = document.getElementById('btn-open-welcome');
@@ -10068,7 +10085,7 @@
   </script>
   <script src="js/animated-list.js?v=20261116_02"></script>
   <script src="js/target-cursor.js?v=20261116_02"></script>
-  <script src="js/ui-polish.js?v=20261117_07"></script>
+  <script src="js/ui-polish.js?v=20261117_08"></script>
   <script src="js/jelly-radio.js?v=20261116_02"></script>
   <script>
     if ('serviceWorker' in navigator) {
