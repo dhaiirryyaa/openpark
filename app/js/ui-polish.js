@@ -280,8 +280,13 @@
   });
 
   UIPolish.register('recentSearchesStore', () => {
-    const KEY = 'openpark_recent_searches_v1';
-    const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'stanza living', 'stanza', 'nift'];
+    // Purge any legacy stored search keys
+    ['openpark_recent_searches_v1', 'openpark_recent_searches', 'openpark_recents'].forEach((k) => {
+      try { localStorage.removeItem(k); } catch {}
+    });
+
+    const KEY = 'openpark_recents_v3';
+    const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'bgs', 'stanza living', 'stanza', 'nift', 'boys pg', 'pg'];
     const isPersonal = (str) => {
       if (!str || typeof str !== 'string') return true;
       const lower = str.toLowerCase();
@@ -313,6 +318,7 @@
       clear() {
         try { 
           localStorage.removeItem(KEY); 
+          localStorage.removeItem('openpark_recent_searches_v1');
           localStorage.removeItem('openpark_recents');
         } catch {}
         window.dispatchEvent(new CustomEvent('openpark:recent-updated'));
@@ -335,79 +341,70 @@
   });
 
   UIPolish.register('sidebarRecentPills', () => {
-    const header = document.querySelector('.sidebar-header');
+    // Show recents cleanly inside dropdown rather than pushing down the entire header
     const searchInput = document.getElementById('search-input');
-    const insertBeforeTarget = header ? (header.querySelector('.category-carousel-wrapper') || header.querySelector('.segmented-control') || header.querySelector('.filter-chip-row')) : null;
-    if (!header || !searchInput || !insertBeforeTarget) return;
+    const autoBox = document.getElementById('search-autocomplete-box');
+    if (!searchInput || !autoBox) return;
 
-    const row = document.createElement('div');
-    row.className = 'recent-searches-row';
-    row.id = 'sidebar-recent-row';
-    header.insertBefore(row, insertBeforeTarget);
-
-    const render = () => {
-      const items = (window.__openparkRecent && window.__openparkRecent.load()) || [];
-      if (!items.length) {
-        row.style.display = 'none';
-        row.innerHTML = '';
-        return;
+    searchInput.addEventListener('focus', () => {
+      if (!searchInput.value.trim()) {
+        const items = (window.__openparkRecent && window.__openparkRecent.load()) || [];
+        if (!items.length) return;
+        autoBox.innerHTML = '<div class="autocomplete-header" style="padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">Recent Destinations</div>' +
+          items.map((q) => {
+            const safeQ = UIPolish.escapeHtml(q);
+            return `<div class="autocomplete-item pressable" data-recent-query="${safeQ}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;">
+              <svg class="svg-icon-xs" style="color:var(--text-secondary);width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="autocomplete-title" style="font-size:13px;font-weight:500;">${safeQ}</span>
+            </div>`;
+          }).join('');
+        autoBox.style.display = 'block';
       }
-      row.style.display = 'flex';
-      row.innerHTML = '<span style="font-size:10.5px;color:var(--text-secondary);font-weight:600;">Recent:</span>' +
-        items.map((q) => {
-          const safeQ = UIPolish.escapeHtml(q);
-          return `<button type="button" class="recent-search-chip" data-rq="${safeQ}"><svg class="recent-clock-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${safeQ}</span></button>`;
-        }).join('') +
-        '<button type="button" class="recent-search-chip" data-clear-recent="1" title="Clear search history">Clear</button>';
-    };
-
-    row.addEventListener('click', (e) => {
-      if (e.target.closest('[data-clear-recent]')) {
-        window.__openparkRecent.clear();
-        return;
-      }
-      const btn = e.target.closest('[data-rq]');
-      if (!btn) return;
-      searchInput.value = btn.getAttribute('data-rq');
-      searchInput.focus();
-      searchInput.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    window.addEventListener('openpark:recent-updated', render);
-    render();
+    autoBox.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-recent-query]');
+      if (!item) return;
+      const q = item.getAttribute('data-recent-query');
+      if (q) {
+        searchInput.value = q;
+        searchInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
   });
 
   UIPolish.register('welcomeRecentPills', () => {
-    const box = document.querySelector('.welcome-search-box');
+    // Show clean recents inside welcome autocomplete box on focus
     const wInput = document.getElementById('welcome-search-input');
-    if (!box || !wInput) return;
+    const wBox = document.getElementById('welcome-autocomplete-box');
+    if (!wInput || !wBox) return;
 
-    const row = document.createElement('div');
-    row.className = 'recent-searches-row';
-    row.id = 'welcome-recent-row';
-    box.appendChild(row);
-
-    const render = () => {
-      const items = (window.__openparkRecent && window.__openparkRecent.load()) || [];
-      if (!items.length) {
-        row.style.display = 'none';
-        row.innerHTML = '';
-        return;
+    wInput.addEventListener('focus', () => {
+      if (!wInput.value.trim()) {
+        const items = (window.__openparkRecent && window.__openparkRecent.load()) || [];
+        if (!items.length) return;
+        wBox.innerHTML = '<div class="autocomplete-header" style="padding: 8px 12px; font-size: 11px; font-weight: 700; color: var(--text-secondary); text-transform: uppercase;">Recent Searches</div>' +
+          items.slice(0, 4).map((q) => {
+            const safeQ = UIPolish.escapeHtml(q);
+            return `<div class="autocomplete-item pressable" data-recent-query="${safeQ}" style="display:flex;align-items:center;gap:10px;padding:9px 12px;cursor:pointer;">
+              <svg class="svg-icon-xs" style="color:var(--text-secondary);width:14px;height:14px;flex-shrink:0;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span class="autocomplete-title" style="font-size:13px;font-weight:500;">${safeQ}</span>
+            </div>`;
+          }).join('');
+        wBox.style.display = 'block';
       }
-      row.style.display = 'flex';
-      row.innerHTML = '<span style="font-size:11px;color:var(--text-secondary);font-weight:600;">Recent:</span>' +
-        items.slice(0, 3).map((q) => {
-          const safeQ = UIPolish.escapeHtml(q);
-          return `<button type="button" class="recent-search-chip" data-wq="${safeQ}"><svg class="recent-clock-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg><span>${safeQ}</span></button>`;
-        }).join('');
-    };
+    });
 
-    row.addEventListener('click', (e) => {
-      const btn = e.target.closest('[data-wq]');
-      if (!btn) return;
-      wInput.value = btn.getAttribute('data-wq');
-      wInput.focus();
-      wInput.dispatchEvent(new Event('input', { bubbles: true }));
+    wBox.addEventListener('click', (e) => {
+      const item = e.target.closest('[data-recent-query]');
+      if (!item) return;
+      const q = item.getAttribute('data-recent-query');
+      if (q) {
+        wInput.value = q;
+        wInput.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    });
+  });
     });
 
     window.addEventListener('openpark:recent-updated', render);

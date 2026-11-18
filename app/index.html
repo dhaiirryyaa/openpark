@@ -196,126 +196,69 @@
       z-index: 1;
     }
 
-    /* Desktop Sidebar */
+    /* Desktop Floating Studio Deck */
     #sidebar {
-      position: absolute;
-      top: 14px;
-      left: 14px;
-      bottom: 14px;
-      width: 390px;
-      border-radius: var(--radius-panel);
-      z-index: 20;
+      position: fixed;
+      bottom: 24px;
+      left: 24px;
+      width: 440px;
+      max-width: calc(100vw - 48px);
+      max-height: calc(100vh - 96px);
+      height: 600px;
+      border-radius: 24px;
+      z-index: 950;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease;
+      transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease;
     }
 
     #sidebar.is-collapsed,
     body.sidebar-collapsed #sidebar {
-      transform: translateX(calc(-100% - 32px)) !important;
+      transform: translateY(calc(100% + 40px)) !important;
       opacity: 0 !important;
       pointer-events: none !important;
       visibility: hidden !important;
     }
 
-    .sidebar-collapse-toggle {
-      position: absolute;
-      top: 20px;
-      left: 418px;
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-pill);
-      z-index: 25;
+    .deck-toggle-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
       color: var(--color-text-primary);
-      background: rgba(18, 22, 34, 0.78);
-      backdrop-filter: blur(24px) saturate(190%);
-      -webkit-backdrop-filter: blur(24px) saturate(190%);
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      transition: left 380ms cubic-bezier(0.16, 1, 0.3, 1),
-                  transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
-                  background-color 0.25s ease,
-                  border-color 0.25s ease,
-                  box-shadow 0.3s ease;
-      will-change: left, transform;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      transition: all 0.2s ease;
+    }
+    .deck-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+      border-color: var(--apple-blue);
+      color: #ffffff;
     }
 
     .sidebar-toggle-arrow {
-      width: 18px;
-      height: 18px;
-      stroke-width: 2.4;
+      width: 16px;
+      height: 16px;
+      stroke-width: 2.2;
       stroke: currentColor;
       fill: none;
       stroke-linecap: round;
       stroke-linejoin: round;
       transition: transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1);
-      transform-origin: center center;
-      display: block;
-    }
-
-    /* Fluid glide to the left edge when sidebar collapses */
-    body.sidebar-collapsed .sidebar-collapse-toggle,
-    #sidebar.is-collapsed + .sidebar-collapse-toggle,
-    #sidebar.is-collapsed ~ .sidebar-collapse-toggle,
-    .sidebar-collapse-toggle.is-collapsed {
-      left: 16px;
-      background: rgba(14, 18, 30, 0.9);
-      border-color: rgba(0, 113, 227, 0.48);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.16), 0 0 24px rgba(0, 113, 227, 0.38);
-      animation: collapsePillPulse 1.6s cubic-bezier(0.16, 1, 0.3, 1) 1;
-    }
-
-    /* Chevron smoothly rotates 180° to point toward right */
-    body.sidebar-collapsed .sidebar-toggle-arrow,
-    #sidebar.is-collapsed + .sidebar-collapse-toggle .sidebar-toggle-arrow,
-    #sidebar.is-collapsed ~ .sidebar-collapse-toggle .sidebar-toggle-arrow,
-    .sidebar-collapse-toggle.is-collapsed .sidebar-toggle-arrow {
-      transform: rotate(180deg);
-    }
-
-    .sidebar-collapse-toggle:hover {
-      background: rgba(28, 36, 56, 0.94);
-      border-color: rgba(255, 255, 255, 0.28);
-      box-shadow: 0 8px 26px rgba(0, 0, 0, 0.38), 0 0 16px rgba(0, 113, 227, 0.28);
-      transform: scale(1.08);
-      color: #ffffff;
-    }
-
-    body.sidebar-collapsed .sidebar-collapse-toggle:hover,
-    .sidebar-collapse-toggle.is-collapsed:hover {
-      border-color: var(--apple-blue);
-      transform: scale(1.12);
-      box-shadow: 0 10px 34px rgba(0, 0, 0, 0.5), 0 0 28px rgba(0, 113, 227, 0.52);
-    }
-
-    .sidebar-collapse-toggle:active {
-      transform: scale(0.92) !important;
-    }
-
-    @keyframes collapsePillPulse {
-      0% {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 0 0 rgba(0, 113, 227, 0.7);
-      }
-      65% {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 0 12px rgba(0, 113, 227, 0);
-      }
-      100% {
-        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45), 0 0 0 0 rgba(0, 113, 227, 0);
-      }
     }
 
     /* Control Cluster (Apple Glass Map Controls HUD) */
     .control-cluster {
-      position: absolute;
-      top: 20px;
+      position: fixed;
+      bottom: 24px;
       right: 20px;
-      z-index: 10;
-      border-radius: var(--radius-panel);
+      top: auto;
+      z-index: 950;
+      border-radius: 9999px;
       display: flex;
       flex-direction: column;
       padding: 6px;
@@ -434,21 +377,16 @@
 
     /* Top Dynamic Island Container */
     .banner-container {
-      position: absolute;
-      top: 18px;
+      position: fixed;
+      top: 14px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 100 !important;
+      z-index: 1250 !important;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 8px;
       pointer-events: none;
-    }
-    @media (min-width: 901px) {
-      body:not(.sidebar-collapsed) .banner-container {
-        left: calc(50% + 140px);
-      }
     }
 
     .banner {
@@ -2237,7 +2175,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261117_08" />
+  <link rel="stylesheet" href="css/ui-polish.css?v=20261118_10" />
 </head>
 <body>
 
@@ -2346,65 +2284,72 @@
     </div>
   </div>
 
-  <!-- Left Sidebar / Mobile Bottom Sheet -->
-  <aside id="sidebar" class="apple-glass" role="complementary" aria-label="OpenPark Sidebar Navigation">
+  <!-- Top Command Island (Dynamic Floating Pill) -->
+  <header id="top-command-island" class="top-command-island apple-glass" role="banner" aria-label="OpenPark Global Command Island">
+    <!-- Brand Mark & Live Telemetry Pill -->
+    <div class="island-brand">
+      <div class="brand-logo-mark">
+        <svg class="brand-logo-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 17V7h4.5a3.5 3.5 0 0 1 0 7H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <span class="island-brand-text">OpenPark</span>
+      <button id="btn-traccar-pill" class="header-status-pill pressable" title="Live GPS Telemetry (Traccar Engine)">
+        <span class="gps-pulse-dot" id="header-gps-dot"></span>
+        <span id="traccar-pill-text">Live GPS</span>
+      </button>
+    </div>
+
+    <!-- Universal Search Bar -->
+    <div class="search-wrapper island-search">
+      <button id="btn-search-trigger" class="search-icon-left" aria-label="Search">
+        <svg class="svg-icon-sm" viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      </button>
+      <input 
+        type="text" 
+        id="search-input" 
+        class="search-input" 
+        placeholder="Search destinations (e.g. MG Road, Indiranagar)..." 
+        autocomplete="off" 
+        spellcheck="false"
+        aria-label="Search places, addresses, destinations"
+      />
+      <kbd class="search-kbd-hint" title="Press / to search">/</kbd>
+      <button id="search-clear" class="search-clear-btn" aria-label="Clear search input">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24">
+          <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <button id="btn-open-welcome" class="search-welcome-btn pressable cursor-target" data-cursor-label="Where to?" title="Open Quick Destination Picker">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      </button>
+
+      <!-- Autocomplete Suggestions -->
+      <div id="search-autocomplete-box" class="autocomplete-list" role="listbox"></div>
+    </div>
+
+    <!-- Island Actions -->
+    <div class="island-actions">
+      <button id="btn-sidebar-theme" class="header-icon-btn pressable" title="Toggle Theme (Cyber Obsidian / Arctic Quartz)" aria-label="Toggle Theme">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+      <button id="btn-refresh-top" class="header-icon-btn pressable" title="Refresh nearby parking lots">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+      <button class="header-icon-btn pressable deck-toggle-btn" id="btn-toggle-sidebar" aria-label="Toggle Parking Deck" title="Toggle Parking Deck" data-cursor-label="Parking Deck">
+        <svg class="svg-icon-xs sidebar-toggle-arrow" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="4" fill="none" stroke="currentColor" stroke-width="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      </button>
+      <!-- Preserved count element for scripts -->
+      <span id="total-lots-count" style="display:none;">148</span>
+    </div>
+  </header>
+
+  <!-- Floating Studio Deck / Mobile Bottom Sheet -->
+  <aside id="sidebar" class="studio-deck apple-glass" role="complementary" aria-label="OpenPark Parking Deck">
     <div class="sidebar-drag-handle" id="sheet-drag-handle" aria-hidden="true"></div>
 
-    <!-- Sidebar Header: Brand, Search & Navigation -->
-    <div class="sidebar-header">
-      <div class="brand-row">
-        <div class="brand-title">
-          <span class="brand-logo-mark">
-            <svg class="brand-logo-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 17V7h4.5a3.5 3.5 0 0 1 0 7H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <span class="brand-logo-text">OpenPark</span>
-          <span class="brand-dot-pulse" title="Connected to Real-time Network"></span>
-        </div>
-        <div class="header-actions">
-          <button id="btn-sidebar-theme" class="header-icon-btn pressable" title="Toggle Theme (Cyber Obsidian / Arctic Quartz)" aria-label="Toggle Theme">
-            <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          </button>
-          <button id="btn-traccar-pill" class="header-status-pill pressable" title="Live GPS Telemetry (Traccar Engine)">
-            <span class="gps-pulse-dot" id="header-gps-dot"></span>
-            <span id="traccar-pill-text">Live GPS</span>
-          </button>
-          <button id="btn-refresh-top" class="header-icon-btn pressable" title="Refresh nearby parking lots">
-            <svg class="svg-icon-xs" viewBox="0 0 24 24"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          </button>
-          <!-- Preserved count element for scripts -->
-          <span id="total-lots-count" style="display:none;">148</span>
-        </div>
-      </div>
-
-      <!-- Search Box (Integrated with Traccar OSM Nominatim Search) -->
-      <div class="search-wrapper">
-        <button id="btn-search-trigger" class="search-icon-left" aria-label="Search">
-          <svg class="svg-icon-sm" viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-          </svg>
-        </button>
-        <input 
-          type="text" 
-          id="search-input" 
-          class="search-input" 
-          placeholder="Search destinations (e.g. MG Road, Indiranagar)..." 
-          autocomplete="off" 
-          spellcheck="false"
-          aria-label="Search places, addresses, destinations"
-        />
-        <button id="search-clear" class="search-clear-btn" aria-label="Clear search input">
-          <svg class="svg-icon-xs" viewBox="0 0 24 24">
-            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
-          </svg>
-        </button>
-        <button id="btn-open-welcome" class="search-welcome-btn pressable cursor-target" data-cursor-label="Where to?" title="Open Quick Destination Picker">
-          <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-        </button>
-
-        <!-- Autocomplete Suggestions -->
-        <div id="search-autocomplete-box" class="autocomplete-list" role="listbox"></div>
-      </div>
-
+    <!-- Deck Header: Navigation Tabs, Hero Action & Filter Chips -->
+    <div class="sidebar-header deck-header">
       <!-- Primary Segmented Switcher (Explore / Routes / Settings) -->
       <div class="segmented-control" role="tablist">
         <button class="segment-tab active" id="tab-explore" role="tab" aria-selected="true">
@@ -2419,6 +2364,22 @@
           <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
           <span>Settings</span>
         </button>
+      </div>
+
+      <!-- Hero Action: Search Parking Near Me (Clean, Elegant, Non-Cartoon) -->
+      <div id="ai-scan-bar-container" class="deck-hero-bar">
+        <button id="btn-ai-scan" class="btn-nearby-search deck-hero-btn pressable" aria-label="Search parking near me">
+          <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span id="btn-ai-scan-label">Search parking near me</span>
+        </button>
+        <div id="ai-scan-banner" class="nearby-search-banner" style="display: none;">
+          <span id="ai-scan-summary-text">Searching parking near you...</span>
+          <button id="btn-ai-clear" class="nearby-banner-clear-btn">Dismiss</button>
+        </div>
+        <div id="ai-scan-results" style="display: none; flex-direction: column; gap: 8px;"></div>
       </div>
 
       <!-- Quick Search Category Carousel (Apple Maps Style) -->
@@ -2450,13 +2411,9 @@
           </button>
         </div>
       </div>
-    </div>
 
-    <!-- Scrollable View Host -->
-    <div class="sidebar-views">
-      
-      <!-- 1. Explore View (List of nearby lots) -->
-      <div id="explore-filter-chips" class="filter-chip-row" style="margin-bottom: 8px; flex-shrink: 0;" role="group" aria-label="Filter parking lots">
+      <!-- Filter Chips Row -->
+      <div id="explore-filter-chips" class="filter-chip-row" role="group" aria-label="Filter parking lots">
         <button class="chip-btn active" data-lot-filter="all">All Lots</button>
         <button class="chip-btn" data-lot-filter="Available">
           <span class="status-indicator-dot dot-vacant"></span>
@@ -2475,8 +2432,11 @@
           <span>Covered</span>
         </button>
       </div>
+    </div>
 
-      <!-- OpenPark AI Parking Copilot (Voice & Natural Language Assistant) -->
+    <!-- Scrollable View Host -->
+    <div class="sidebar-views">
+      <!-- OpenPark AI Parking Copilot -->
       <div class="ai-copilot-card">
         <div class="ai-copilot-input-row">
           <svg class="svg-icon-sm" viewBox="0 0 24 24" style="color: var(--apple-blue); flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -2492,7 +2452,7 @@
           <button class="copilot-chip" data-copilot-prompt="Covered basement parking for SUV">🛡️ Covered SUV</button>
           <button class="copilot-chip" data-copilot-prompt="Parking with EV charging station">⚡ EV Ready</button>
           <button class="copilot-chip" data-copilot-prompt="Quick stop under 20 mins near destination">⏱️ Quick Stop</button>
-          <button class="copilot-chip" data-copilot-prompt="Cheapest or free parking nearby">💰 Budget / Free</button>
+          <button class="copilot-chip" data-copilot-prompt="Cheapest or free parking nearby">💰 Budget</button>
         </div>
         <div id="copilot-result-box" class="copilot-result-box" style="display: none;">
           <div class="copilot-response-header">
@@ -2503,23 +2463,6 @@
           </div>
           <div id="copilot-speech-text" class="copilot-speech-text"></div>
         </div>
-      </div>
-
-      <!-- Search Parking Near Me Button -->
-      <div id="ai-scan-bar-container" class="nearby-search-box">
-        <button id="btn-ai-scan" class="btn-nearby-search pressable" aria-label="Search parking near me">
-          <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <span id="btn-ai-scan-label">Search parking near me</span>
-        </button>
-
-        <div id="ai-scan-banner" class="nearby-search-banner" style="display: none;">
-          <span id="ai-scan-summary-text">Searching parking near you...</span>
-          <button id="btn-ai-clear" class="nearby-banner-clear-btn">Dismiss</button>
-        </div>
-        <div id="ai-scan-results" style="display: none; flex-direction: column; gap: 8px;"></div>
       </div>
 
       <div id="view-explore" style="display: flex; flex-direction: column; gap: 10px;">
@@ -2988,9 +2931,13 @@
     </div>
   </aside>
 
-  <!-- Desktop Sidebar Collapse / Expand Toggle Dock -->
-  <button class="sidebar-collapse-toggle apple-glass pressable cursor-target" id="btn-toggle-sidebar" aria-label="Toggle Sidebar Navigation" title="Collapse Sidebar" data-cursor-label="Sidebar">
-    <svg class="svg-icon sidebar-toggle-arrow" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  <!-- Floating Studio Deck Restore Pill (Shown only when Deck is collapsed) -->
+  <button id="btn-restore-deck" class="deck-restore-pill apple-glass pressable cursor-target" style="display: none;" aria-label="Show Parking Deck" title="Show Parking Deck" data-cursor-label="Show Deck">
+    <span class="brand-logo-mark" style="width: 20px; height: 20px; padding: 2px;">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 17V7h4.5a3.5 3.5 0 0 1 0 7H9" fill="none" stroke="currentColor" stroke-width="2.2"/></svg>
+    </span>
+    <span>Show Parking Deck</span>
+    <svg class="svg-icon-xs" style="width: 14px; height: 14px;" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
   </button>
 
   <!-- Right Side Apple Glass Map Controls HUD -->
@@ -6252,14 +6199,18 @@
             });
           });
 
-          // Sidebar Desktop Collapse
+          // Sidebar Desktop Collapse & Restore Pill
           const sidebar = document.getElementById('sidebar');
           const toggleBtn = document.getElementById('btn-toggle-sidebar');
+          const restorePill = document.getElementById('btn-restore-deck');
           if (toggleBtn) {
             toggleBtn.onclick = () => {
               const currentlyCollapsed = sidebar ? sidebar.classList.contains('is-collapsed') : document.body.classList.contains('sidebar-collapsed');
               this.setSidebarCollapsed(!currentlyCollapsed);
             };
+          }
+          if (restorePill) {
+            restorePill.onclick = () => this.setSidebarCollapsed(false);
           }
 
           // Mobile Sheet Drag Handler
@@ -6800,6 +6751,7 @@
         setSidebarCollapsed(isCollapsed) {
           const sidebar = document.getElementById('sidebar');
           const toggleBtn = document.getElementById('btn-toggle-sidebar');
+          const restorePill = document.getElementById('btn-restore-deck');
           if (sidebar) {
             sidebar.classList.toggle('is-collapsed', isCollapsed);
           }
@@ -6807,7 +6759,10 @@
           if (toggleBtn) {
             toggleBtn.classList.toggle('is-collapsed', isCollapsed);
             toggleBtn.setAttribute('aria-expanded', isCollapsed ? 'false' : 'true');
-            toggleBtn.setAttribute('title', isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar');
+            toggleBtn.setAttribute('title', isCollapsed ? 'Show Parking Deck' : 'Hide Parking Deck');
+          }
+          if (restorePill) {
+            restorePill.style.display = isCollapsed ? 'flex' : 'none';
           }
           window.dispatchEvent(new CustomEvent('openpark:sidebar-toggled', { detail: { collapsed: isCollapsed } }));
           setTimeout(() => { if (MapEngine.map) MapEngine.map.resize(); }, 380);
@@ -9203,9 +9158,9 @@
                   name: qDest,
                   lat: qLat,
                   lon: qLon,
-                  category: 'Residence & PG',
-                  badge: 'home',
-                  address: 'Kengeri, Bengaluru'
+                  category: qCat || 'Hub',
+                  badge: 'landmark',
+                  address: 'Bengaluru, Karnataka'
                 });
               } else if (qDest) {
                 const mainInput = document.getElementById('search-input');
@@ -9981,6 +9936,7 @@
         },
 
         activate(lot) {
+          document.body.classList.add('nav-active');
           this.activeLot = lot;
           const island = document.getElementById('nav-turn-banner');
           if (!island) return;
@@ -10053,6 +10009,7 @@
         },
 
         dismiss() {
+          document.body.classList.remove('nav-active');
           const island = document.getElementById('nav-turn-banner');
           if (!island) return;
           island.classList.remove('expanded');
@@ -10085,12 +10042,12 @@
   </script>
   <script src="js/animated-list.js?v=20261116_02"></script>
   <script src="js/target-cursor.js?v=20261116_02"></script>
-  <script src="js/ui-polish.js?v=20261117_08"></script>
+  <script src="js/ui-polish.js?v=20261118_10"></script>
   <script src="js/jelly-radio.js?v=20261116_02"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20261116_02', { scope: './' })
+        navigator.serviceWorker.register('sw.js?v=20261118_10', { scope: './' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

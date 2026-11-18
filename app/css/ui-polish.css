@@ -86,16 +86,39 @@
 }
 
 .lot-card {
-  transition: transform var(--transition-standard), box-shadow var(--transition-standard), border-color var(--transition-standard);
+  padding: 13px 15px !important;
+  border-radius: 16px !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+  cursor: pointer !important;
+  transition: transform var(--transition-standard), box-shadow var(--transition-standard), border-color var(--transition-standard), background var(--transition-standard) !important;
 }
+
+[data-theme="light"] .lot-card {
+  background: #ffffff !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+}
+
 .lot-card:hover {
-  transform: translateY(-1px);
-  border-color: rgba(0, 113, 227, 0.34);
-  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px) !important;
+  background: rgba(255, 255, 255, 0.07) !important;
+  border-color: rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25) !important;
 }
+
+[data-theme="light"] .lot-card:hover {
+  background: #ffffff !important;
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08) !important;
+}
+
 .lot-card.is-selected {
   border-color: var(--apple-blue) !important;
-  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.22), 0 8px 20px rgba(0, 113, 227, 0.12);
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.3), 0 8px 24px rgba(0, 113, 227, 0.18) !important;
 }
 
 .fav-toggle-btn {
@@ -567,61 +590,301 @@
   --apple-green: #34c759 !important;
 }
 
-#sidebar.apple-glass {
-  background: var(--glass-bg);
-  backdrop-filter: blur(12px) saturate(150%);
-  -webkit-backdrop-filter: blur(12px) saturate(150%);
-  border: var(--glass-border);
-  box-shadow: var(--glass-shadow), var(--glass-highlight);
-  border-radius: 20px;
-  overflow: hidden;
-  will-change: transform, opacity;
-  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease, visibility 0s 0s !important;
+/* ==========================================================================
+   1. Apple VisionOS / Tesla "Top Command Island"
+   ========================================================================== */
+.top-command-island {
+  position: fixed !important;
+  top: 14px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  width: min(860px, calc(100vw - 28px)) !important;
+  height: 52px !important;
+  z-index: 1200 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 10px !important;
+  padding: 6px 14px !important;
+  border-radius: 9999px !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.88)) !important;
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.14)) !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
+  transition: all 280ms cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+[data-theme="light"] .top-command-island {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(0, 0, 0, 0.09) !important;
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.9) !important;
+}
+
+body.nav-active .top-command-island {
+  transform: translate(-50%, -80px) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+.island-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  flex-shrink: 0 !important;
+}
+
+.island-brand-text {
+  font-size: 15px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.02em !important;
+  color: var(--text-primary) !important;
+  display: none !important;
+}
+
+@media (min-width: 640px) {
+  .island-brand-text {
+    display: inline-block !important;
+  }
+}
+
+.island-search {
+  flex: 1 !important;
+  max-width: 520px !important;
+  position: relative !important;
+  display: flex !important;
+  align-items: center !important;
+  height: 38px !important;
+  background: rgba(0, 0, 0, 0.18) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 9999px !important;
+  padding: 0 8px 0 12px !important;
+  transition: all 180ms ease !important;
+}
+
+[data-theme="light"] .island-search {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+}
+
+.island-search:focus-within {
+  background: rgba(0, 0, 0, 0.32) !important;
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.22) !important;
+}
+
+[data-theme="light"] .island-search:focus-within {
+  background: #ffffff !important;
+}
+
+.island-search .search-input {
+  flex: 1 !important;
+  height: 100% !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: var(--text-primary) !important;
+  font-size: 13.5px !important;
+  font-family: inherit !important;
+  padding: 0 6px !important;
+  box-shadow: none !important;
+}
+
+.search-kbd-hint {
+  font-family: var(--font-mono, monospace) !important;
+  font-size: 11px !important;
+  color: var(--text-secondary) !important;
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 6px !important;
+  padding: 1px 6px !important;
+  margin-right: 4px !important;
+  line-height: 1.4 !important;
+  display: none !important;
+  cursor: pointer !important;
+}
+
+@media (min-width: 720px) {
+  .search-kbd-hint {
+    display: inline-block !important;
+  }
+}
+
+.island-search .autocomplete-list {
+  position: absolute !important;
+  top: calc(100% + 12px) !important;
+  left: 0 !important;
+  right: 0 !important;
+  max-height: 380px !important;
+  overflow-y: auto !important;
+  border-radius: 18px !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.94)) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.14)) !important;
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.5) !important;
+  z-index: 1300 !important;
+}
+
+.island-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex-shrink: 0 !important;
+}
+
+/* ==========================================================================
+   2. Floating Studio Deck ("The Parking Deck")
+   ========================================================================== */
+#sidebar,
+#sidebar.apple-glass,
+#sidebar.studio-deck {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 24px !important;
+  top: auto !important;
+  width: 440px !important;
+  max-width: calc(100vw - 48px) !important;
+  max-height: calc(100vh - 96px) !important;
+  height: 600px !important;
+  border-radius: 24px !important;
+  z-index: 1000 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.88)) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.12)) !important;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.12) !important;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease, visibility 0s 0s !important;
+  will-change: transform, opacity !important;
+}
+
+[data-theme="light"] #sidebar,
+[data-theme="light"] #sidebar.studio-deck {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border: 1px solid rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.85) !important;
 }
 
 #sidebar.is-collapsed,
 body.sidebar-collapsed #sidebar {
-  transform: translateX(calc(-100% - 32px)) !important;
+  transform: translateY(calc(100% + 40px)) !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;
-  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 280ms ease, visibility 0s 380ms !important;
+  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease, visibility 0s 380ms !important;
 }
 
-@media (max-width: 899px) {
-  #sidebar.is-collapsed,
-  body.sidebar-collapsed #sidebar {
-    transform: translateY(100%) !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-    visibility: hidden !important;
+@media (max-width: 768px) {
+  #sidebar,
+  #sidebar.studio-deck {
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 24px 24px 0 0 !important;
+    max-height: 82vh !important;
+    height: auto !important;
   }
 }
 
-.sidebar-collapse-toggle {
-  transition: left 380ms cubic-bezier(0.16, 1, 0.3, 1),
-              transform 380ms cubic-bezier(0.34, 1.56, 0.64, 1),
-              background 0.2s ease,
-              border-color 0.2s ease,
-              box-shadow 0.2s ease !important;
-  will-change: left, transform;
+/* Deck Restore Floating Pill */
+.deck-restore-pill {
+  position: fixed !important;
+  bottom: 24px !important;
+  left: 24px !important;
+  z-index: 990 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  padding: 8px 18px !important;
+  border-radius: 9999px !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.9)) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.14)) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  transition: all 200ms ease !important;
 }
 
-body.sidebar-collapsed .sidebar-collapse-toggle,
-#sidebar.is-collapsed + .sidebar-collapse-toggle,
-#sidebar.is-collapsed ~ .sidebar-collapse-toggle,
-.sidebar-collapse-toggle.is-collapsed {
-  left: 16px !important;
-  background: var(--glass-bg) !important;
-  border-color: var(--glass-border-color) !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+.deck-restore-pill:hover {
+  transform: translateY(-2px) !important;
+  border-color: var(--apple-blue) !important;
+  box-shadow: 0 16px 36px rgba(0, 113, 227, 0.35) !important;
 }
 
-body.sidebar-collapsed .sidebar-toggle-arrow,
-#sidebar.is-collapsed + .sidebar-collapse-toggle .sidebar-toggle-arrow,
-#sidebar.is-collapsed ~ .sidebar-collapse-toggle .sidebar-toggle-arrow,
-.sidebar-collapse-toggle.is-collapsed .sidebar-toggle-arrow {
-  transform: rotate(180deg) !important;
+/* Deck Header & Normal Hero Search Button */
+.deck-header {
+  padding: 14px 16px 10px 16px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  border-bottom: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.08)) !important;
+}
+
+.deck-hero-bar {
+  margin: 2px 0 2px 0 !important;
+}
+
+.deck-hero-btn {
+  width: 100% !important;
+  height: 44px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+  padding: 0 16px !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  border-radius: 12px !important;
+  background: #0071e3 !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  box-shadow: 0 4px 14px rgba(0, 113, 227, 0.28) !important;
+  cursor: pointer !important;
+  transition: all 180ms ease !important;
+  letter-spacing: -0.01em !important;
+}
+
+.deck-hero-btn:hover {
+  background: #0062c4 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 18px rgba(0, 113, 227, 0.4) !important;
+}
+
+.deck-hero-btn:active {
+  transform: scale(0.98) !important;
+}
+
+/* Right Side Map Controls Cluster */
+.control-cluster {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 20px !important;
+  top: auto !important;
+  z-index: 1000 !important;
+  border-radius: 9999px !important;
+  padding: 6px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 6px !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.88)) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.12)) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
+}
+
+[data-theme="light"] .control-cluster {
+  background: rgba(255, 255, 255, 0.92) !important;
+  border-color: rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
 }
 
 /* 2. Executive Brand Header */
