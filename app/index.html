@@ -442,15 +442,16 @@
       white-space: nowrap;
     }
 
-    /* Telemetry HUD Panel (Desktop bottom-left) */
+    /* Telemetry HUD Panel (Desktop bottom-right, to the left of map controls) */
     #telemetry-hud {
-      position: absolute;
+      position: fixed;
       bottom: 24px;
-      left: 426px;
-      width: 310px;
+      right: 88px;
+      left: auto;
+      width: 290px;
       border-radius: var(--radius-card);
       padding: 14px;
-      z-index: 15;
+      z-index: 920;
       display: none;
       flex-direction: column;
       gap: 10px;
@@ -2175,7 +2176,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261118_10" />
+  <link rel="stylesheet" href="css/ui-polish.css?v=20261118_12" />
 </head>
 <body>
 
@@ -2906,7 +2907,7 @@
               <div class="setting-row">
                 <span style="font-size: 12px;">Live telemetry HUD</span>
                 <label class="toggle-switch">
-                  <input type="checkbox" id="toggle-hud" checked />
+                  <input type="checkbox" id="toggle-hud" />
                   <span class="slider"></span>
                 </label>
               </div>
@@ -2997,8 +2998,8 @@
     </button>
   </div>
 
-  <!-- Bottom-Left Desktop Telemetry HUD -->
-  <div id="telemetry-hud" class="glass-surface active" aria-live="polite">
+  <!-- Bottom Desktop Telemetry HUD (Hidden by default, docked on right) -->
+  <div id="telemetry-hud" class="glass-surface" style="display: none;" aria-live="polite">
     <div class="hud-title-bar">
       <span>Traccar GPS Telemetry</span>
       <div style="display: flex; align-items: center; gap: 8px;">
@@ -4600,8 +4601,8 @@
       // 5.4 API Client (FastAPI Backend + Traccar GPS & OSRM Engine)
       // --------------------------------------------------------------------------
       const API = {
-        async getNearbyLots(lat, lon, radius = CONFIG.RADIUS_METERS) {
-          const maxMeters = Math.min(Number(radius) || 1000, 1000);
+        async getNearbyLots(lat, lon, radius = 25000) {
+          const maxMeters = Number(radius) || 25000;
           if (typeof navigator !== 'undefined' && navigator.onLine === false) {
             try {
               const cachedStr = localStorage.getItem('openpark_cached_lots');
@@ -4610,23 +4611,26 @@
                 if (Array.isArray(cached) && cached.length > 0) return cached;
               }
             } catch (e) {}
-            return API.generateFallbackLots(lat, lon)
-              .filter(lot => (parseFloat(lot.distance_km) * 1000) <= maxMeters);
+            let fb = API.generateFallbackLots(lat, lon);
+            fb.sort((a, b) => parseFloat(a.distance_km || 99) - parseFloat(b.distance_km || 99));
+            return fb;
           }
           try {
             const res = await fetch(`/lots/nearby?lat=${lat}&lon=${lon}&radius_m=${maxMeters}`);
             if (!res.ok) throw new Error("Backend nearby lots offline");
             const data = await res.json();
-            const lots = (data.lots || data)
-              .map(lot => API.normalizeLot(lot, lat, lon))
-              .filter(lot => (parseFloat(lot.distance_km) * 1000) <= maxMeters);
-            try { localStorage.setItem('openpark_cached_lots', JSON.stringify(lots)); } catch (e) {}
-            return lots;
+            let lots = (data.lots || data).map(lot => API.normalizeLot(lot, lat, lon));
+            lots.sort((a, b) => parseFloat(a.distance_km || 99) - parseFloat(b.distance_km || 99));
+            if (lots.length > 0) {
+              try { localStorage.setItem('openpark_cached_lots', JSON.stringify(lots)); } catch (e) {}
+              return lots;
+            }
           } catch (err) {
             console.warn("OpenPark: Using seed dataset fallback", err);
-            return API.generateFallbackLots(lat, lon)
-              .filter(lot => (parseFloat(lot.distance_km) * 1000) <= maxMeters);
           }
+          let fallback = API.generateFallbackLots(lat, lon);
+          fallback.sort((a, b) => parseFloat(a.distance_km || 99) - parseFloat(b.distance_km || 99));
+          return fallback;
         },
 
         normalizeLot(raw, refLat = null, refLon = null) {
@@ -6834,10 +6838,20 @@
 
           if (filtered.length === 0) {
             container.innerHTML = `
-              <div style="text-align: center; padding: 40px 10px; color: var(--color-text-secondary);">
-                <svg class="svg-icon" style="width: 38px; height: 38px; margin-bottom: 8px;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-                <div style="font-weight:600;">No parking found</div>
-                <div style="font-size:var(--font-size-sec);">Try a larger search area or change filter.</div>
+              <div class="empty-lots-card" style="text-align: center; padding: 26px 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.03); border: 1px dashed rgba(255, 255, 255, 0.12); margin-top: 6px;">
+                <div style="width: 40px; height: 40px; margin: 0 auto 10px; border-radius: 50%; background: rgba(0, 113, 227, 0.16); display: flex; align-items: center; justify-content: center; color: var(--apple-blue);">
+                  <svg class="svg-icon-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                </div>
+                <div style="font-weight: 700; font-size: 14.5px; margin-bottom: 4px; color: var(--text-primary);">No lots under this filter</div>
+                <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 14px;">Tap below to scan open grounds or reset filters.</div>
+                <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                  <button class="deck-hero-btn pressable" style="height: 38px; padding: 0 14px; font-size: 12.5px; width: auto;" onclick="document.getElementById('btn-ai-scan').click()">
+                    Search parking near me
+                  </button>
+                  <button class="chip-btn pressable" style="height: 38px; padding: 0 12px; font-size: 12.5px;" onclick="document.querySelector('[data-lot-filter=\\'all\\']').click()">
+                    Show All Lots
+                  </button>
+                </div>
               </div>
             `;
             return;
@@ -10042,7 +10056,7 @@
   </script>
   <script src="js/animated-list.js?v=20261116_02"></script>
   <script src="js/target-cursor.js?v=20261116_02"></script>
-  <script src="js/ui-polish.js?v=20261118_10"></script>
+  <script src="js/ui-polish.js?v=20261118_12"></script>
   <script src="js/jelly-radio.js?v=20261116_02"></script>
   <script>
     if ('serviceWorker' in navigator) {

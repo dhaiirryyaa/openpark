@@ -280,10 +280,13 @@
   });
 
   UIPolish.register('recentSearchesStore', () => {
-    // Purge any legacy stored search keys
+    // Purge any legacy stored search keys and obsolete DOM rows
     ['openpark_recent_searches_v1', 'openpark_recent_searches', 'openpark_recents'].forEach((k) => {
       try { localStorage.removeItem(k); } catch {}
     });
+    try {
+      document.querySelectorAll('.recent-searches-row, #sidebar-recent-row, #welcome-recent-row').forEach(el => el.remove());
+    } catch {}
 
     const KEY = 'openpark_recents_v3';
     const FORBIDDEN = ['debrecan', 'svyasa', 'mhow', 'bgs hospital', 'bgs', 'stanza living', 'stanza', 'nift', 'boys pg', 'pg'];

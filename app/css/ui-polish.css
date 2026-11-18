@@ -1488,6 +1488,12 @@ body.sidebar-collapsed #sidebar {
 
 /* 10. Sleek Telemetry Ribbon HUD */
 #telemetry-hud {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 88px !important;
+  left: auto !important;
+  width: 290px !important;
+  z-index: 920 !important;
   background: rgba(10, 14, 22, 0.92) !important;
   backdrop-filter: blur(14px) saturate(160%) !important;
   -webkit-backdrop-filter: blur(14px) saturate(160%) !important;
@@ -1495,6 +1501,14 @@ body.sidebar-collapsed #sidebar {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important;
   border-radius: 18px !important;
   transform: translateZ(0);
+}
+@media (max-width: 768px) {
+  #telemetry-hud {
+    right: 14px !important;
+    left: 14px !important;
+    bottom: 90px !important;
+    width: auto !important;
+  }
 }
 .hud-title-bar {
   font-family: var(--font-mono);
@@ -2278,6 +2292,108 @@ body.sidebar-collapsed #sidebar {
   border-radius: 50%;
   background: var(--apple-blue, #0071e3);
   box-shadow: 0 0 10px var(--apple-blue, #0071e3);
+}
+
+/* ==========================================================================
+   Distinct UI & Zero-Collision Architecture
+   Eliminates visual overlap, removes repetitive pill rows, polishes controls
+   ========================================================================== */
+
+/* 1. Eliminate redundant pill clutter */
+.recent-searches-row,
+#sidebar-recent-row,
+#welcome-recent-row,
+#sidebar .category-carousel-wrapper,
+.copilot-quick-chips {
+  display: none !important;
+}
+
+/* 2. Elevated High-Contrast Parking Filter Bar */
+#explore-filter-chips {
+  display: flex !important;
+  gap: 6px !important;
+  overflow-x: auto !important;
+  padding: 4px 2px 10px !important;
+  scrollbar-width: none !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+#explore-filter-chips::-webkit-scrollbar {
+  display: none !important;
+}
+#explore-filter-chips .chip-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 7px 14px !important;
+  border-radius: 9999px !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  background: rgba(255, 255, 255, 0.05) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  white-space: nowrap !important;
+  cursor: pointer !important;
+  transition: all 0.18s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+#explore-filter-chips .chip-btn:hover {
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  transform: translateY(-1px) !important;
+}
+#explore-filter-chips .chip-btn.active {
+  background: linear-gradient(135deg, #0a84ff 0%, #0066cc 100%) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+  font-weight: 600 !important;
+  box-shadow: 0 4px 14px rgba(10, 132, 255, 0.4) !important;
+}
+
+/* 3. Sleek Studio Deck Hero Button */
+#btn-ai-scan.deck-hero-btn {
+  background: linear-gradient(135deg, #0a84ff 0%, #005bb5 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 4px 18px rgba(0, 113, 227, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  font-size: 13.5px !important;
+  height: 44px !important;
+  border-radius: 14px !important;
+  letter-spacing: -0.01em !important;
+  transition: transform 0.15s ease, box-shadow 0.15s ease !important;
+}
+#btn-ai-scan.deck-hero-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 6px 22px rgba(0, 113, 227, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+}
+#btn-ai-scan.deck-hero-btn:active {
+  transform: scale(0.98) !important;
+}
+
+/* 4. Compact AI Copilot Card */
+.ai-copilot-card {
+  background: rgba(255, 255, 255, 0.03) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 14px !important;
+  padding: 6px 12px !important;
+  margin-bottom: 8px !important;
+}
+.ai-copilot-input-row {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  height: 38px !important;
+}
+.copilot-input-field {
+  flex: 1 !important;
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  color: #ffffff !important;
+  font-size: 13px !important;
+}
+.copilot-input-field::placeholder {
+  color: rgba(255, 255, 255, 0.42) !important;
 }
 
 
