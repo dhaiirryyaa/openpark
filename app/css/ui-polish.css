@@ -2396,6 +2396,42 @@ body.sidebar-collapsed #sidebar {
   color: rgba(255, 255, 255, 0.42) !important;
 }
 
+/* 5. Prevent column squish in AI scan bar */
+#ai-scan-bar-container,
+.deck-hero-bar {
+  display: flex !important;
+  flex-direction: column !important;
+  width: 100% !important;
+  gap: 8px !important;
+}
+#btn-ai-scan {
+  width: 100% !important;
+}
+#ai-scan-banner {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+#ai-scan-results {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+/* 6. Strict HUD & Navigation separation */
+#telemetry-hud {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 88px !important;
+  left: auto !important;
+  width: 290px !important;
+  z-index: 920 !important;
+}
+body.navigating #telemetry-hud {
+  display: none !important;
+}
+
 
 
 
