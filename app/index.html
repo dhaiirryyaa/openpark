@@ -2370,7 +2370,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v25" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v26" />
 </head>
 <body class="welcome-active">
 
@@ -3710,7 +3710,7 @@
       // --------------------------------------------------------------------------
       // 5.1 Config & Constants
       // --------------------------------------------------------------------------
-      // Ensure local storage is cleaned of legacy personal/test coordinates
+      // Clean out legacy personal/test coordinates & stale/coarse fixes from localStorage
       try {
         localStorage.removeItem('openpark_debrecan_coords');
       } catch {}
@@ -3720,9 +3720,12 @@
         const rawFix = localStorage.getItem('openpark_last_device_fix');
         if (rawFix) {
           const parsedFix = JSON.parse(rawFix);
-          // Only use cached device fix as initial warm center if < 30 minutes old
-          if (parsedFix && parsedFix.ts && (Date.now() - parsedFix.ts) < 1800000) {
+          // Only use cached device fix as warm center if fresh (< 15 mins), high-accuracy (<= 150m), and NOT default city coordinates
+          const isDefault = Math.abs(parsedFix.lat - 12.97160) < 0.001 && Math.abs(parsedFix.lng - 77.59460) < 0.001;
+          if (parsedFix && parsedFix.ts && (Date.now() - parsedFix.ts) < 900000 && (parsedFix.accuracy || 999) <= 150 && !isDefault) {
             lastKnownFix = parsedFix;
+          } else {
+            localStorage.removeItem('openpark_last_device_fix');
           }
         }
       } catch {}
@@ -3758,8 +3761,8 @@
       // 5.2 Application State
       // --------------------------------------------------------------------------
       const STATE = {
-        hasRealDeviceFix: false,
-        bestFixAccuracy: Infinity,
+        hasRealDeviceFix: !!lastKnownFix,
+        bestFixAccuracy: lastKnownFix ? (lastKnownFix.accuracy || 25) : Infinity,
         userLocation: {
           lng: lastKnownFix ? lastKnownFix.lng : CONFIG.DEFAULT_COORDS[0],
           lat: lastKnownFix ? lastKnownFix.lat : CONFIG.DEFAULT_COORDS[1],
@@ -4554,12 +4557,13 @@
       };
 
       // --------------------------------------------------------------------------
-      // 5.3.3 GPS Signal Monitor (Active State & Loss Detector)
+      // 5.3.3 GPS Signal Monitor (Active State, Keepalive & Loss Detector)
       // --------------------------------------------------------------------------
       const GPSMonitor = {
         lastValidFixTime: 0,
         isLost: false,
         timer: null,
+        isCheckingKeepalive: false,
 
         onValidFix(accMeters = null) {
           this.lastValidFixTime = Date.now();
@@ -4571,11 +4575,29 @@
           this.timer = setInterval(() => {
             if (!this.lastValidFixTime) return;
             const elapsed = Date.now() - this.lastValidFixTime;
-            // Allow 60 seconds of stationary rest before flagging signal lost
-            if (elapsed > 60000 && !this.isLost) {
+
+            // When device is stationary (resting on a desk or parked), browser watchPosition
+            // does not emit new events until the device moves.
+            // Fire a light keepalive check every ~35s so GPS hardware doesn't sleep
+            if (elapsed > 35000 && !this.isCheckingKeepalive && STATE.isTrackingLocation && ('geolocation' in navigator)) {
+              this.isCheckingKeepalive = true;
+              navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                  this.isCheckingKeepalive = false;
+                  if (pos && pos.coords) {
+                    this.onValidFix(pos.coords.accuracy);
+                  }
+                },
+                () => { this.isCheckingKeepalive = false; },
+                { enableHighAccuracy: true, timeout: 6000, maximumAge: 10000 }
+              );
+            }
+
+            // Only flag signal lost if no fix has been received for over 2 minutes (120 seconds)
+            if (elapsed > 120000 && !this.isLost) {
               this.setSignalLostState(true);
             }
-          }, 2500);
+          }, 3500);
         },
 
         setSignalLostState(lost, accMeters = null) {
@@ -6202,7 +6224,7 @@
                 <circle cx="24" cy="24" r="3.5" fill="#ffffff" stroke="#991b1b" stroke-width="1.5"/>
               </svg>
             </div>
-            <div class="vehicle-speed-pill" id="v-speed-pill">Device Location</div>
+            <div class="vehicle-speed-pill" id="v-speed-pill">${STATE.hasRealDeviceFix ? "Device Location" : "Waiting for GPS... (Drag to set)"}</div>
           `;
 
           this.vehicleEl.title = "Your Location Pointer (Drag to place anywhere on map)";
@@ -8806,7 +8828,7 @@
           }
 
           if (notify) {
-            ParkingApp.showToast("Locating your exact device position...", "info", 1800);
+            ParkingApp.showToast("Acquiring hardware GPS lock...", "info", 1800);
           }
 
           const getPositionPromise = (options) => {
@@ -8816,27 +8838,33 @@
           };
 
           let pos = null;
-          // Step 1: Request high-accuracy lock with 9s timeout & fresh 15s maximumAge
+          // Step 1: Request fresh hardware GPS reading (maximumAge: 0 bypasses stale ISP/cell cache)
           try {
-            pos = await getPositionPromise({ enableHighAccuracy: true, timeout: 9000, maximumAge: 15000 });
+            pos = await getPositionPromise({ enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
           } catch (err1) {
-            console.warn('[GPS] High-accuracy lock notice:', err1.message);
+            console.warn('[GPS] Zero-cache lock notice:', err1.code, err1.message);
             if (err1.code === 1) { // PERMISSION_DENIED
               if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
               STATE.isTrackingLocation = false;
-              ParkingApp.showToast("Location access is blocked. Please allow Location permissions in your browser address bar.", "warning", 6000);
+              ParkingApp.showToast("Location access is blocked. Please allow Location permissions in your browser URL bar.", "warning", 6000);
               return null;
             }
-            // Step 2: Fall back to standard Wi-Fi / cellular Fused Location (vital for laptops & indoors)
+            // Step 2: Retry with short 5s maximumAge if fresh GNSS acquisition needed more time
             try {
-              pos = await getPositionPromise({ enableHighAccuracy: false, timeout: 9000, maximumAge: 60000 });
+              pos = await getPositionPromise({ enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 });
             } catch (err2) {
-              console.warn('[GPS] Standard accuracy lock notice:', err2.message);
+              console.warn('[GPS] Secondary high-acc lock notice:', err2.code, err2.message);
               if (err2.code === 1) {
                 if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
                 STATE.isTrackingLocation = false;
-                ParkingApp.showToast("Location access is blocked. Please allow Location permissions in your browser address bar.", "warning", 6000);
+                ParkingApp.showToast("Location access is blocked. Please allow Location permissions in your browser URL bar.", "warning", 6000);
                 return null;
+              }
+              // Step 3: Device Wi-Fi / cellular fused location (vital for laptops / indoors)
+              try {
+                pos = await getPositionPromise({ enableHighAccuracy: false, timeout: 8000, maximumAge: 10000 });
+              } catch (err3) {
+                console.warn('[GPS] Standard location notice:', err3.message);
               }
             }
           }
@@ -8863,9 +8891,18 @@
               GPSMonitor.onValidFix(accMeters);
               if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
 
-              try {
-                localStorage.setItem('openpark_last_device_fix', JSON.stringify({ lat: fix.lat, lng: fix.lng, heading: fix.heading, accuracy: fix.accuracy, ts: Date.now() }));
-              } catch {}
+              // Only persist real physical fixes with reasonable accuracy (<= 150m)
+              if (accMeters <= 150) {
+                try {
+                  localStorage.setItem('openpark_last_device_fix', JSON.stringify({
+                    lat: fix.lat,
+                    lng: fix.lng,
+                    heading: fix.heading,
+                    accuracy: fix.accuracy,
+                    ts: Date.now()
+                  }));
+                } catch {}
+              }
 
               if (MapEngine.tracker) {
                 MapEngine.tracker.feedDirectFix(fix);
@@ -8895,7 +8932,7 @@
             }
           }
 
-          ParkingApp.showToast("GPS satellite lock unavailable. Please enable device location or drag pin.", "warning", 4500);
+          ParkingApp.showToast("GPS lock unavailable. Drag the blue pointer on map to your exact spot.", "warning", 5000);
           return null;
         },
 
@@ -8917,10 +8954,10 @@
             if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
             const accMeters = Math.round(accuracy || 25);
-            const isHighAccSource = (source === 'high-acc-gps' || source === 'live-gps');
+            const isHighAccSource = (source === 'high-acc-gps' || source === 'live-gps' || source === 'fresh-gps');
 
-            // Do not let a wild jump overwrite a high precision lock
-            if (!isHighAccSource && STATE.hasRealDeviceFix && accMeters > Math.max(300, STATE.bestFixAccuracy * 3)) {
+            // If we already have a real high-accuracy fix, reject inaccurate network jumps (> 300m or > 2.5x worse)
+            if (!isHighAccSource && STATE.hasRealDeviceFix && accMeters > Math.max(300, (STATE.bestFixAccuracy || 50) * 2.5)) {
               return;
             }
 
@@ -8937,15 +8974,27 @@
 
             const isFirstFix = !STATE.hasRealDeviceFix;
             const prevBest = STATE.bestFixAccuracy || Infinity;
-            STATE.hasRealDeviceFix = true;
+            if (accMeters <= 300 || isHighAccSource) {
+              STATE.hasRealDeviceFix = true;
+            }
             if (accMeters < prevBest || isHighAccSource) {
               STATE.bestFixAccuracy = accMeters;
             }
             STATE.userLocation = fix;
             STATE.isTrackingLocation = true;
-            try {
-              localStorage.setItem('openpark_last_device_fix', JSON.stringify({ lat: fix.lat, lng: fix.lng, heading: fix.heading, accuracy: fix.accuracy, ts: Date.now() }));
-            } catch {}
+
+            // Only cache real device fixes with good accuracy (< 150m)
+            if (accMeters <= 150) {
+              try {
+                localStorage.setItem('openpark_last_device_fix', JSON.stringify({
+                  lat: fix.lat,
+                  lng: fix.lng,
+                  heading: fix.heading,
+                  accuracy: fix.accuracy,
+                  ts: Date.now()
+                }));
+              } catch {}
+            }
 
             GPSMonitor.onValidFix(accMeters);
             if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
@@ -8986,35 +9035,33 @@
             }
           };
 
-          // Step 1: Immediate Position Lock (cached fix < 60s or fast network lock)
+          // Step 1: Immediate fresh hardware lock (maximumAge: 0 forces fresh GPS/Wi-Fi read)
           navigator.geolocation.getCurrentPosition(
-            (pos) => applyPositionFix(pos, 'cached-gps'),
+            (pos) => applyPositionFix(pos, 'fresh-gps'),
             (err) => {
-              console.debug('[Geolocation] Cached fix notice:', err.message);
-              navigator.geolocation.getCurrentPosition(
-                (pos2) => applyPositionFix(pos2, 'network-gps'),
-                (err2) => console.warn('[Geolocation] Standard lock warning:', err2.message),
-                { enableHighAccuracy: false, timeout: 12000, maximumAge: 60000 }
-              );
-            },
-            { enableHighAccuracy: false, timeout: 5000, maximumAge: 60000 }
-          );
-
-          // Step 2: High-Precision Hardware GPS Lock
-          navigator.geolocation.getCurrentPosition(
-            (pos) => applyPositionFix(pos, 'high-acc-gps'),
-            (err) => {
-              console.warn('[Geolocation] Precision lock notice:', err.message);
+              console.warn('[Geolocation] Fresh hardware lock notice:', err.message);
               if (err.code === 1) { // PERMISSION_DENIED
                 if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
                 STATE.isTrackingLocation = false;
-                ParkingApp.showToast("Location access is blocked. Please allow location permissions in your browser settings.", "warning", 5000);
+                ParkingApp.showToast("Location permission requested: please click 'Allow' in your browser URL bar for live GPS.", "info", 5000);
+                return;
               }
+              // If strict zero-cache timed out (indoors/laptop), retry with 5s maximumAge
+              navigator.geolocation.getCurrentPosition(
+                (pos2) => applyPositionFix(pos2, 'fresh-gps'),
+                (err2) => {
+                  console.warn('[Geolocation] Secondary lock notice:', err2.message);
+                  if (!STATE.hasRealDeviceFix) {
+                    ParkingApp.fallbackToIpLocation();
+                  }
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 5000 }
+              );
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 15000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
           );
 
-          // Step 3: Continuous watching with automatic fallback
+          // Step 2: Continuous real-time watching
           if (STATE.watchId) {
             navigator.geolocation.clearWatch(STATE.watchId);
             STATE.watchId = null;
@@ -9026,19 +9073,9 @@
               if (err.code === 1) {
                 if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
                 STATE.isTrackingLocation = false;
-              } else if (err.code === 3 || err.code === 2) {
-                if (!STATE.watchFallbackActive) {
-                  STATE.watchFallbackActive = true;
-                  navigator.geolocation.clearWatch(STATE.watchId);
-                  STATE.watchId = navigator.geolocation.watchPosition(
-                    (pos) => applyPositionFix(pos, 'watch-fallback'),
-                    () => {},
-                    { enableHighAccuracy: false, maximumAge: 10000, timeout: 25000 }
-                  );
-                }
               }
             },
-            { enableHighAccuracy: true, timeout: 25000, maximumAge: 5000 }
+            { enableHighAccuracy: true, timeout: 20000, maximumAge: 0 }
           );
         },
 
@@ -9309,9 +9346,21 @@
           };
 
           STATE.userLocation = { ...updatedFix };
-          if (source !== 'ip') {
+          if (source !== 'ip' && source !== 'default') {
             STATE.hasRealDeviceFix = true;
+            STATE.bestFixAccuracy = acc;
             GPSMonitor.onValidFix(acc);
+            if (source === 'drag' || source === 'shift-click' || source === 'manual') {
+              try {
+                localStorage.setItem('openpark_last_device_fix', JSON.stringify({
+                  lat,
+                  lng,
+                  heading: updatedFix.heading,
+                  accuracy: acc,
+                  ts: Date.now()
+                }));
+              } catch {}
+            }
           }
 
           if (MapEngine.tracker) {
@@ -10403,14 +10452,14 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v25"></script>
-  <script src="/app/js/target-cursor.js?v=20261119_v25"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v25"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v25"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v26"></script>
+  <script src="/app/js/target-cursor.js?v=20261119_v26"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v26"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v26"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v25', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v26', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
