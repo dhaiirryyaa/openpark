@@ -2370,7 +2370,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v24" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v25" />
 </head>
 <body class="welcome-active">
 
@@ -5742,6 +5742,7 @@
             clearTimeout(_poiDebounce);
             _poiDebounce = setTimeout(() => {
               this.loadViewportPois();
+              this.renderLotMarkers(STATE.lots || []);
             }, 200);
           };
           this.map.on('moveend', loadViewportPois);
@@ -6289,6 +6290,7 @@
           if (typeof ParkingApp !== 'undefined' && ParkingApp.updateAiScanVisibility) {
             ParkingApp.updateAiScanVisibility();
           }
+          this.renderLotMarkers(STATE.lots || []);
         },
 
         clearDestinationMarker() {
@@ -6300,6 +6302,7 @@
           if (typeof ParkingApp !== 'undefined' && ParkingApp.updateAiScanVisibility) {
             ParkingApp.updateAiScanVisibility();
           }
+          this.renderLotMarkers(STATE.lots || []);
         },
 
         renderLotMarkers(lots) {
@@ -6308,12 +6311,74 @@
           if (!STATE.config.showLotPins) return;
           if (!this.map || !Array.isArray(lots)) return;
 
+          // Determine active anchor pin locations:
+          // 1. Searched destination pin (from SearchEngine, Place view, or custom destination pin)
+          const activePins = [];
+
+          if (STATE.selectedPlace && Number.isFinite(Number(STATE.selectedPlace.lat)) && Number.isFinite(Number(STATE.selectedPlace.lon))) {
+            activePins.push({ lat: Number(STATE.selectedPlace.lat), lon: Number(STATE.selectedPlace.lon), type: 'searched_place', radius: 2200 });
+          } else if (this.destinationMarker && typeof this.destinationMarker.getLngLat === 'function') {
+            const ll = this.destinationMarker.getLngLat();
+            activePins.push({ lat: ll.lat, lon: ll.lng, type: 'destination_pin', radius: 2200 });
+          } else if (STATE.destination && Number.isFinite(Number(STATE.destination.lat)) && Number.isFinite(Number(STATE.destination.lon))) {
+            activePins.push({ lat: Number(STATE.destination.lat), lon: Number(STATE.destination.lon), type: 'destination', radius: 2200 });
+          }
+
+          // 2. Active GPS / device location pin (when user has an active fix or located pin)
+          if (STATE.hasRealDeviceFix && STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lat)) && Number.isFinite(Number(STATE.userLocation.lng))) {
+            activePins.push({ lat: Number(STATE.userLocation.lat), lon: Number(STATE.userLocation.lng), type: 'device_pin', radius: 2000 });
+          }
+
+          const currentZoom = (this.map && typeof this.map.getZoom === 'function') ? this.map.getZoom() : 12;
+
+          // 3. Street-level neighborhood inspection (Zoom >= 15.0): user is closely inspecting a neighborhood
+          if (currentZoom >= 15.0 && typeof this.map.getCenter === 'function') {
+            const center = this.map.getCenter();
+            activePins.push({ lat: center.lat, lon: center.lng, type: 'viewport_center', radius: 1400 });
+          }
+
+          // If no searched place and no pin location is active near lots:
+          // HIDE all lots as requested ("hide all this lots show when a place near it is searched or it have a pin location near")
+          if (activePins.length === 0 && !STATE.selectedLot) {
+            return;
+          }
+
           const filtered = (typeof UIController !== 'undefined' && UIController.filterLots)
             ? UIController.filterLots(lots)
             : lots;
 
-          // Render crisp Apple Glass availability pills for the closest 18 lots
-          filtered.slice(0, 18).forEach(lot => {
+          // Filter lots to ONLY those that have an active searched place or pin location near them
+          const relevantLots = filtered.filter(lot => {
+            // Always keep explicitly selected lot
+            if (STATE.selectedLot && STATE.selectedLot.id == lot.id) return true;
+
+            const lon = Number(lot.lon !== undefined ? lot.lon : lot.lng);
+            const lat = Number(lot.lat);
+            if (!Number.isFinite(lon) || !Number.isFinite(lat)) return false;
+
+            // Check if lot is within radius of ANY active pin
+            return activePins.some(pin => {
+              const dMeters = calculateDistanceMeters(pin.lat, pin.lon, lat, lon);
+              return dMeters <= pin.radius;
+            });
+          });
+
+          // Sort by distance to the primary pin (searched place or device pin)
+          if (activePins.length > 0) {
+            const primaryPin = activePins[0];
+            relevantLots.sort((a, b) => {
+              const aLat = Number(a.lat), aLon = Number(a.lon !== undefined ? a.lon : a.lng);
+              const bLat = Number(b.lat), bLon = Number(b.lon !== undefined ? b.lon : b.lng);
+              const distA = calculateDistanceMeters(primaryPin.lat, primaryPin.lon, aLat, aLon);
+              const distB = calculateDistanceMeters(primaryPin.lat, primaryPin.lon, bLat, bLon);
+              return distA - distB;
+            });
+          }
+
+          // At low zoom (< 14.0), even if near a pin, don't crowd the map: show at most the 3 closest lots
+          const maxPills = currentZoom < 14.0 ? 3 : (currentZoom < 15.5 ? 8 : 14);
+
+          relevantLots.slice(0, maxPills).forEach(lot => {
             const lon = Number(lot.lon !== undefined ? lot.lon : lot.lng);
             const lat = Number(lot.lat);
             if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
@@ -10338,14 +10403,14 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v24"></script>
-  <script src="/app/js/target-cursor.js?v=20261119_v24"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v24"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v24"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v25"></script>
+  <script src="/app/js/target-cursor.js?v=20261119_v25"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v25"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v25"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v24', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v25', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
