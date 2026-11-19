@@ -2483,6 +2483,19 @@ body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge {
   transform: translateX(90px) !important;
 }
 
+/* 8. Map Scrolling State - Hide sidebar cleanly while scrolling or dragging on the map */
+body.map-scrolling #sidebar {
+  transform: translateY(calc(100% + 50px)) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.map-scrolling #btn-restore-deck {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(20px) !important;
+}
+
+
 
 
 

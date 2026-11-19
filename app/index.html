@@ -2135,6 +2135,18 @@
     body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge {
       transform: translateX(90px) !important;
     }
+
+    /* While actively scrolling or dragging on the map, ensure sidebar and restore pills hide */
+    body.map-scrolling #sidebar {
+      transform: translateY(calc(100% + 50px)) !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    body.map-scrolling #btn-restore-deck {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      transform: translateY(20px) !important;
+    }
     .welcome-card {
       width: min(620px, 100%);
       max-height: calc(100vh - 32px);
@@ -2358,7 +2370,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v23" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v24" />
 </head>
 <body class="welcome-active">
 
@@ -5524,45 +5536,121 @@
           let _lastMapGestureTime = 0;
           let _isMapGestureActive = false;
           let _pointerDownPos = null;
+          let _wheelHideTimer = null;
 
-          const markMapGesture = () => {
+          // Automatically hide & collapse the sidebar whenever the user scrolls or drags on the map
+          const hideSidebarOnMapScroll = (e) => {
+            // Do not hide if welcome modal is showing
+            const welcome = document.getElementById('welcome-overlay');
+            if (welcome && !welcome.classList.contains('is-hidden')) return;
+
+            // Ensure gesture originated on map canvas and not inside sidebar or dialogs
+            if (e && e.originalEvent && e.originalEvent.target) {
+              if (e.originalEvent.target.closest('#sidebar') ||
+                  e.originalEvent.target.closest('#welcome-overlay') ||
+                  e.originalEvent.target.closest('.modal-backdrop') ||
+                  e.originalEvent.target.closest('#top-command-island') ||
+                  e.originalEvent.target.closest('.control-cluster')) {
+                return;
+              }
+            }
+
+            document.body.classList.add('map-scrolling');
+
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar && !sidebar.classList.contains('is-collapsed') && !document.body.classList.contains('sidebar-collapsed')) {
+              if (typeof UIController !== 'undefined' && UIController.setSidebarCollapsed) {
+                UIController.setSidebarCollapsed(true);
+              }
+            }
+          };
+
+          const markMapGesture = (e) => {
             _lastMapGestureTime = Date.now();
             _isMapGestureActive = true;
+            if (e && e.originalEvent) {
+              hideSidebarOnMapScroll(e);
+            }
           };
 
           const endMapGesture = () => {
             _lastMapGestureTime = Date.now();
-            setTimeout(() => { _isMapGestureActive = false; }, 220);
+            setTimeout(() => {
+              _isMapGestureActive = false;
+              document.body.classList.remove('map-scrolling');
+            }, 250);
           };
 
-          this.map.on('movestart', markMapGesture);
-          this.map.on('move', markMapGesture);
+          this.map.on('movestart', (e) => {
+            markMapGesture(e);
+            if (e && e.originalEvent) hideSidebarOnMapScroll(e);
+          });
+          this.map.on('move', (e) => {
+            markMapGesture(e);
+            if (e && e.originalEvent) hideSidebarOnMapScroll(e);
+          });
           this.map.on('moveend', endMapGesture);
-          this.map.on('dragstart', () => { markMapGesture(); onUserPan(); });
-          this.map.on('drag', markMapGesture);
+          this.map.on('dragstart', (e) => {
+            markMapGesture(e);
+            onUserPan();
+            hideSidebarOnMapScroll(e);
+          });
+          this.map.on('drag', (e) => {
+            markMapGesture(e);
+            hideSidebarOnMapScroll(e);
+          });
           this.map.on('dragend', endMapGesture);
-          this.map.on('zoomstart', markMapGesture);
+          this.map.on('zoomstart', (e) => {
+            markMapGesture(e);
+            if (e && e.originalEvent) hideSidebarOnMapScroll(e);
+          });
           this.map.on('zoom', markMapGesture);
           this.map.on('zoomend', endMapGesture);
-          this.map.on('rotatestart', markMapGesture);
+          this.map.on('rotatestart', (e) => {
+            markMapGesture(e);
+            if (e && e.originalEvent) hideSidebarOnMapScroll(e);
+          });
           this.map.on('rotate', markMapGesture);
           this.map.on('rotateend', endMapGesture);
-          this.map.on('pitchstart', markMapGesture);
+          this.map.on('pitchstart', (e) => {
+            markMapGesture(e);
+            if (e && e.originalEvent) hideSidebarOnMapScroll(e);
+          });
           this.map.on('pitch', markMapGesture);
           this.map.on('pitchend', endMapGesture);
-          this.map.on('wheel', markMapGesture);
+          this.map.on('wheel', (e) => {
+            markMapGesture(e);
+            hideSidebarOnMapScroll(e);
+            clearTimeout(_wheelHideTimer);
+            _wheelHideTimer = setTimeout(endMapGesture, 300);
+          });
 
           this.map.on('touchstart', (e) => {
-            markMapGesture();
+            markMapGesture(e);
             onUserPan();
             if (e && e.point) _pointerDownPos = { x: e.point.x, y: e.point.y, t: Date.now() };
           });
-          this.map.on('touchmove', markMapGesture);
+          this.map.on('touchmove', (e) => {
+            markMapGesture(e);
+            hideSidebarOnMapScroll(e);
+          });
           this.map.on('touchend', endMapGesture);
 
           this.map.on('mousedown', (e) => {
             if (e && e.point) _pointerDownPos = { x: e.point.x, y: e.point.y, t: Date.now() };
           });
+
+          // Direct map viewport wheel listener for immediate scroll hide response
+          const mapViewportEl = document.getElementById('map-viewport');
+          if (mapViewportEl) {
+            mapViewportEl.addEventListener('wheel', (e) => {
+              if (!e.target.closest('#sidebar') && !e.target.closest('#welcome-overlay') && !e.target.closest('.modal-backdrop')) {
+                hideSidebarOnMapScroll(e);
+                clearTimeout(_wheelHideTimer);
+                _wheelHideTimer = setTimeout(endMapGesture, 300);
+              }
+            }, { passive: true });
+          }
 
           // Interactive cursor for buildings
           try {
@@ -7361,6 +7449,9 @@
         },
 
         quickSearch(query) {
+          if (typeof UIController !== 'undefined' && UIController.setSidebarCollapsed) {
+            UIController.setSidebarCollapsed(false);
+          }
           const input = document.getElementById('search-input');
           if (input) {
             input.value = query;
@@ -10247,14 +10338,14 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v23"></script>
-  <script src="/app/js/target-cursor.js?v=20261119_v23"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v23"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v23"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v24"></script>
+  <script src="/app/js/target-cursor.js?v=20261119_v24"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v24"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v24"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v23', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v24', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
