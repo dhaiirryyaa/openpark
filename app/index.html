@@ -3798,7 +3798,7 @@
               return 'google-hybrid';
             }
             const s = localStorage.getItem('openpark_map_style');
-            if (!s || s === 'ola-maps' || s === 'ola') return 'google-hybrid';
+            if (!s || s === 'ola-maps' || s === 'ola' || s.includes('carto')) return 'google-hybrid';
             return s;
           })(),
           olaMapsKey: localStorage.getItem('openpark_olamaps_key') || '',
@@ -3958,7 +3958,7 @@
         if (styleKey === 'google-traffic' || styleKey === 'traffic') {
           return MAP_STYLES['google-traffic'];
         }
-        if (!styleKey || styleKey === 'google-hybrid' || styleKey === 'hybrid' || styleKey === 'openfreemap-auto' || styleKey === 'auto') {
+        if (!styleKey || styleKey === 'google-hybrid' || styleKey === 'hybrid' || styleKey === 'openfreemap-auto' || styleKey === 'auto' || (typeof styleKey === 'string' && styleKey.includes('carto'))) {
           return MAP_STYLES['google-hybrid'];
         }
         if (styleKey === 'openfreemap-vector' || styleKey === 'ultra-detail' || styleKey === 'openfreemap-liberty' || styleKey === 'liberty') {
@@ -3970,8 +3970,8 @@
         if (styleKey === 'osm-standard' || styleKey === 'osm' || styleKey === 'traccar-osm') {
           return MAP_STYLES['osm-standard'];
         }
-        if (styleKey === 'carto-voyager') {
-          return MAP_STYLES['carto-voyager'];
+        if (styleKey === 'carto-voyager' || styleKey === 'carto-dark' || styleKey === 'carto-positron') {
+          return MAP_STYLES['google-hybrid'];
         }
         return MAP_STYLES[styleKey] || MAP_STYLES['google-hybrid'];
       }
@@ -9109,10 +9109,6 @@
             }
           }
         },
-              console.debug('[IP Geolocation] provider skip:', e);
-            }
-          }
-        },
 
         async loadNearbyLots(lat = CONFIG.DEFAULT_COORDS[1], lon = CONFIG.DEFAULT_COORDS[0]) {
           STATE.lots = await API.getNearbyLots(lat, lon);
@@ -10451,9 +10447,9 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v28"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v28"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v28"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v30"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v30"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v30"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {

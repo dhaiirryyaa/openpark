@@ -422,11 +422,6 @@
       }
     });
   });
-    });
-
-    window.addEventListener('openpark:recent-updated', render);
-    render();
-  });
 
   UIPolish.register('welcomeTimeGreeting', () => {
     const el = document.getElementById('welcome-greeting');
