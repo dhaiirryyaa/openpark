@@ -8996,21 +8996,20 @@
             // Reject coarse network/ISP coordinates (e.g. 5km - 50km) from claiming to be live GPS
             if (!isAccurateFix) {
               console.warn('[GPS] Coarse accuracy fix received (±' + accMeters + 'm). Not treating as real hardware GPS.');
-              if (!STATE.hasRealDeviceFix && !STATE.isManualLocation) {
-                STATE.userLocation.lat = latitude;
-                STATE.userLocation.lng = longitude;
-                STATE.userLocation.accuracy = accMeters;
-                const pillText = document.getElementById('traccar-pill-text');
-                if (pillText) pillText.innerText = `GPS Standby (±${Math.round(accMeters / 1000)}km)`;
-                const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
-                if (speedPill) speedPill.innerText = `Drag pin to your spot`;
-                if (MapEngine.vehicleMarker) MapEngine.vehicleMarker.setLngLat([longitude, latitude]);
-                if (STATE.isCameraFollowing && MapEngine.map) {
-                  MapEngine.map.easeTo({ center: [longitude, latitude], zoom: 14, duration: 600 });
-                }
-                ParkingApp.loadNearbyLots(latitude, longitude);
-              }
+              const pillText = document.getElementById('traccar-pill-text');
+              if (pillText && !STATE.hasRealDeviceFix) pillText.innerText = `GPS Standby (±${Math.round(accMeters / 1000)}km)`;
               return;
+            }
+
+            // Anti-teleport jump filter:
+            // If we already have a verified fix, reject sudden jumps (> 500m) unless accuracy is ultra-precise (<= 30m).
+            // Prevents secondary network lookups from jumping across town to an ISP gateway!
+            if (STATE.hasRealDeviceFix && !STATE.isManualLocation) {
+              const jumpDist = calculateDistanceMeters(STATE.userLocation.lat, STATE.userLocation.lng, latitude, longitude);
+              if (jumpDist > 500 && accMeters > 35) {
+                console.warn(`[GPS] Teleport rejected: ${Math.round(jumpDist)}m jump with ±${accMeters}m accuracy.`);
+                return;
+              }
             }
 
             const fix = {
@@ -9658,16 +9657,6 @@
                 ParkingApp.loadNearbyLots(lat, lng),
                 AIScannerEngine.scanCurrentArea(lat, lng)
               ]);
-
-              const filteredLots = UIController.filterLots(STATE.lots || []);
-              const bestLot = filteredLots.find(l => (l.free_spots || 0) > 0) || filteredLots[0];
-              const bestAi = (AIScannerEngine.results && AIScannerEngine.results[0]) || null;
-
-              if (bestAi && (!bestLot || Number(bestAi.distance_km) <= Number(bestLot.distance_km || 99))) {
-                AIScannerEngine.selectDiscoveredSpot(bestAi);
-              } else if (bestLot) {
-                ParkingApp.selectLot(bestLot.id);
-              }
             };
           }
 
@@ -10147,7 +10136,7 @@
                 'success',
                 4000
               );
-              if (MapEngine.map) {
+              if (MapEngine.map && Number.isFinite(overrideLat) && Number.isFinite(overrideLon)) {
                 MapEngine.map.flyTo({ center: [center.lng, center.lat], zoom: 15.8, duration: 700 });
               }
             } else {
@@ -10508,13 +10497,13 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v31"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v31"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v31"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v32"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v32"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v32"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v31', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v32', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

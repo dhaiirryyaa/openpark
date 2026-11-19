@@ -2,7 +2,7 @@
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v31-gps-precision';
+const CACHE_NAME = 'openpark-offline-v32-anti-teleport';
 const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/app/',
