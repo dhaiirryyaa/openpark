@@ -2370,7 +2370,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v26" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v27" />
 </head>
 <body class="welcome-active">
 
@@ -10452,14 +10452,13 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v26"></script>
-  <script src="/app/js/target-cursor.js?v=20261119_v26"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v26"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v26"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v27"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v27"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v27"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v26', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v27', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
