@@ -2069,14 +2069,14 @@
     #welcome-overlay {
       position: fixed;
       inset: 0;
-      z-index: 95;
+      z-index: 2100;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 16px;
-      background: rgba(10, 15, 28, 0.28);
-      backdrop-filter: blur(14px) saturate(150%);
-      -webkit-backdrop-filter: blur(14px) saturate(150%);
+      background: rgba(10, 15, 28, 0.45);
+      backdrop-filter: blur(18px) saturate(160%);
+      -webkit-backdrop-filter: blur(18px) saturate(160%);
       opacity: 1;
       transition: opacity 0.34s var(--spring-curve), transform 0.34s var(--spring-curve), visibility 0.34s ease;
     }
@@ -2085,6 +2085,55 @@
       transform: scale(1.03);
       pointer-events: none;
       visibility: hidden;
+    }
+
+    /* While Welcome Page ("Where are you heading?") is active, hide all 3 surrounding corner items:
+       1. Top Command Island bar
+       2. Left Studio Deck / Sidebar
+       3. Right Controls Cluster & Telemetry HUD */
+    body.welcome-active #top-command-island,
+    body.welcome-active #sidebar,
+    body.welcome-active #btn-show-deck,
+    body.welcome-active .control-cluster,
+    body.welcome-active #telemetry-hud,
+    body.welcome-active #map-coords-badge,
+    body.welcome-active .dynamic-island-nav,
+    body.welcome-active .banner-container,
+    body:has(#welcome-overlay:not(.is-hidden)) #top-command-island,
+    body:has(#welcome-overlay:not(.is-hidden)) #sidebar,
+    body:has(#welcome-overlay:not(.is-hidden)) #btn-show-deck,
+    body:has(#welcome-overlay:not(.is-hidden)) .control-cluster,
+    body:has(#welcome-overlay:not(.is-hidden)) #telemetry-hud,
+    body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge,
+    body:has(#welcome-overlay:not(.is-hidden)) .dynamic-island-nav,
+    body:has(#welcome-overlay:not(.is-hidden)) .banner-container {
+      opacity: 0 !important;
+      pointer-events: none !important;
+      visibility: hidden !important;
+    }
+
+    body.welcome-active #top-command-island,
+    body:has(#welcome-overlay:not(.is-hidden)) #top-command-island {
+      transform: translate(-50%, -90px) !important;
+    }
+
+    body.welcome-active #sidebar,
+    body:has(#welcome-overlay:not(.is-hidden)) #sidebar {
+      transform: translateY(calc(100% + 50px)) !important;
+    }
+
+    body.welcome-active #btn-show-deck,
+    body:has(#welcome-overlay:not(.is-hidden)) #btn-show-deck {
+      transform: translateY(100px) !important;
+    }
+
+    body.welcome-active .control-cluster,
+    body.welcome-active #telemetry-hud,
+    body.welcome-active #map-coords-badge,
+    body:has(#welcome-overlay:not(.is-hidden)) .control-cluster,
+    body:has(#welcome-overlay:not(.is-hidden)) #telemetry-hud,
+    body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge {
+      transform: translateX(90px) !important;
     }
     .welcome-card {
       width: min(620px, 100%);
@@ -2309,9 +2358,9 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v22" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v23" />
 </head>
-<body>
+<body class="welcome-active">
 
   <!-- Fullscreen Map Engine Container -->
   <div id="map-viewport" role="region" aria-label="Interactive city parking map"></div>
@@ -9240,7 +9289,16 @@
           const params = new URLSearchParams(window.location.search);
           if (params.has('lat') || params.has('dest_lat') || params.has('q')) {
             this.hide(true);
+          } else {
+            document.body.classList.add('welcome-active');
           }
+
+          // Dismiss on backdrop click
+          overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+              this.hide();
+            }
+          });
 
           // Time-based greeting
           const greetEl = document.getElementById('welcome-greeting');
@@ -9479,6 +9537,7 @@
           const overlay = document.getElementById('welcome-overlay');
           if (!overlay) return;
           overlay.classList.remove('is-hidden');
+          document.body.classList.add('welcome-active');
           const wInput = document.getElementById('welcome-search-input');
           if (wInput) setTimeout(() => wInput.focus(), 180);
         },
@@ -9488,6 +9547,7 @@
           if (!overlay) return;
           if (instant) overlay.style.transition = 'none';
           overlay.classList.add('is-hidden');
+          document.body.classList.remove('welcome-active');
           if (instant) {
             requestAnimationFrame(() => { overlay.style.transition = ''; });
           }
@@ -10187,14 +10247,14 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261119_v22"></script>
-  <script src="/app/js/target-cursor.js?v=20261119_v22"></script>
-  <script src="/app/js/ui-polish.js?v=20261119_v22"></script>
-  <script src="/app/js/jelly-radio.js?v=20261119_v22"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v23"></script>
+  <script src="/app/js/target-cursor.js?v=20261119_v23"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v23"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v23"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261119_v22', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v23', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

@@ -2,7 +2,7 @@
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v22-svg-fix';
+const CACHE_NAME = 'openpark-offline-v23-welcome-corner-hide';
 const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/app/',

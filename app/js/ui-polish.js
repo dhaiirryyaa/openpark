@@ -78,7 +78,7 @@
     });
   });
 
-  UIPolish.register('modalBackdropDismiss', () => {
+  UIPolish.register('modalBackdropDismiss', (up) => {
     ['modal-receipt', 'modal-report', 'modal-traccar'].forEach((id) => {
       const backdrop = document.getElementById(id);
       if (!backdrop) return;
@@ -86,6 +86,20 @@
         if (e.target === backdrop) backdrop.classList.remove('active');
       });
     });
+    const welcome = document.getElementById('welcome-overlay');
+    if (welcome) {
+      welcome.addEventListener('click', (e) => {
+        if (e.target === welcome) {
+          const ctx = up.getCtx();
+          if (ctx.WelcomeController && typeof ctx.WelcomeController.hide === 'function') {
+            ctx.WelcomeController.hide();
+          } else {
+            welcome.classList.add('is-hidden');
+            document.body.classList.remove('welcome-active');
+          }
+        }
+      });
+    }
   });
 
   UIPolish.register('slashSearchShortcut', (up) => {
