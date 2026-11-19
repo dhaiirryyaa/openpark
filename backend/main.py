@@ -469,7 +469,23 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 APP_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "app"))
 DASHBOARD_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "dashboard"))
 
+@app.get("/app", include_in_schema=False)
+async def redirect_app_trailing_slash(request: Request):
+    """Enforces trailing slash on /app/ to guarantee relative CSS/JS paths resolve correctly."""
+    scheme = request.headers.get("x-forwarded-proto", request.url.scheme)
+    host = request.headers.get("host", request.url.netloc)
+    return RedirectResponse(url=f"{scheme}://{host}/app/", status_code=307)
+
 if os.path.isdir(APP_DIR):
+    css_dir = os.path.join(APP_DIR, "css")
+    js_dir = os.path.join(APP_DIR, "js")
+    vendor_dir = os.path.join(APP_DIR, "vendor")
+    if os.path.isdir(css_dir):
+        app.mount("/css", StaticFiles(directory=css_dir), name="css_fallback")
+    if os.path.isdir(js_dir):
+        app.mount("/js", StaticFiles(directory=js_dir), name="js_fallback")
+    if os.path.isdir(vendor_dir):
+        app.mount("/vendor", StaticFiles(directory=vendor_dir), name="vendor_fallback")
     app.mount("/app", StaticFiles(directory=APP_DIR, html=True), name="app")
 
 if os.path.isdir(DASHBOARD_DIR):

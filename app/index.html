@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <base href="/app/" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <title>OpenPark — Next-Gen Urban Parking & Live GPS Telemetry</title>
 
@@ -171,18 +172,150 @@
       border-radius: var(--radius-card);
     }
 
-    /* Icon system */
+    /* Universal SVG Safety & Icon System - Guaranteed to render cleanly under all conditions */
+    svg {
+      fill: none;
+    }
+    svg:not([fill]) {
+      fill: none;
+    }
     .svg-icon {
-      width: 18px;
-      height: 18px;
+      width: 18px !important;
+      height: 18px !important;
       stroke: currentColor;
       stroke-width: 1.8;
       stroke-linecap: round;
       stroke-linejoin: round;
-      fill: none;
+      fill: none !important;
       flex-shrink: 0;
       display: inline-block;
       vertical-align: middle;
+    }
+    .svg-icon-sm {
+      width: 16px !important;
+      height: 16px !important;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none !important;
+      display: inline-block;
+      vertical-align: -2px;
+      flex-shrink: 0;
+    }
+    .svg-icon-xs {
+      width: 13px !important;
+      height: 13px !important;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none !important;
+      display: inline-block;
+      vertical-align: -1.5px;
+      flex-shrink: 0;
+    }
+    .svg-icon-island {
+      width: 20px !important;
+      height: 20px !important;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none !important;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .poi-svg-icon {
+      width: 15px !important;
+      height: 15px !important;
+      stroke: currentColor;
+      fill: none !important;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+      flex-shrink: 0;
+    }
+
+    /* Tab Segment & Hero Search Button inline rules */
+    .segment-tab svg,
+    .segment-tab .svg-icon-xs {
+      width: 14px !important;
+      height: 14px !important;
+      max-width: 14px !important;
+      max-height: 14px !important;
+      stroke: currentColor !important;
+      fill: none !important;
+      flex-shrink: 0 !important;
+    }
+    .segment-tab svg * {
+      fill: none !important;
+      stroke: currentColor !important;
+    }
+
+    /* AI Copilot & Search SVGs */
+    .ai-copilot-card svg,
+    .ai-copilot-input-row svg,
+    .copilot-badge svg {
+      width: 16px !important;
+      height: 16px !important;
+      max-width: 16px !important;
+      max-height: 16px !important;
+      fill: none !important;
+      stroke: currentColor !important;
+      flex-shrink: 0 !important;
+    }
+    .ai-copilot-card svg * {
+      fill: none !important;
+    }
+
+    /* Search parking near me Hero Button */
+    #ai-scan-bar-container {
+      display: flex !important;
+      flex-direction: column !important;
+      width: 100% !important;
+      margin: 4px 0 8px 0 !important;
+    }
+    #btn-ai-scan,
+    .btn-nearby-search,
+    .deck-hero-btn {
+      width: 100% !important;
+      height: 44px !important;
+      min-height: 44px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      gap: 8px !important;
+      padding: 0 16px !important;
+      font-family: inherit !important;
+      font-size: 13.5px !important;
+      font-weight: 600 !important;
+      border-radius: 14px !important;
+      background: linear-gradient(135deg, #0a84ff 0%, #005bb5 100%) !important;
+      color: #ffffff !important;
+      border: 1px solid rgba(255, 255, 255, 0.22) !important;
+      box-shadow: 0 4px 18px rgba(0, 113, 227, 0.35) !important;
+      cursor: pointer !important;
+      box-sizing: border-box !important;
+      outline: none !important;
+    }
+    #btn-ai-scan:hover,
+    .btn-nearby-search:hover,
+    .deck-hero-btn:hover {
+      background: linear-gradient(135deg, #2594ff 0%, #0066cc 100%) !important;
+      box-shadow: 0 6px 22px rgba(0, 113, 227, 0.45) !important;
+    }
+    #btn-ai-scan svg,
+    .btn-nearby-search svg,
+    .deck-hero-btn svg {
+      width: 16px !important;
+      height: 16px !important;
+      max-width: 16px !important;
+      max-height: 16px !important;
+      stroke: #ffffff !important;
+      fill: none !important;
+      flex-shrink: 0 !important;
     }
 
     /* ==========================================================================
@@ -2176,7 +2309,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="css/ui-polish.css?v=20261118_v20" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v22" />
 </head>
 <body>
 
@@ -10054,14 +10187,14 @@
       });
     })();
   </script>
-  <script src="js/animated-list.js?v=20261116_02"></script>
-  <script src="js/target-cursor.js?v=20261116_02"></script>
-  <script src="js/ui-polish.js?v=20261118_v20"></script>
-  <script src="js/jelly-radio.js?v=20261116_02"></script>
+  <script src="/app/js/animated-list.js?v=20261119_v22"></script>
+  <script src="/app/js/target-cursor.js?v=20261119_v22"></script>
+  <script src="/app/js/ui-polish.js?v=20261119_v22"></script>
+  <script src="/app/js/jelly-radio.js?v=20261119_v22"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js?v=20261118_10', { scope: './' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261119_v22', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
