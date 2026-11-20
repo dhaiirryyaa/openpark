@@ -2559,7 +2559,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v42" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v43" />
 </head>
 <body class="welcome-active">
 
@@ -8544,8 +8544,6 @@
             }
 
             // Calculate driving distance & ETA from current vehicle position
-            const uLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
-            const uLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
             const distMeters = calculateDistanceMeters(uLat, uLng, item.lat, item.lon);
             const distKm = (distMeters / 1000).toFixed(1);
             const etaMins = Math.max(1, Math.round((distMeters / 1000 / 30) * 60)); // ~30 km/h city speed
