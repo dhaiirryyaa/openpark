@@ -2094,6 +2094,7 @@
     body.welcome-active #top-command-island,
     body.welcome-active #sidebar,
     body.welcome-active #btn-show-deck,
+    body.welcome-active #btn-restore-deck,
     body.welcome-active .control-cluster,
     body.welcome-active #telemetry-hud,
     body.welcome-active #map-coords-badge,
@@ -2102,11 +2103,13 @@
     body:has(#welcome-overlay:not(.is-hidden)) #top-command-island,
     body:has(#welcome-overlay:not(.is-hidden)) #sidebar,
     body:has(#welcome-overlay:not(.is-hidden)) #btn-show-deck,
+    body:has(#welcome-overlay:not(.is-hidden)) #btn-restore-deck,
     body:has(#welcome-overlay:not(.is-hidden)) .control-cluster,
     body:has(#welcome-overlay:not(.is-hidden)) #telemetry-hud,
     body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge,
     body:has(#welcome-overlay:not(.is-hidden)) .dynamic-island-nav,
     body:has(#welcome-overlay:not(.is-hidden)) .banner-container {
+      display: none !important;
       opacity: 0 !important;
       pointer-events: none !important;
       visibility: hidden !important;
@@ -2274,9 +2277,28 @@
       gap: 8px;
       overflow-x: auto;
       scrollbar-width: none;
-      padding-bottom: 2px;
+      -webkit-overflow-scrolling: touch;
+      scroll-behavior: smooth;
+      padding-bottom: 4px;
+      user-select: none;
+      cursor: grab;
+    }
+    .welcome-mode-row:active {
+      cursor: grabbing;
     }
     .welcome-mode-row::-webkit-scrollbar { display: none; }
+    .welcome-mode-row .chip-btn {
+      flex-shrink: 0;
+      white-space: nowrap;
+      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+      touch-action: pan-x;
+    }
+    .welcome-mode-row .chip-btn:hover {
+      transform: translateY(-1px);
+    }
+    .welcome-mode-row .chip-btn:active {
+      transform: scale(0.96);
+    }
     .welcome-section-label {
       font-size: 11.5px;
       font-weight: 700;
@@ -2370,7 +2392,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261119_v28" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v33" />
 </head>
 <body class="welcome-active">
 
@@ -3725,8 +3747,7 @@
           const isDefault = Math.abs(parsedFix.lat - 12.97160) < 0.003 && Math.abs(parsedFix.lng - 77.59460) < 0.003;
           const isIpDefault = Math.abs(parsedFix.lat - 12.97194) < 0.003 && Math.abs(parsedFix.lng - 77.59368) < 0.003;
           const isRecent = parsedFix.ts && (Date.now() - parsedFix.ts < 86400000);
-          const isAccurate = (parsedFix.accuracy || 999) <= 200;
-          if (parsedFix && !isDefault && !isIpDefault && isRecent && isAccurate && Number.isFinite(parsedFix.lat) && Number.isFinite(parsedFix.lng)) {
+          if (parsedFix && !isDefault && !isIpDefault && isRecent && Number.isFinite(parsedFix.lat) && Number.isFinite(parsedFix.lng)) {
             lastKnownFix = parsedFix;
             isManualSaved = parsedFix.isManual || false;
           } else {
@@ -4631,9 +4652,7 @@
               if (STATE.isManualLocation) {
                 pillText.innerText = "Pinned Spot";
               } else {
-                const acc = accMeters || STATE.userLocation?.accuracy;
-                const accLabel = (acc && acc <= 200) ? ` ±${Math.round(acc)}m` : '';
-                pillText.innerText = (acc && acc <= 200) ? `Live GPS${accLabel}` : `GPS Standby`;
+                pillText.innerText = "Live GPS";
               }
             }
             if (vehicleEl) vehicleEl.classList.remove('gps-signal-lost');
@@ -8878,8 +8897,7 @@
           if (pos && pos.coords) {
             const { latitude, longitude, accuracy, heading, speed, altitude } = pos.coords;
             if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-              const accMeters = Math.round(accuracy || 999);
-              const isAccurate = accMeters <= 200;
+              const accMeters = Math.round(accuracy || 20);
 
               const fix = {
                 lat: latitude,
@@ -8894,69 +8912,49 @@
 
               STATE.userLocation = fix;
               STATE.isTrackingLocation = true;
+              STATE.hasRealDeviceFix = true;
+              STATE.bestFixAccuracy = accMeters;
+              STATE.isManualLocation = false;
 
-              if (isAccurate) {
-                STATE.hasRealDeviceFix = true;
-                STATE.bestFixAccuracy = accMeters;
-                STATE.isManualLocation = false;
-                try {
-                  localStorage.setItem('openpark_last_device_fix', JSON.stringify({
-                    lat: fix.lat,
-                    lng: fix.lng,
-                    heading: fix.heading,
-                    accuracy: fix.accuracy,
-                    ts: Date.now()
-                  }));
-                } catch {}
+              try {
+                localStorage.setItem('openpark_last_device_fix', JSON.stringify({
+                  lat: fix.lat,
+                  lng: fix.lng,
+                  heading: fix.heading,
+                  accuracy: fix.accuracy,
+                  ts: Date.now()
+                }));
+              } catch {}
 
-                GPSMonitor.onValidFix(accMeters);
-                if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
+              GPSMonitor.onValidFix(accMeters);
+              if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
 
-                const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
-                if (speedPill) {
-                  const spd = Math.round(fix.speed || 0);
-                  speedPill.innerText = spd > 1 ? `${spd} km/h` : 'Device Location';
-                }
+              const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
+              if (speedPill) {
+                const spd = Math.round(fix.speed || 0);
+                speedPill.innerText = spd > 1 ? `${spd} km/h` : 'Device Location';
+              }
 
-                if (MapEngine.tracker) {
-                  MapEngine.tracker.feedDirectFix(fix);
-                } else {
-                  MapEngine.updateVehicle(fix);
-                }
-
-                if (followCamera && MapEngine.map) {
-                  MapEngine.map.flyTo({
-                    center: [fix.lng, fix.lat],
-                    zoom: Math.max(MapEngine.map.getZoom(), 17.2),
-                    duration: 650
-                  });
-                }
-
-                ParkingApp.loadNearbyLots(fix.lat, fix.lng);
-                TelemetryController.update(fix);
-                API.sendTraccarPing(fix);
-
-                if (notify) {
-                  ParkingApp.showToast(`Device Located: ±${accMeters}m`, "success", 3000);
-                }
+              if (MapEngine.tracker) {
+                MapEngine.tracker.feedDirectFix(fix);
               } else {
-                // Coarse accuracy notice
-                STATE.hasRealDeviceFix = false;
-                const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
-                if (speedPill) speedPill.innerText = `Drag pin to your spot`;
-                const pillText = document.getElementById('traccar-pill-text');
-                if (pillText) pillText.innerText = `GPS Standby (±${Math.round(accMeters / 1000)}km)`;
-                if (MapEngine.vehicleMarker) MapEngine.vehicleMarker.setLngLat([fix.lng, fix.lat]);
+                MapEngine.updateVehicle(fix);
+              }
 
-                if (followCamera && MapEngine.map) {
-                  MapEngine.map.flyTo({
-                    center: [fix.lng, fix.lat],
-                    zoom: 14,
-                    duration: 650
-                  });
-                }
-                ParkingApp.loadNearbyLots(fix.lat, fix.lng);
-                ParkingApp.showToast(`Approximate location detected (±${Math.round(accMeters / 1000)}km). Drag the pointer to pinpoint your exact spot.`, "warning", 5000);
+              if (followCamera && MapEngine.map) {
+                MapEngine.map.flyTo({
+                  center: [fix.lng, fix.lat],
+                  zoom: Math.max(MapEngine.map.getZoom(), 17.2),
+                  duration: 650
+                });
+              }
+
+              ParkingApp.loadNearbyLots(fix.lat, fix.lng);
+              TelemetryController.update(fix);
+              API.sendTraccarPing(fix);
+
+              if (notify) {
+                ParkingApp.showToast(`Live GPS: [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`, "success", 3000);
               }
 
               this.startRealtimeDeviceLocation();
@@ -8985,28 +8983,18 @@
             const { latitude, longitude, heading, speed, altitude, accuracy } = pos.coords;
             if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
 
-            const accMeters = Math.round(accuracy || 999);
-            const isAccurateFix = accMeters <= 200;
-
             // If user manually placed or dragged their pin, DO NOT let background watchPosition hijack it!
             if (STATE.isManualLocation && source !== 'user-button-gps') {
               return;
             }
 
-            // Reject coarse network/ISP coordinates (e.g. 5km - 50km) from claiming to be live GPS
-            if (!isAccurateFix) {
-              console.warn('[GPS] Coarse accuracy fix received (±' + accMeters + 'm). Not treating as real hardware GPS.');
-              const pillText = document.getElementById('traccar-pill-text');
-              if (pillText && !STATE.hasRealDeviceFix) pillText.innerText = `GPS Standby (±${Math.round(accMeters / 1000)}km)`;
-              return;
-            }
+            const accMeters = Math.round(accuracy || 20);
 
             // Anti-teleport jump filter:
-            // If we already have a verified fix, reject sudden jumps (> 500m) unless accuracy is ultra-precise (<= 30m).
-            // Prevents secondary network lookups from jumping across town to an ISP gateway!
+            // If we already have a verified fix, reject massive sudden hops (> 3000m) with poor accuracy (> 500m)
             if (STATE.hasRealDeviceFix && !STATE.isManualLocation) {
               const jumpDist = calculateDistanceMeters(STATE.userLocation.lat, STATE.userLocation.lng, latitude, longitude);
-              if (jumpDist > 500 && accMeters > 35) {
+              if (jumpDist > 3000 && accMeters > 500) {
                 console.warn(`[GPS] Teleport rejected: ${Math.round(jumpDist)}m jump with ±${accMeters}m accuracy.`);
                 return;
               }
@@ -9030,7 +9018,6 @@
             STATE.userLocation = fix;
             STATE.isTrackingLocation = true;
 
-            // Only cache real device fixes with good accuracy (<= 200m)
             try {
               localStorage.setItem('openpark_last_device_fix', JSON.stringify({
                 lat: fix.lat,
@@ -10497,13 +10484,13 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261120_v32"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v32"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v32"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v33"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v33"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v33"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v32', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v33', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

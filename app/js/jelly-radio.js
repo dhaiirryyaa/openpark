@@ -15,18 +15,18 @@
     s.textContent = `
       .chip-btn, .jelly-pill {
         will-change: transform;
-        transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), 
-                    background-color 0.2s ease, 
-                    color 0.2s ease, 
-                    border-color 0.2s ease, 
-                    box-shadow 0.2s ease !important;
+        transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), 
+                    background-color 0.18s ease, 
+                    color 0.18s ease, 
+                    border-color 0.18s ease, 
+                    box-shadow 0.18s ease;
+        -webkit-tap-highlight-color: transparent;
       }
       .chip-btn:hover, .jelly-pill:hover {
-        transform: translateY(-1.5px) scale(1.02) !important;
+        transform: translateY(-1px);
       }
       .chip-btn:active, .jelly-pill:active {
-        transform: scale(0.96) !important;
-        transition-duration: 0.08s !important;
+        transform: scale(0.96);
       }
     `;
     document.head.appendChild(s);
@@ -39,19 +39,10 @@
     bar.addEventListener("click", (ev) => {
       const pill = ev.target && ev.target.closest ? ev.target.closest(".chip-btn, .jelly-pill, button") : null;
       if (!pill || pill.parentElement !== bar) return;
-      if (reducedMotion() || !global.gsap) return;
+      if (reducedMotion()) return;
 
-      global.gsap.killTweensOf(pill);
-      global.gsap.fromTo(
-        pill,
-        { scale: 0.95 },
-        {
-          scale: 1,
-          duration: 0.28,
-          ease: "back.out(2.2)",
-          clearProps: "transform"
-        }
-      );
+      // Silky subtle haptic tap if supported
+      if (navigator.vibrate) navigator.vibrate(6);
     });
   }
 

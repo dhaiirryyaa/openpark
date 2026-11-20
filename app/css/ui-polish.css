@@ -2441,6 +2441,7 @@ body.navigating #telemetry-hud {
 body.welcome-active #top-command-island,
 body.welcome-active #sidebar,
 body.welcome-active #btn-show-deck,
+body.welcome-active #btn-restore-deck,
 body.welcome-active .control-cluster,
 body.welcome-active #telemetry-hud,
 body.welcome-active #map-coords-badge,
@@ -2449,11 +2450,13 @@ body.welcome-active .banner-container,
 body:has(#welcome-overlay:not(.is-hidden)) #top-command-island,
 body:has(#welcome-overlay:not(.is-hidden)) #sidebar,
 body:has(#welcome-overlay:not(.is-hidden)) #btn-show-deck,
+body:has(#welcome-overlay:not(.is-hidden)) #btn-restore-deck,
 body:has(#welcome-overlay:not(.is-hidden)) .control-cluster,
 body:has(#welcome-overlay:not(.is-hidden)) #telemetry-hud,
 body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge,
 body:has(#welcome-overlay:not(.is-hidden)) .dynamic-island-nav,
 body:has(#welcome-overlay:not(.is-hidden)) .banner-container {
+  display: none !important;
   opacity: 0 !important;
   pointer-events: none !important;
   visibility: hidden !important;

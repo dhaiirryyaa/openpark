@@ -1576,6 +1576,76 @@
     });
   });
 
+  UIPolish.register('dragScrollPills', () => {
+    const selectors = [
+      '#welcome-mode-row',
+      '.welcome-mode-row',
+      '#explore-filter-chips',
+      '.filter-chip-row',
+      '.category-carousel-wrapper'
+    ];
+    selectors.forEach((sel) => {
+      document.querySelectorAll(sel).forEach((el) => {
+        if (!el || el.dataset.dragScrollInit === '1') return;
+        el.dataset.dragScrollInit = '1';
+
+        let isDown = false;
+        let startX = 0;
+        let scrollStart = 0;
+        let velX = 0;
+        let lastX = 0;
+        let lastTime = 0;
+        let hasMoved = false;
+
+        el.addEventListener('mousedown', (e) => {
+          if (e.button !== 0) return;
+          isDown = true;
+          hasMoved = false;
+          startX = e.pageX - el.offsetLeft;
+          scrollStart = el.scrollLeft;
+          lastX = e.pageX;
+          lastTime = performance.now();
+          velX = 0;
+          el.style.scrollBehavior = 'auto';
+        });
+
+        window.addEventListener('mousemove', (e) => {
+          if (!isDown) return;
+          const x = e.pageX - el.offsetLeft;
+          const walk = (x - startX);
+          if (Math.abs(walk) > 4) {
+            hasMoved = true;
+          }
+          el.scrollLeft = scrollStart - walk;
+          const now = performance.now();
+          const dt = now - lastTime;
+          if (dt > 0) {
+            velX = (e.pageX - lastX) / dt;
+            lastX = e.pageX;
+            lastTime = now;
+          }
+        });
+
+        window.addEventListener('mouseup', () => {
+          if (!isDown) return;
+          isDown = false;
+          el.style.scrollBehavior = 'smooth';
+          if (Math.abs(velX) > 0.12) {
+            el.scrollBy({ left: -velX * 180, behavior: 'smooth' });
+          }
+        });
+
+        el.addEventListener('click', (e) => {
+          if (hasMoved) {
+            e.preventDefault();
+            e.stopPropagation();
+            hasMoved = false;
+          }
+        }, true);
+      });
+    });
+  });
+
   // __EXTEND_HOOK__
 
   if (window.__openpark) {
