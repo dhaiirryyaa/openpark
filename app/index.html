@@ -2556,7 +2556,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v38" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v39" />
 </head>
 <body class="welcome-active">
 
@@ -3693,7 +3693,7 @@
         <h3 class="drawer-title" id="drawer-lot-name">Parking Lot</h3>
         <p class="drawer-subtitle" id="drawer-lot-info">2 mins away • 0.3 km • Bengaluru</p>
       </div>
-      <span style="font-size: 18px; font-weight: 700; white-space: nowrap;" id="drawer-lot-rate">₹40<small style="font-size:12px; font-weight:400; color:var(--text-secondary)">/hr</small></span>
+      <span style="font-size: 18px; font-weight: 700; white-space: nowrap; display: none;" id="drawer-lot-rate">₹40<small style="font-size:12px; font-weight:400; color:var(--text-secondary)">/hr</small></span>
     </div>
 
     <div class="capacity-card">
@@ -6757,7 +6757,7 @@
                 ${lot.free_spots !== undefined ? lot.free_spots + ' spots free' : 'Available'}
               </div>
               <div style="font-size:11px;color:var(--color-text-secondary,#94a3b8);margin-bottom:8px;">
-                ${lot.price_car || '₹40'}/hr &nbsp;|&nbsp; ${lot.distance_km ? lot.distance_km + ' km' : ''}
+                ${lot.distance_km ? lot.distance_km + ' km' : ''}
               </div>
               <button onclick="NavigationEngine.startTrip(window._routeLot_${lot.id})"
                 style="width:100%;padding:6px 0;background:#2563eb;color:#fff;border:none;border-radius:7px;
@@ -7045,7 +7045,6 @@
             else if (lot.status === 'Filling up' || free < 15) pulseClass = 'status-orange';
             else if (lot.status === 'Unknown') pulseClass = 'status-muted';
 
-            const cleanRate = String(lot.price_car || lot.price_note || '₹40').replace('/hr', '');
             const el = document.createElement('div');
             el.className = 'apple-glass parking-pin pressable';
             if (STATE.selectedLot && STATE.selectedLot.id == lot.id) {
@@ -7053,9 +7052,9 @@
             }
             el.innerHTML = `
               <div class="status-pulse ${pulseClass}"></div>
-              <span>${free > 0 ? free + ' bays' : 'Full'} • ${cleanRate}</span>
+              <span>${free > 0 ? free + ' bays' : 'Full'}</span>
             `;
-            el.title = `${lot.name} • ${free} spots free (${cleanRate}/hr)`;
+            el.title = `${lot.name} • ${free} spots free`;
 
             el.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -7903,7 +7902,6 @@
                   <span class="status-dot"></span>
                   <span>${lot.status} &bull; <strong>${lot.free_spots}</strong> free</span>
                 </div>
-                <div class="lot-price">${safePrice}/hr</div>
               </div>
               <div class="lot-footer-sub">Updated ${lot.updated_mins}m ago &bull; ${safeAddr}</div>
             `;
@@ -10671,7 +10669,6 @@
                   <div class="status-pill" style="background: rgba(52,199,89,0.12); color: var(--apple-green);">
                     <span>${spot.temporal ? spot.temporal.vacancy_probability_pct + '% Vacancy' : 'AI ' + spot.ai_score + '%'} &bull; ~${spot.estimated_spots} bays</span>
                   </div>
-                  <div class="lot-price">${spot.fee}</div>
                 </div>
                 <div class="ai-card-reasoning">
                   <svg class="svg-icon-xs" viewBox="0 0 24 24" style="color: var(--apple-blue); flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
@@ -10980,14 +10977,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261120_v38"></script>
-  <script src="/app/js/animated-list.js?v=20261120_v38"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v38"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v38"></script>
+  <script type="module" src="/app/js/locate.js?v=20261120_v39"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v39"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v39"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v39"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v38', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v39', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
