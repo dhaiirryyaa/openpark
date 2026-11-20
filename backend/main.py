@@ -1093,10 +1093,13 @@ def ai_list_verified_pockets_endpoint():
 def public_runtime_config():
     """Non-sensitive runtime configuration flags for client UI initialization."""
     ola_env = os.getenv("OLAMAPS_API_KEY", "")
+    google_env = os.getenv("GOOGLE_MAPS_API_KEY", "")
     return {
         "status": "ok",
         "olamaps_configured": bool(ola_env),
         "olamaps_key": ola_env,
+        "google_maps_configured": bool(google_env),
+        "google_maps_key": google_env,
         "default_map_style": "google-hybrid",
         "scan_radius_m": 1000,
     }

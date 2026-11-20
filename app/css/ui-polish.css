@@ -906,30 +906,133 @@ body.sidebar-collapsed #sidebar {
   transform: scale(0.98) !important;
 }
 
-/* Right Side Map Controls Cluster */
+/* Right Side Map Controls Cluster (Collapsible Apple Glass HUD) */
 .control-cluster {
   position: fixed !important;
-  bottom: 24px !important;
+  bottom: 80px !important;
   right: 20px !important;
   top: auto !important;
   z-index: 1000 !important;
-  border-radius: 9999px !important;
+  border-radius: 26px !important;
   padding: 6px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 6px !important;
-  background: var(--glass-bg, rgba(15, 23, 42, 0.88)) !important;
+  gap: 5px !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.92)) !important;
   backdrop-filter: blur(28px) saturate(180%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
-  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.12)) !important;
-  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.42) !important;
-  transition: transform 380ms cubic-bezier(0.16, 1, 0.3, 1), opacity 260ms ease, visibility 0s 0s !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.14)) !important;
+  box-shadow: 0 16px 36px rgba(0, 0, 0, 0.48) !important;
+  max-height: calc(100vh - 120px) !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  transition: transform 320ms cubic-bezier(0.16, 1, 0.3, 1), opacity 240ms ease, visibility 240ms !important;
+  transform-origin: bottom right !important;
+}
+
+.control-cluster::-webkit-scrollbar {
+  display: none !important;
+}
+
+.control-cluster.is-collapsed {
+  transform: translateX(120px) scale(0.92) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  visibility: hidden !important;
+}
+
+.control-cluster:not(.is-collapsed) {
+  transform: translateX(0) scale(1) !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
 }
 
 [data-theme="light"] .control-cluster {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.94) !important;
   border-color: rgba(0, 0, 0, 0.08) !important;
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* Floating Map Tools Summon Button */
+.toolbar-toggle-btn {
+  position: fixed !important;
+  bottom: 24px !important;
+  right: 20px !important;
+  z-index: 1002 !important;
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background: var(--glass-bg, rgba(15, 23, 42, 0.9)) !important;
+  backdrop-filter: blur(28px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
+  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.16)) !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45) !important;
+  color: var(--text-primary) !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease !important;
+}
+
+[data-theme="light"] .toolbar-toggle-btn {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-color: rgba(0, 0, 0, 0.12) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14) !important;
+}
+
+.toolbar-toggle-btn:hover {
+  transform: scale(1.08) !important;
+  border-color: var(--apple-blue, #0071e3) !important;
+  box-shadow: 0 14px 34px rgba(0, 113, 227, 0.38) !important;
+}
+
+.toolbar-toggle-btn:active {
+  transform: scale(0.92) !important;
+}
+
+.toolbar-toggle-btn.is-active {
+  background: rgba(0, 113, 227, 0.95) !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.4) !important;
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.35), 0 12px 30px rgba(0, 113, 227, 0.5) !important;
+}
+
+.toolbar-toggle-btn .icon-close {
+  display: none !important;
+}
+.toolbar-toggle-btn.is-active .icon-close {
+  display: block !important;
+}
+.toolbar-toggle-btn.is-active .icon-tools {
+  display: none !important;
+}
+
+.cluster-btn-close {
+  color: var(--text-secondary) !important;
+  transition: color 0.18s ease, transform 0.18s var(--spring-curve) !important;
+}
+.cluster-btn-close:hover {
+  color: #ef4444 !important;
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+
+@media (max-width: 768px) {
+  .toolbar-toggle-btn {
+    bottom: 145px !important;
+    right: 14px !important;
+    width: 44px !important;
+    height: 44px !important;
+  }
+  .control-cluster {
+    bottom: 198px !important;
+    right: 14px !important;
+    max-height: calc(100vh - 220px) !important;
+  }
 }
 
 /* 2. Executive Brand Header */
@@ -1491,7 +1594,6 @@ body.sidebar-collapsed #sidebar {
   box-shadow: 0 16px 42px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.16) !important;
   border-radius: 20px !important;
   padding: 6px !important;
-  transform: translateZ(0);
 }
 .cluster-btn {
   border-radius: 12px !important;
@@ -2465,6 +2567,7 @@ body.welcome-active #sidebar,
 body.welcome-active #btn-show-deck,
 body.welcome-active #btn-restore-deck,
 body.welcome-active .control-cluster,
+body.welcome-active #btn-toggle-toolbar,
 body.welcome-active #telemetry-hud,
 body.welcome-active #map-coords-badge,
 body.welcome-active .dynamic-island-nav,
@@ -2474,6 +2577,7 @@ body:has(#welcome-overlay:not(.is-hidden)) #sidebar,
 body:has(#welcome-overlay:not(.is-hidden)) #btn-show-deck,
 body:has(#welcome-overlay:not(.is-hidden)) #btn-restore-deck,
 body:has(#welcome-overlay:not(.is-hidden)) .control-cluster,
+body:has(#welcome-overlay:not(.is-hidden)) #btn-toggle-toolbar,
 body:has(#welcome-overlay:not(.is-hidden)) #telemetry-hud,
 body:has(#welcome-overlay:not(.is-hidden)) #map-coords-badge,
 body:has(#welcome-overlay:not(.is-hidden)) .dynamic-island-nav,
