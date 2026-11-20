@@ -2559,7 +2559,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v41" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v42" />
 </head>
 <body class="welcome-active">
 
@@ -4339,7 +4339,7 @@
             MapEngine.updateVehicle(fix);
             if (MapEngine.tracker) MapEngine.tracker.feedDirectFix(fix);
 
-            if (STATE.isCameraFollowing && MapEngine.map) {
+            if (STATE.isCameraFollowing && !STATE.selectedPlace && !STATE.selectedLot && !STATE.activeTrip && MapEngine.map) {
               const targetZoom = accMeters > 100 ? 16.0 : 17.2;
               MapEngine.map.flyTo({
                 center: [loc.lon, loc.lat],
@@ -6117,11 +6117,14 @@
             updateCompassState();
           });
 
-          // User map interaction breaks camera follow during navigation
+          // User map interaction breaks camera follow
           const onUserPan = () => {
-            if (STATE.activeTrip && STATE.isCameraFollowing) {
+            if (STATE.isCameraFollowing) {
               STATE.isCameraFollowing = false;
-              document.getElementById('btn-recenter-nav').classList.add('visible');
+              const myLocBtn = document.getElementById('btn-my-location');
+              if (myLocBtn) myLocBtn.classList.remove('active-blue', 'active-pulse');
+              const recenterBtn = document.getElementById('btn-recenter-nav');
+              if (recenterBtn && STATE.activeTrip) recenterBtn.classList.add('visible');
             }
           };
 
@@ -8156,6 +8159,31 @@
         results: [],
         lastQuery: '',
 
+        closeAutocomplete() {
+          clearTimeout(this.debounceTimer);
+          this.selectedIndex = -1;
+          const list = document.getElementById('search-autocomplete-box');
+          if (list) {
+            list.classList.remove('open');
+            list.style.display = 'none';
+            list.innerHTML = '';
+          }
+          const wList = document.getElementById('welcome-autocomplete-box');
+          if (wList) {
+            wList.classList.remove('open');
+            wList.style.display = 'none';
+            wList.innerHTML = '';
+          }
+          const input = document.getElementById('search-input');
+          if (input && document.activeElement === input) {
+            input.blur();
+          }
+          const wInput = document.getElementById('welcome-search-input');
+          if (wInput && document.activeElement === wInput) {
+            wInput.blur();
+          }
+        },
+
         init() {
           window.SearchEngine = this;
           const input = document.getElementById('search-input');
@@ -8170,10 +8198,11 @@
 
             clearTimeout(this.debounceTimer);
             if (query.length < 2) {
-              list.classList.remove('open');
+              this.closeAutocomplete();
               return;
             }
 
+            if (list) list.style.display = '';
             this.debounceTimer = setTimeout(() => {
               this.fetchSuggestions(query);
             }, 200);
@@ -8183,6 +8212,7 @@
             triggerBtn.onclick = () => {
               const query = input.value.trim();
               if (query.length >= 2) {
+                this.closeAutocomplete();
                 this.fetchSuggestions(query, true);
               }
             };
@@ -8191,7 +8221,7 @@
           clearBtn.onclick = () => {
             input.value = '';
             clearBtn.classList.remove('visible');
-            list.classList.remove('open');
+            this.closeAutocomplete();
             MapEngine.clearDestinationMarker();
             input.focus();
           };
@@ -8212,20 +8242,25 @@
               }
             } else if (e.key === 'Enter') {
               e.preventDefault();
-              if (this.selectedIndex >= 0 && this.results[this.selectedIndex]) {
-                this.selectResult(this.results[this.selectedIndex]);
-              } else if (this.results.length > 0) {
-                this.selectResult(this.results[0]);
+              const hasItems = this.results && this.results.length > 0;
+              const chosen = (this.selectedIndex >= 0 && this.results[this.selectedIndex])
+                ? this.results[this.selectedIndex]
+                : (hasItems ? this.results[0] : null);
+
+              this.closeAutocomplete();
+              if (chosen) {
+                this.selectResult(chosen);
               } else if (input.value.trim().length >= 2) {
                 this.fetchSuggestions(input.value.trim(), true);
               }
             } else if (e.key === 'Escape') {
-              list.classList.remove('open');
+              this.closeAutocomplete();
             }
           });
 
           input.addEventListener('focus', () => {
             if (!input.value.trim()) {
+              if (list) list.style.display = '';
               this.showRecentSearches();
             }
           });
@@ -8233,7 +8268,7 @@
           // Close dropdown on outside click
           document.addEventListener('click', (e) => {
             if (!e.target.closest('.search-wrapper')) {
-              list.classList.remove('open');
+              this.closeAutocomplete();
             }
           });
         },
@@ -8352,20 +8387,29 @@
             console.warn("[SearchEngine] Search notice:", e);
             this.results = [];
           }
+
+          if (selectFirstOnFetch) {
+            this.closeAutocomplete();
+            if (this.results && this.results.length > 0) {
+              this.selectResult(this.results[0]);
+            } else {
+              ParkingApp.showToast(`No places found for "${query}"`, 'warning', 2500);
+            }
+            return;
+          }
+
           this.renderAutocomplete();
 
           // Render Google Maps category POI markers on vector map
           if (MapEngine.map && typeof MapEngine.renderPoiMarkers === 'function' && this.results.length > 0) {
             MapEngine.renderPoiMarkers(this.results);
           }
-
-          if (selectFirstOnFetch && this.results.length > 0) {
-            this.selectResult(this.results[0]);
-          }
         },
 
         renderAutocomplete() {
           const list = document.getElementById('search-autocomplete-box');
+          if (!list) return;
+          list.style.display = '';
           list.innerHTML = '';
           this.selectedIndex = -1;
 
@@ -8419,7 +8463,11 @@
               </div>
             `;
 
-            row.onclick = () => this.selectResult(item);
+            row.onclick = (e) => {
+              e.stopPropagation();
+              this.closeAutocomplete();
+              this.selectResult(item);
+            };
             list.appendChild(row);
           });
 
@@ -8438,15 +8486,19 @@
 
         selectResult(rawItem) {
           try {
-            const list = document.getElementById('search-autocomplete-box');
-            if (list) list.classList.remove('open');
-            const wList = document.getElementById('welcome-autocomplete-box');
-            if (wList) wList.classList.remove('open');
+            this.closeAutocomplete();
+            this.results = [];
 
             const input = document.getElementById('search-input');
-            if (input) input.value = rawItem.name;
+            if (input) {
+              input.value = rawItem.name;
+              input.blur();
+            }
             const wInput = document.getElementById('welcome-search-input');
-            if (wInput) wInput.value = rawItem.name;
+            if (wInput) {
+              wInput.value = rawItem.name;
+              wInput.blur();
+            }
 
             if (rawItem && rawItem.name) this.saveRecentSearch(rawItem.name);
 
@@ -8457,22 +8509,37 @@
               AIScannerEngine.clear();
             }
 
+            // CRITICAL: Stop auto-following camera so whole path stays visible!
+            STATE.isCameraFollowing = false;
+            const myLocBtn = document.getElementById('btn-my-location');
+            if (myLocBtn) myLocBtn.classList.remove('active-blue', 'active-pulse');
+
             // Drop high-visibility destination pin
             if (MapEngine && MapEngine.setDestinationMarker) {
               MapEngine.setDestinationMarker(item);
             }
 
-            // Fly map smoothly to place coordinates
-            if (MapEngine.map && typeof MapEngine.map.flyTo === 'function') {
+            // Immediately frame both user device location and destination so whole path is visible
+            const uLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
+            const uLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
+
+            if (MapEngine.map && typeof maplibregl !== 'undefined') {
               try {
-                MapEngine.map.flyTo({
-                  center: [item.lon, item.lat],
-                  zoom: 15.5,
-                  pitch: 35,
-                  duration: 900
+                const initBounds = new maplibregl.LngLatBounds([uLng, uLat], [uLng, uLat]);
+                initBounds.extend([item.lon, item.lat]);
+
+                const isDesktop = window.innerWidth > 768;
+                const sidebarEl = document.getElementById('sidebar');
+                const isCollapsed = sidebarEl && sidebarEl.classList.contains('is-collapsed');
+                const padLeft = (isDesktop && !isCollapsed) ? 420 : 60;
+
+                MapEngine.map.fitBounds(initBounds, {
+                  padding: { top: 110, bottom: 90, left: padLeft, right: 60 },
+                  maxZoom: 15.5,
+                  duration: 800
                 });
               } catch (e) {
-                console.warn("[SearchEngine] flyTo notice:", e);
+                console.warn("[SearchEngine] fitBounds notice:", e);
               }
             }
 
@@ -8635,15 +8702,16 @@
             }
           };
 
-          // Auto-draw driving route to selected destination so user sees the way immediately
-          if (STATE.userLocation && STATE.userLocation.lat && MapEngine.map && typeof MapEngine.map.getSource === 'function') {
+          // Auto-draw driving route to selected destination so user sees the whole way immediately
+          if (MapEngine.map && typeof MapEngine.map.getSource === 'function') {
             const destObj = {
               id: item.lot_id || ('place-' + Date.now()),
               name: item.name,
               lat: item.lat,
-              lon: item.lon
+              lon: item.lon,
+              address: item.address
             };
-            NavigationEngine.loadRoute(STATE.userLocation, destObj).catch(() => {});
+            NavigationEngine.loadRoute({ lat: uLat, lng: uLng }, destObj).catch(() => {});
           }
 
           ParkingApp.loadNearbyLots(item.lat, item.lon).then(() => {
@@ -9006,22 +9074,29 @@
           // Fit bounds to show entire route from device location to destination
           if (MapEngine.map && coords.length > 1) {
             try {
-              const bounds = coords.reduce((b, pt) => {
+              STATE.isCameraFollowing = false;
+              const myLocBtn = document.getElementById('btn-my-location');
+              if (myLocBtn) myLocBtn.classList.remove('active-blue', 'active-pulse');
+
+              const bounds = new maplibregl.LngLatBounds();
+              coords.forEach((pt) => {
                 if (Number.isFinite(pt[0]) && Number.isFinite(pt[1])) {
-                  return b.extend(pt);
+                  bounds.extend(pt);
                 }
-                return b;
-              }, new maplibregl.LngLatBounds(coords[0], coords[0]));
+              });
+
+              if (Number.isFinite(origLon) && Number.isFinite(origLat)) bounds.extend([origLon, origLat]);
+              if (Number.isFinite(destLon) && Number.isFinite(destLat)) bounds.extend([destLon, destLat]);
 
               const isDesktop = window.innerWidth > 768;
               const sidebarEl = document.getElementById('sidebar');
               const isCollapsed = sidebarEl && sidebarEl.classList.contains('is-collapsed');
-              const padLeft = (isDesktop && !isCollapsed) ? 420 : 70;
+              const padLeft = (isDesktop && !isCollapsed) ? 420 : 60;
 
               MapEngine.map.fitBounds(bounds, {
-                padding: { top: 120, bottom: 90, left: padLeft, right: 70 },
-                maxZoom: 16.5,
-                duration: 700
+                padding: { top: 120, bottom: 90, left: padLeft, right: 60 },
+                maxZoom: 15.5,
+                duration: 800
               });
             } catch (e) {
               console.warn("fitBounds notice:", e);
@@ -10181,7 +10256,7 @@
               MapEngine.updateVehicle(updatedFix);
             }
 
-            if (STATE.isCameraFollowing && MapEngine.map) {
+            if (STATE.isCameraFollowing && !STATE.selectedPlace && !STATE.selectedLot && !STATE.activeTrip && MapEngine.map) {
               MapEngine.map.easeTo({
                 center: [lng, lat],
                 duration: 500
@@ -10555,8 +10630,9 @@
 
         pickDestination(item) {
           if (navigator.vibrate) navigator.vibrate(8);
-          const wList = document.getElementById('welcome-autocomplete-box');
-          if (wList) wList.classList.remove('open');
+          if (SearchEngine && SearchEngine.closeAutocomplete) {
+            SearchEngine.closeAutocomplete();
+          }
           this.hide();
           SearchEngine.selectResult(item);
         },
