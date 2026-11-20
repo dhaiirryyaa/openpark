@@ -684,8 +684,9 @@
       box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
     .search-icon-left {
-      position: absolute;
-      left: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       pointer-events: none;
       color: var(--color-text-tertiary);
     }
@@ -2556,7 +2557,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v39" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v40" />
 </head>
 <body class="welcome-active">
 
@@ -2673,9 +2674,9 @@
         <svg class="brand-logo-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="2.2"/><path d="M9 17V7h4.5a3.5 3.5 0 0 1 0 7H9" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
       </div>
       <span class="island-brand-text">OpenPark</span>
-      <button id="btn-traccar-pill" class="header-status-pill pressable" title="Live GPS Telemetry (Traccar Engine)">
+      <button id="btn-traccar-pill" class="header-status-pill pressable" title="Live Device GPS Status">
         <span class="gps-pulse-dot" id="header-gps-dot"></span>
-        <span id="traccar-pill-text">Locating GPS...</span>
+        <span id="traccar-pill-text">Live GPS</span>
       </button>
     </div>
 
@@ -2701,9 +2702,6 @@
           <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
         </svg>
       </button>
-      <button id="btn-open-welcome" class="search-welcome-btn pressable cursor-target" data-cursor-label="Where to?" title="Open Quick Destination Picker">
-        <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-      </button>
 
       <!-- Autocomplete Suggestions -->
       <div id="search-autocomplete-box" class="autocomplete-list" role="listbox"></div>
@@ -2711,6 +2709,9 @@
 
     <!-- Island Actions -->
     <div class="island-actions">
+      <button id="btn-open-welcome" class="header-icon-btn pressable cursor-target" data-cursor-label="Where to?" title="Quick Destinations & Neighborhoods">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+      </button>
       <button id="btn-sidebar-theme" class="header-icon-btn pressable" title="Toggle Theme (Cyber Obsidian / Arctic Quartz)" aria-label="Toggle Theme">
         <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
@@ -9352,10 +9353,10 @@
             });
           }
 
-          // Traccar Status Pill & Modal Updates
+          // Live GPS Status Pill & Modal Updates
           const traccarPillText = document.getElementById('traccar-pill-text');
           if (traccarPillText) {
-            traccarPillText.innerText = (pos.speed > 2) ? "Traccar: Moving" : "Traccar: Online";
+            traccarPillText.innerText = STATE.isManualLocation ? "Pinned Spot" : ((pos.speed > 2) ? "Live GPS" : "GPS Online");
           }
           const trSpeed = document.getElementById('traccar-modal-speed');
           if (trSpeed) trSpeed.innerText = `${Math.round(pos.speed || 0)} km/h`;
@@ -10977,14 +10978,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261120_v39"></script>
-  <script src="/app/js/animated-list.js?v=20261120_v39"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v39"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v39"></script>
+  <script type="module" src="/app/js/locate.js?v=20261120_v40"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v40"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v40"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v40"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v39', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v40', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
