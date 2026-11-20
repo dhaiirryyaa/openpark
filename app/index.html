@@ -2392,7 +2392,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v35" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v36" />
 </head>
 <body class="welcome-active">
 
@@ -3757,9 +3757,16 @@
         const ok = (p) => {
           const { latitude: lat, longitude: lon, accuracy } = p.coords;
           if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+          const now = p.timestamp || Date.now();
+          // Prevent degradation: if we already have a recent high-accuracy fix, reject sudden jumps to coarse
+          if (LOC.lat != null && LOC.accuracy != null && (now - LOC.ts < 45000)) {
+            if (accuracy > LOC.accuracy * 2 && accuracy > 120) {
+              return;
+            }
+          }
           // NOTE: no 40 m accuracy gate here. Laptops / indoor Wi-Fi give 100-2000 m, and rejecting
           // those is what makes an app "never find me". Show the accuracy instead; keep the strict filter for live tracking.
-          setLoc({ state: accuracy <= 100 ? 'precise' : 'coarse', lat, lon, accuracy, ts: p.timestamp });
+          setLoc({ state: accuracy <= 100 ? 'precise' : 'coarse', lat, lon, accuracy, ts: now });
         };
         const fail = (e) => setLoc({ state: e.code === 1 ? 'denied' : e.code === 2 ? 'unavailable' : 'timeout' });
 
@@ -3770,9 +3777,9 @@
           navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 60000 });
         }, { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
 
-        // 3) keep refining; later fixes replace the first one
+        // 3) keep refining; later fixes replace the first one (maximumAge: 0 prevents stale cache)
         _locWatchId = navigator.geolocation.watchPosition(ok, (e) => { if (e.code === 1) fail(e); },
-          { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+          { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
       }
 
       function stopLocating() {
@@ -3915,6 +3922,11 @@
         }
 
         if (loc.state === 'precise' || loc.state === 'coarse') {
+          // Rule: If user manually placed or dragged their pin, DO NOT let background GPS overwrite it!
+          if (STATE.isManualLocation) {
+            return;
+          }
+
           const isFirstFix = !STATE.hasRealDeviceFix;
           const accMeters = Math.round(loc.accuracy || 20);
 
@@ -3931,7 +3943,6 @@
 
           STATE.userLocation = fix;
           STATE.hasRealDeviceFix = true;
-          STATE.isManualLocation = false;
           STATE.bestFixAccuracy = accMeters;
           STATE.isTrackingLocation = true;
 
@@ -3949,7 +3960,7 @@
             GPSMonitor.onValidFix(accMeters);
           }
           if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
-          if (pillText) pillText.innerText = `Live GPS (±${accMeters}m)`;
+          if (pillText) pillText.innerText = loc.state === 'precise' ? `Live GPS (±${accMeters}m)` : `Approx GPS (±${accMeters}m)`;
 
           // Rule: The map ONLY moves when we have a REAL fix!
           // Browser gives {latitude, longitude}; MapLibre wants [lon, lat].
@@ -3958,9 +3969,10 @@
             if (MapEngine.tracker) MapEngine.tracker.feedDirectFix(fix);
 
             if (STATE.isCameraFollowing && MapEngine.map) {
+              const targetZoom = accMeters > 400 ? 15.0 : (loc.state === 'precise' ? 17.2 : 16.0);
               MapEngine.map.flyTo({
                 center: [loc.lon, loc.lat],
-                zoom: loc.state === 'precise' ? 17.2 : 16.0,
+                zoom: targetZoom,
                 duration: isFirstFix ? 750 : 400
               });
             }
@@ -3979,8 +3991,8 @@
           if (isFirstFix && typeof ParkingApp !== 'undefined') {
             const label = loc.state === 'precise'
               ? `Live GPS: [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`
-              : `Live Location (Wi-Fi): [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`;
-            ParkingApp.showToast(label, loc.state === 'precise' ? 'success' : 'info', 3200);
+              : `Location approximate (±${accMeters}m). Drag red pin to adjust exact spot.`;
+            ParkingApp.showToast(label, loc.state === 'precise' ? 'success' : 'info', 4000);
           }
           return;
         }
@@ -5651,6 +5663,7 @@
 
           this.map.on('load', () => {
             this.setupRouteSource();
+            this.setupAccuracyCircleSource();
             this.createVehicleMarker();
             if (this.map) this.map.resize();
             setTimeout(() => { if (this.map) this.map.resize(); }, 250);
@@ -6184,6 +6197,71 @@
           }
         },
 
+        setupAccuracyCircleSource() {
+          if (!this.map) return;
+          if (!this.map.getSource('vehicle-accuracy-circle')) {
+            this.map.addSource('vehicle-accuracy-circle', {
+              type: 'geojson',
+              data: { type: 'FeatureCollection', features: [] }
+            });
+          }
+          if (!this.map.getLayer('vehicle-accuracy-fill')) {
+            this.map.addLayer({
+              id: 'vehicle-accuracy-fill',
+              type: 'fill',
+              source: 'vehicle-accuracy-circle',
+              paint: {
+                'fill-color': '#0071e3',
+                'fill-opacity': 0.12
+              }
+            });
+          }
+          if (!this.map.getLayer('vehicle-accuracy-stroke')) {
+            this.map.addLayer({
+              id: 'vehicle-accuracy-stroke',
+              type: 'line',
+              source: 'vehicle-accuracy-circle',
+              paint: {
+                'line-color': '#0071e3',
+                'line-width': 1.5,
+                'line-opacity': 0.55
+              }
+            });
+          }
+        },
+
+        updateAccuracyCircle(lng, lat, radiusMeters) {
+          if (!this.map || !this.map.getSource('vehicle-accuracy-circle')) return;
+          const src = this.map.getSource('vehicle-accuracy-circle');
+          if (!Number.isFinite(lng) || !Number.isFinite(lat) || !radiusMeters || radiusMeters < 15 || STATE.isManualLocation) {
+            src.setData({ type: 'FeatureCollection', features: [] });
+            return;
+          }
+          // Cap visual circle to max 2000m so it doesn't obscure the entire country
+          const rad = Math.min(2000, Math.max(15, radiusMeters));
+          const coords = [];
+          const points = 64;
+          const distanceX = rad / (111320 * Math.cos((lat * Math.PI) / 180));
+          const distanceY = rad / 110574;
+          for (let i = 0; i < points; i++) {
+            const theta = (i / points) * (2 * Math.PI);
+            const x = distanceX * Math.cos(theta);
+            const y = distanceY * Math.sin(theta);
+            coords.push([lng + x, lat + y]);
+          }
+          coords.push(coords[0]);
+          src.setData({
+            type: 'FeatureCollection',
+            features: [{
+              type: 'Feature',
+              geometry: {
+                type: 'Polygon',
+                coordinates: [coords]
+              }
+            }]
+          });
+        },
+
         async setupOverpassLayers() {
           // Parking lot outlines and toll markers are hidden to keep map clean like Google Maps
           this.clearPoiMarkers();
@@ -6474,15 +6552,21 @@
             const screenHeading = (((pos.heading || 0) - mapBearing + 360) % 360);
             rotator.style.transform = `rotate(${screenHeading}deg)`;
           }
+
+          // Render real-world geographic accuracy uncertainty circle
+          this.updateAccuracyCircle(lng, lat, pos.accuracy);
+
           const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
           if (speedPill) {
             const spd = Math.round(pos.speed || 0);
             if (spd > 1) {
               speedPill.innerText = `${spd} km/h`;
             } else if (STATE.isManualLocation) {
-              speedPill.innerText = 'Pinned Spot';
+              speedPill.innerText = 'Pinned Spot (Exact)';
+            } else if (pos.accuracy && pos.accuracy > 50) {
+              speedPill.innerText = `±${Math.round(pos.accuracy)}m • Drag to adjust`;
             } else if (STATE.hasRealDeviceFix) {
-              speedPill.innerText = 'Device Location';
+              speedPill.innerText = `Device Location (±${Math.round(pos.accuracy || 10)}m)`;
             } else {
               speedPill.innerText = 'Locating GPS...';
             }
@@ -9040,14 +9124,18 @@
 
           if (LOC.lat && LOC.lon && (LOC.state === 'precise' || LOC.state === 'coarse')) {
             if (followCamera && MapEngine.map) {
+              const targetZoom = (LOC.accuracy && LOC.accuracy > 400) ? 15.0 : (LOC.state === 'precise' ? 17.2 : 16.0);
               MapEngine.map.flyTo({
                 center: [LOC.lon, LOC.lat],
-                zoom: LOC.state === 'precise' ? 17.2 : 16.0,
+                zoom: targetZoom,
                 duration: 650
               });
             }
             if (notify) {
-              ParkingApp.showToast(`Live GPS: [${LOC.lat.toFixed(5)}, ${LOC.lon.toFixed(5)}] ±${Math.round(LOC.accuracy)}m`, "success", 2500);
+              const msg = LOC.state === 'precise'
+                ? `Live GPS: [${LOC.lat.toFixed(5)}, ${LOC.lon.toFixed(5)}] ±${Math.round(LOC.accuracy)}m`
+                : `Location approximate (±${Math.round(LOC.accuracy)}m). Drag red pin to adjust exact spot.`;
+              ParkingApp.showToast(msg, LOC.state === 'precise' ? 'success' : 'info', 3500);
             }
           }
 
@@ -9361,9 +9449,9 @@
           }
 
           if (source === 'drag') {
-            this.showToast(`Location set to [${lat.toFixed(5)}, ${lng.toFixed(5)}]`, "success", 2000);
+            this.showToast(`Pinned Spot: [${lat.toFixed(5)}, ${lng.toFixed(5)}] (Locked)`, "success", 2500);
           } else if (source === 'shift-click' || source === 'contextmenu' || source === 'manual') {
-            this.showToast(`Pointer placed at [${lat.toFixed(5)}, ${lng.toFixed(5)}]`, "success", 2000);
+            this.showToast(`Pinned Spot: [${lat.toFixed(5)}, ${lng.toFixed(5)}] (Locked)`, "success", 2500);
           }
         },
 
@@ -10418,14 +10506,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261120_v35"></script>
-  <script src="/app/js/animated-list.js?v=20261120_v35"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v35"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v35"></script>
+  <script type="module" src="/app/js/locate.js?v=20261120_v36"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v36"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v36"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v36"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v35', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v36', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

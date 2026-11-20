@@ -25,9 +25,16 @@ export async function startLocating({ timeoutMs = 12000 } = {}) {
   const ok = (p) => {
     const { latitude: lat, longitude: lon, accuracy } = p.coords;
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const now = p.timestamp || Date.now();
+    // Prevent degradation: if we already have a recent high-accuracy fix, reject sudden jumps to coarse
+    if (LOC.lat != null && LOC.accuracy != null && (now - LOC.ts < 45000)) {
+      if (accuracy > LOC.accuracy * 2 && accuracy > 120) {
+        return;
+      }
+    }
     // NOTE: no 40 m accuracy gate here. Laptops / indoor Wi-Fi give 100-2000 m, and rejecting
     // those is what makes an app "never find me". Show the accuracy instead; keep the strict filter for live tracking.
-    set({ state: accuracy <= 100 ? 'precise' : 'coarse', lat, lon, accuracy, ts: p.timestamp });
+    set({ state: accuracy <= 100 ? 'precise' : 'coarse', lat, lon, accuracy, ts: now });
   };
   const fail = (e) => set({ state: e.code === 1 ? 'denied' : e.code === 2 ? 'unavailable' : 'timeout' });
 
@@ -38,9 +45,9 @@ export async function startLocating({ timeoutMs = 12000 } = {}) {
     navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 60000 });
   }, { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
 
-  // 3) keep refining; later fixes replace the first one
+  // 3) keep refining; later fixes replace the first one (maximumAge: 0 prevents stale cache)
   watchId = navigator.geolocation.watchPosition(ok, (e) => { if (e.code === 1) fail(e); },
-    { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
 }
 
 export function stopLocating() {
