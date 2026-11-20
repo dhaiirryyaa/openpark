@@ -2392,7 +2392,7 @@
       #btn-print-receipt, #btn-close-receipt-sheet, #modal-receipt-close { display: none !important; }
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v34" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261120_v35" />
 </head>
 <body class="welcome-active">
 
@@ -3730,31 +3730,87 @@
       window.renderCategorySvgIcon = renderCategorySvgIcon;
 
       // --------------------------------------------------------------------------
-      // 5.1 Config & Constants
+      // 5.1 Honest Locator Engine (locate.js)
+      // Rule: the map only moves when we have a REAL fix. No default spot, no IP guess, no random lot.
+      // Coordinates: browser gives {latitude, longitude}; MapLibre wants [lon, lat].
+      // --------------------------------------------------------------------------
+      const LOC = { state: 'idle', lat: null, lon: null, accuracy: null, ts: 0 };
+      // state: idle | locating | precise (<=100 m) | coarse (>100 m) | denied | unavailable | timeout | insecure
+      const _locListeners = new Set();
+      const onLocation = (fn) => { _locListeners.add(fn); return () => _locListeners.delete(fn); };
+      const setLoc = (patch) => { Object.assign(LOC, patch); _locListeners.forEach((f) => f({ ...LOC })); };
+
+      let _locWatchId = null;
+
+      async function startLocating({ timeoutMs = 12000 } = {}) {
+        if (!('geolocation' in navigator)) return setLoc({ state: 'unavailable' });
+        if (!window.isSecureContext) return setLoc({ state: 'insecure' }); // geolocation needs HTTPS or localhost
+
+        try { // react if the user flips the permission in browser settings
+          const perm = await navigator.permissions?.query({ name: 'geolocation' });
+          if (perm) perm.onchange = () => (perm.state === 'granted' ? startLocating() : perm.state === 'denied' && setLoc({ state: 'denied' }));
+        } catch { /* Permissions API not available (older Safari) – fine */ }
+
+        setLoc({ state: 'locating' });
+        if (_locWatchId != null) navigator.geolocation.clearWatch(_locWatchId);
+
+        const ok = (p) => {
+          const { latitude: lat, longitude: lon, accuracy } = p.coords;
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+          // NOTE: no 40 m accuracy gate here. Laptops / indoor Wi-Fi give 100-2000 m, and rejecting
+          // those is what makes an app "never find me". Show the accuracy instead; keep the strict filter for live tracking.
+          setLoc({ state: accuracy <= 100 ? 'precise' : 'coarse', lat, lon, accuracy, ts: p.timestamp });
+        };
+        const fail = (e) => setLoc({ state: e.code === 1 ? 'denied' : e.code === 2 ? 'unavailable' : 'timeout' });
+
+        // 1) fast first answer, GPS preferred
+        navigator.geolocation.getCurrentPosition(ok, (e) => {
+          if (e.code === 1) return fail(e);
+          // 2) retry once with network/Wi-Fi location (works on desktops without GPS)
+          navigator.geolocation.getCurrentPosition(ok, fail, { enableHighAccuracy: false, timeout: timeoutMs, maximumAge: 60000 });
+        }, { enableHighAccuracy: true, timeout: timeoutMs, maximumAge: 0 });
+
+        // 3) keep refining; later fixes replace the first one
+        _locWatchId = navigator.geolocation.watchPosition(ok, (e) => { if (e.code === 1) fail(e); },
+          { enableHighAccuracy: true, maximumAge: 5000, timeout: 20000 });
+      }
+
+      function stopLocating() {
+        if (_locWatchId != null) navigator.geolocation.clearWatch(_locWatchId);
+        _locWatchId = null;
+      }
+
+      const LOCATION_MESSAGES = {
+        locating: 'Finding your location…',
+        coarse: 'Location is approximate – step outside or enable GPS for better accuracy.',
+        denied: 'Location is blocked. Allow it in your browser’s site settings, or search for a place.',
+        unavailable: 'Couldn’t get a location fix. Turn on device location or search for a place.',
+        timeout: 'Location is taking too long. Try again or search for a place.',
+        insecure: 'Location needs a secure (HTTPS) connection.',
+      };
+
+      const OpenParkLocate = {
+        LOC,
+        onLocation,
+        startLocating,
+        stopLocating,
+        LOCATION_MESSAGES
+      };
+      window.OpenParkLocate = OpenParkLocate;
+      window.LOC = LOC;
+
+      // --------------------------------------------------------------------------
+      // 5.1.1 Config & Constants
       // --------------------------------------------------------------------------
       // Clean out legacy personal/test coordinates & stale default city coordinates from localStorage
       try {
         localStorage.removeItem('openpark_debrecan_coords');
+        localStorage.removeItem('openpark_bengaluru_coords');
+        localStorage.removeItem('openpark_last_device_fix');
       } catch {}
 
       let lastKnownFix = null;
       let isManualSaved = false;
-      try {
-        const rawFix = localStorage.getItem('openpark_last_device_fix');
-        if (rawFix) {
-          const parsedFix = JSON.parse(rawFix);
-          // Purge if matches default ISP/city center or if older than 24h or coarse > 200m
-          const isDefault = Math.abs(parsedFix.lat - 12.97160) < 0.003 && Math.abs(parsedFix.lng - 77.59460) < 0.003;
-          const isIpDefault = Math.abs(parsedFix.lat - 12.97194) < 0.003 && Math.abs(parsedFix.lng - 77.59368) < 0.003;
-          const isRecent = parsedFix.ts && (Date.now() - parsedFix.ts < 86400000);
-          if (parsedFix && !isDefault && !isIpDefault && isRecent && Number.isFinite(parsedFix.lat) && Number.isFinite(parsedFix.lng)) {
-            lastKnownFix = parsedFix;
-            isManualSaved = parsedFix.isManual || false;
-          } else {
-            localStorage.removeItem('openpark_last_device_fix');
-          }
-        }
-      } catch {}
 
       const CONFIG = {
         DEFAULT_COORDS: [77.59460, 12.97160],
@@ -3787,16 +3843,16 @@
       // 5.2 Application State
       // --------------------------------------------------------------------------
       const STATE = {
-        hasRealDeviceFix: !!lastKnownFix,
-        bestFixAccuracy: lastKnownFix ? (lastKnownFix.accuracy || 25) : Infinity,
-        isManualLocation: isManualSaved,
+        hasRealDeviceFix: false,
+        bestFixAccuracy: Infinity,
+        isManualLocation: false,
         userLocation: {
-          lng: lastKnownFix ? lastKnownFix.lng : CONFIG.DEFAULT_COORDS[0],
-          lat: lastKnownFix ? lastKnownFix.lat : CONFIG.DEFAULT_COORDS[1],
-          heading: lastKnownFix ? (lastKnownFix.heading || 0) : 0,
+          lng: null,
+          lat: null,
+          heading: 0,
           speed: 0,
           altitude: 920,
-          accuracy: lastKnownFix ? (lastKnownFix.accuracy || 500) : 500
+          accuracy: null
         },
         targetLocation: null,
         isTrackingLocation: false,
@@ -3842,6 +3898,102 @@
         localStorage.removeItem('openpark_mapbox_token');
         localStorage.removeItem('openpark_mappls_key');
       } catch (e) {}
+
+      // Connect honest locator (locate.js) to OpenPark state & MapLibre
+      onLocation((loc) => {
+        const locBtn = document.getElementById('btn-my-location');
+        const pillText = document.getElementById('traccar-pill-text');
+
+        if (loc.state === 'locating') {
+          if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
+          if (pillText) pillText.innerText = 'Finding GPS…';
+          const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
+          if (speedPill && !STATE.hasRealDeviceFix && !STATE.isManualLocation) {
+            speedPill.innerText = 'Finding your location…';
+          }
+          return;
+        }
+
+        if (loc.state === 'precise' || loc.state === 'coarse') {
+          const isFirstFix = !STATE.hasRealDeviceFix;
+          const accMeters = Math.round(loc.accuracy || 20);
+
+          const fix = {
+            lat: loc.lat,
+            lng: loc.lon,
+            speed: 0,
+            speedMs: 0,
+            heading: STATE.userLocation?.heading || 0,
+            altitude: 920,
+            accuracy: accMeters,
+            timestamp: loc.ts || Date.now()
+          };
+
+          STATE.userLocation = fix;
+          STATE.hasRealDeviceFix = true;
+          STATE.isManualLocation = false;
+          STATE.bestFixAccuracy = accMeters;
+          STATE.isTrackingLocation = true;
+
+          try {
+            localStorage.setItem('openpark_last_device_fix', JSON.stringify({
+              lat: fix.lat,
+              lng: fix.lng,
+              heading: fix.heading,
+              accuracy: fix.accuracy,
+              ts: Date.now()
+            }));
+          } catch {}
+
+          if (typeof GPSMonitor !== 'undefined' && GPSMonitor.onValidFix) {
+            GPSMonitor.onValidFix(accMeters);
+          }
+          if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
+          if (pillText) pillText.innerText = `Live GPS (±${accMeters}m)`;
+
+          // Rule: The map ONLY moves when we have a REAL fix!
+          // Browser gives {latitude, longitude}; MapLibre wants [lon, lat].
+          if (typeof MapEngine !== 'undefined') {
+            MapEngine.updateVehicle(fix);
+            if (MapEngine.tracker) MapEngine.tracker.feedDirectFix(fix);
+
+            if (STATE.isCameraFollowing && MapEngine.map) {
+              MapEngine.map.flyTo({
+                center: [loc.lon, loc.lat],
+                zoom: loc.state === 'precise' ? 17.2 : 16.0,
+                duration: isFirstFix ? 750 : 400
+              });
+            }
+          }
+
+          if (typeof ParkingApp !== 'undefined' && !STATE.selectedPlace) {
+            ParkingApp.loadNearbyLots(fix.lat, fix.lng);
+          }
+          if (typeof API !== 'undefined' && API.sendTraccarPing) {
+            API.sendTraccarPing(fix);
+          }
+          if (typeof TelemetryController !== 'undefined' && TelemetryController.update) {
+            TelemetryController.update(fix);
+          }
+
+          if (isFirstFix && typeof ParkingApp !== 'undefined') {
+            const label = loc.state === 'precise'
+              ? `Live GPS: [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`
+              : `Live Location (Wi-Fi): [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`;
+            ParkingApp.showToast(label, loc.state === 'precise' ? 'success' : 'info', 3200);
+          }
+          return;
+        }
+
+        // Error states: denied | unavailable | timeout | insecure
+        if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
+        STATE.isTrackingLocation = false;
+        if (pillText) pillText.innerText = loc.state === 'denied' ? 'GPS Blocked' : 'GPS Standby';
+        const msg = LOCATION_MESSAGES[loc.state];
+        if (msg && typeof ParkingApp !== 'undefined' && ParkingApp.showToast) {
+          ParkingApp.showToast(msg, 'warning', 5000);
+        }
+      });
 
       // --------------------------------------------------------------------------
       // 5.3 Google Maps, Ola Maps & OpenStreetMap Ultra-Detail Map Styles
@@ -4436,33 +4588,9 @@
             this.marker = MapEngine.vehicleMarker;
             return;
           }
-          this.el = document.createElement('div');
-          this.el.className = 'vehicle-marker-root';
-          this.el.innerHTML =
-            '<div class="vehicle-accuracy-ring"></div>' +
-            '<div class="vehicle-heading-rotator" id="v-rotator">' +
-              '<svg viewBox="0 0 48 48" class="vehicle-chevron-svg">' +
-                '<defs>' +
-                  '<linearGradient id="redPointerGrad" x1="0%" y1="0%" x2="0%" y2="100%">' +
-                    '<stop offset="0%" stop-color="#ef4444"/>' +
-                    '<stop offset="100%" stop-color="#b91c1c"/>' +
-                  '</linearGradient>' +
-                  '<filter id="pointerShadow" x="-20%" y="-20%" width="140%" height="140%">' +
-                    '<feDropShadow dx="0" dy="2" stdDeviation="2.5" flood-color="rgba(0,0,0,0.5)"/>' +
-                  '</filter>' +
-                '</defs>' +
-                '<circle cx="24" cy="24" r="22" fill="rgba(239, 68, 68, 0.2)"/>' +
-                '<path d="M24 3 L43 41 L24 32 L5 41 Z" fill="#ffffff" filter="url(#pointerShadow)"/>' +
-                '<path d="M24 6 L39 38 L24 30 L9 38 Z" fill="url(#redPointerGrad)"/>' +
-                '<circle cx="24" cy="24" r="3.5" fill="#ffffff" stroke="#991b1b" stroke-width="1.5"/>' +
-              '</svg>' +
-            '</div>' +
-            '<div class="vehicle-speed-pill" id="v-speed-pill">' + (STATE.hasRealDeviceFix ? 'Device Location' : (STATE.isManualLocation ? 'Pinned Location' : 'Locating GPS... (Drag to set)')) + '</div>';
-          this.marker = new maplibregl.Marker({ element: this.el, anchor: 'center', draggable: true });
-          this.marker.on('dragend', () => {
-            const lngLat = this.marker.getLngLat();
-            ParkingApp.setUserLocation(lngLat.lat, lngLat.lng, 'drag');
-          });
+          if (MapEngine.vehicleEl) {
+            this.el = MapEngine.vehicleEl;
+          }
         }
 
         _makeBanner() {
@@ -4484,6 +4612,10 @@
         }
 
         _animateTo(fix) {
+          if (!this.marker && MapEngine.vehicleMarker) {
+            this.marker = MapEngine.vehicleMarker;
+            this.el = MapEngine.vehicleEl;
+          }
           const now = performance.now();
           const heading = fix.heading ?? this.shown?.heading ?? 0;
           if (!this.shown) {
@@ -4519,6 +4651,10 @@
             heading: (a.from.heading + dh * k + 360) % 360,
             speed: a.from.speed + ((a.to.speed || 0) - (a.from.speed || 0)) * k,
           };
+          if (!this.marker && MapEngine.vehicleMarker) {
+            this.marker = MapEngine.vehicleMarker;
+            this.el = MapEngine.vehicleEl;
+          }
           if (this.marker) this.marker.setLngLat([this.shown.lon, this.shown.lat]);
           const rotator = this.el?.querySelector('#v-rotator');
           if (rotator) {
@@ -5519,12 +5655,14 @@
             if (this.map) this.map.resize();
             setTimeout(() => { if (this.map) this.map.resize(); }, 250);
 
-            const cur = STATE.userLocation;
-            if (cur && (cur.lat !== CONFIG.DEFAULT_COORDS[1] || cur.lng !== CONFIG.DEFAULT_COORDS[0])) {
-              this.map.jumpTo({ center: [cur.lng, cur.lat], zoom: 16 });
-              ParkingApp.loadNearbyLots(cur.lat, cur.lng);
-            } else {
-              ParkingApp.loadNearbyLots();
+            // Rule: The map ONLY moves when we have a REAL fix. No default spot, no random lot.
+            if ((STATE.hasRealDeviceFix || STATE.isManualLocation) && STATE.userLocation) {
+              const cur = STATE.userLocation;
+              if (Number.isFinite(cur.lat) && Number.isFinite(cur.lng)) {
+                this.updateVehicle(cur);
+                this.map.jumpTo({ center: [cur.lng, cur.lat], zoom: 16 });
+                ParkingApp.loadNearbyLots(cur.lat, cur.lng);
+              }
             }
 
             const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -6237,6 +6375,7 @@
         },
 
         createVehicleMarker() {
+          if (this.vehicleEl) return;
           this.vehicleEl = document.createElement('div');
           this.vehicleEl.className = 'vehicle-marker-root';
           this.vehicleEl.innerHTML = `
@@ -6258,62 +6397,94 @@
                 <circle cx="24" cy="24" r="3.5" fill="#ffffff" stroke="#991b1b" stroke-width="1.5"/>
               </svg>
             </div>
-            <div class="vehicle-speed-pill" id="v-speed-pill">${STATE.hasRealDeviceFix ? "Device Location" : (STATE.isManualLocation ? "Pinned Location" : "Waiting for GPS... (Drag to set)")}</div>
+            <div class="vehicle-speed-pill" id="v-speed-pill">${STATE.hasRealDeviceFix ? "Device Location" : (STATE.isManualLocation ? "Pinned Spot" : "Waiting for GPS...")}</div>
           `;
 
           this.vehicleEl.title = "Your Location Pointer (Drag to place anywhere on map)";
 
-          const initLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
-          const initLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
+          // Only attach to map if we actually have a real fix or manual user location!
+          if ((STATE.hasRealDeviceFix || STATE.isManualLocation) && STATE.userLocation && Number.isFinite(STATE.userLocation.lng) && Number.isFinite(STATE.userLocation.lat)) {
+            this.vehicleMarker = new maplibregl.Marker({
+              element: this.vehicleEl,
+              anchor: 'center',
+              draggable: true
+            })
+              .setLngLat([STATE.userLocation.lng, STATE.userLocation.lat])
+              .addTo(this.map);
 
-          this.vehicleMarker = new maplibregl.Marker({
-            element: this.vehicleEl,
-            anchor: 'center',
-            draggable: true
-          })
-            .setLngLat([initLng, initLat])
-            .addTo(this.map);
+            this.vehicleMarker.on('dragstart', () => {
+              this.vehicleEl.classList.add('dragging');
+              const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
+              if (speedPill) speedPill.innerText = 'Repositioning...';
+            });
 
-          this.vehicleMarker.on('dragstart', () => {
-            this.vehicleEl.classList.add('dragging');
-            const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
-            if (speedPill) speedPill.innerText = 'Repositioning...';
-          });
+            this.vehicleMarker.on('drag', () => {
+              const lngLat = this.vehicleMarker.getLngLat();
+              const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
+              if (speedPill) speedPill.innerText = `${lngLat.lat.toFixed(4)}, ${lngLat.lng.toFixed(4)}`;
+            });
 
-          this.vehicleMarker.on('drag', () => {
-            const lngLat = this.vehicleMarker.getLngLat();
-            const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
-            if (speedPill) speedPill.innerText = `${lngLat.lat.toFixed(4)}, ${lngLat.lng.toFixed(4)}`;
-          });
-
-          this.vehicleMarker.on('dragend', () => {
-            this.vehicleEl.classList.remove('dragging');
-            const lngLat = this.vehicleMarker.getLngLat();
-            ParkingApp.setUserLocation(lngLat.lat, lngLat.lng, 'drag');
-          });
+            this.vehicleMarker.on('dragend', () => {
+              this.vehicleEl.classList.remove('dragging');
+              const lngLat = this.vehicleMarker.getLngLat();
+              ParkingApp.setUserLocation(lngLat.lat, lngLat.lng, 'drag');
+            });
+          }
         },
 
         updateVehicle(pos) {
-          if (this.vehicleMarker) {
-            this.vehicleMarker.setLngLat([pos.lng, pos.lat]);
-            const rotator = this.vehicleEl.querySelector('#v-rotator');
-            if (rotator) {
-              const mapBearing = this.map ? this.map.getBearing() : 0;
-              const screenHeading = ((pos.heading || 0) - mapBearing + 360) % 360;
-              rotator.style.transform = `rotate(${screenHeading}deg)`;
-            }
-            const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
-            if (speedPill) {
-              const spd = Math.round(pos.speed || 0);
-              if (spd > 1) {
-                speedPill.innerText = `${spd} km/h`;
-              } else if (STATE.isManualLocation) {
-                speedPill.innerText = 'Pinned Spot';
-              } else if (STATE.hasRealDeviceFix) {
-                speedPill.innerText = 'Device Location';
-              } else {
-                speedPill.innerText = 'Locating GPS...';
-              }
+          if (!pos || !Number.isFinite(Number(pos.lat)) || !Number.isFinite(Number(pos.lng))) return;
+          const lat = Number(pos.lat);
+          const lng = Number(pos.lng);
+
+          if (!this.vehicleMarker) {
+            if (!this.vehicleEl) this.createVehicleMarker();
+            this.vehicleMarker = new maplibregl.Marker({
+              element: this.vehicleEl,
+              anchor: 'center',
+              draggable: true
+            })
+              .setLngLat([lng, lat])
+              .addTo(this.map);
+
+            this.vehicleMarker.on('dragstart', () => {
+              this.vehicleEl.classList.add('dragging');
+              const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
+              if (speedPill) speedPill.innerText = 'Repositioning...';
+            });
+
+            this.vehicleMarker.on('drag', () => {
+              const lngLat = this.vehicleMarker.getLngLat();
+              const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
+              if (speedPill) speedPill.innerText = `${lngLat.lat.toFixed(4)}, ${lngLat.lng.toFixed(4)}`;
+            });
+
+            this.vehicleMarker.on('dragend', () => {
+              this.vehicleEl.classList.remove('dragging');
+              const lngLat = this.vehicleMarker.getLngLat();
+              ParkingApp.setUserLocation(lngLat.lat, lngLat.lng, 'drag');
+            });
+          } else {
+            this.vehicleMarker.setLngLat([lng, lat]);
+          }
+
+          const rotator = this.vehicleEl.querySelector('#v-rotator');
+          if (rotator) {
+            const mapBearing = this.map ? this.map.getBearing() : 0;
+            const screenHeading = (((pos.heading || 0) - mapBearing + 360) % 360);
+            rotator.style.transform = `rotate(${screenHeading}deg)`;
+          }
+          const speedPill = this.vehicleEl.querySelector('#v-speed-pill');
+          if (speedPill) {
+            const spd = Math.round(pos.speed || 0);
+            if (spd > 1) {
+              speedPill.innerText = `${spd} km/h`;
+            } else if (STATE.isManualLocation) {
+              speedPill.innerText = 'Pinned Spot';
+            } else if (STATE.hasRealDeviceFix) {
+              speedPill.innerText = 'Device Location';
+            } else {
+              speedPill.innerText = 'Locating GPS...';
             }
           }
         },
@@ -8855,286 +9026,67 @@
           }
         },
 
-        async locateAndCenterDevice(followCamera = true, notify = true) {
+        locateAndCenterDevice(followCamera = true, notify = true) {
           const locBtn = document.getElementById('btn-my-location');
-          if (locBtn) {
-            locBtn.classList.add('active-blue', 'active-pulse');
-          }
+          if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
           STATE.isCameraFollowing = followCamera;
           STATE.isTrackingLocation = true;
           STATE.isManualLocation = false; // User explicitly tapped to acquire device GPS!
           WakeLockManager.acquire();
 
-          if (!('geolocation' in navigator)) {
-            ParkingApp.showToast("Geolocation is not supported by your browser.", "error", 4000);
-            return null;
+          if (notify && !STATE.hasRealDeviceFix) {
+            ParkingApp.showToast("Finding your location…", "info", 1800);
           }
 
-          if (notify) {
-            ParkingApp.showToast("Acquiring live device location...", "info", 1800);
-          }
-
-          const getPositionPromise = (options) => {
-            return new Promise((resolve, reject) => {
-              navigator.geolocation.getCurrentPosition(resolve, reject, options);
-            });
-          };
-
-          let pos = null;
-          // Step 1: Immediate lock with fresh cache (up to 30s) so it resolves instantly
-          try {
-            pos = await getPositionPromise({ enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 });
-          } catch (err1) {
-            console.warn('[GPS] Quick-lock notice:', err1.code, err1.message);
-            if (err1.code === 1) { // PERMISSION_DENIED
-              if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
-              STATE.isTrackingLocation = false;
-              ParkingApp.showToast("Location access is blocked. Please allow Location in your browser address bar.", "warning", 6000);
-              return null;
+          if (LOC.lat && LOC.lon && (LOC.state === 'precise' || LOC.state === 'coarse')) {
+            if (followCamera && MapEngine.map) {
+              MapEngine.map.flyTo({
+                center: [LOC.lon, LOC.lat],
+                zoom: LOC.state === 'precise' ? 17.2 : 16.0,
+                duration: 650
+              });
             }
-            // Step 2: Try standard accuracy if high accuracy failed
-            try {
-              pos = await getPositionPromise({ enableHighAccuracy: false, timeout: 6000, maximumAge: 60000 });
-            } catch (err2) {
-              console.warn('[GPS] Standard accuracy notice:', err2.code, err2.message);
-              // Step 3: Zero-cache high-accuracy retry
-              try {
-                pos = await getPositionPromise({ enableHighAccuracy: true, timeout: 8000, maximumAge: 0 });
-              } catch (err3) {
-                console.warn('[GPS] Zero-cache notice:', err3.code, err3.message);
-              }
+            if (notify) {
+              ParkingApp.showToast(`Live GPS: [${LOC.lat.toFixed(5)}, ${LOC.lon.toFixed(5)}] ±${Math.round(LOC.accuracy)}m`, "success", 2500);
             }
           }
 
-          if (pos && pos.coords) {
-            const { latitude, longitude, accuracy, heading, speed, altitude } = pos.coords;
-            if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
-              const accMeters = Math.round(accuracy || 20);
-
-              const fix = {
-                lat: latitude,
-                lng: longitude,
-                speed: (speed || 0) * 3.6,
-                speedMs: speed || 0,
-                heading: (heading !== null && !isNaN(heading)) ? heading : (STATE.userLocation?.heading || 0),
-                altitude: altitude || 920,
-                accuracy: accMeters,
-                timestamp: pos.timestamp || Date.now()
-              };
-
-              STATE.userLocation = fix;
-              STATE.isTrackingLocation = true;
-              STATE.hasRealDeviceFix = true;
-              STATE.bestFixAccuracy = accMeters;
-              STATE.isManualLocation = false;
-
-              try {
-                localStorage.setItem('openpark_last_device_fix', JSON.stringify({
-                  lat: fix.lat,
-                  lng: fix.lng,
-                  heading: fix.heading,
-                  accuracy: fix.accuracy,
-                  ts: Date.now()
-                }));
-              } catch {}
-
-              GPSMonitor.onValidFix(accMeters);
-              if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
-
-              MapEngine.updateVehicle(fix);
-              if (MapEngine.tracker) MapEngine.tracker.feedDirectFix(fix);
-
-              if (followCamera && MapEngine.map) {
-                MapEngine.map.flyTo({
-                  center: [fix.lng, fix.lat],
-                  zoom: Math.max(MapEngine.map.getZoom(), 17.2),
-                  duration: 650
-                });
-              }
-
-              ParkingApp.loadNearbyLots(fix.lat, fix.lng);
-              TelemetryController.update(fix);
-              API.sendTraccarPing(fix);
-
-              if (notify) {
-                ParkingApp.showToast(`Device Located: [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`, "success", 3000);
-              }
-
-              this.startRealtimeDeviceLocation();
-              return fix;
-            }
-          }
-
-          ParkingApp.showToast("GPS lock unavailable. Drag the pointer or search your area to set your spot.", "warning", 5000);
-          return null;
+          startLocating();
         },
 
         startRealtimeDeviceLocation() {
           const locBtn = document.getElementById('btn-my-location');
-          if (!('geolocation' in navigator)) {
-            console.warn('[Geolocation] Geolocation API not supported');
-            return;
-          }
-
           if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
           STATE.isCameraFollowing = true;
           STATE.isTrackingLocation = true;
           WakeLockManager.acquire();
-
-          const applyPositionFix = (pos, source = 'gps') => {
-            if (!pos || !pos.coords) return;
-            const { latitude, longitude, heading, speed, altitude, accuracy } = pos.coords;
-            if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return;
-
-            // If user manually placed or dragged their pin, DO NOT let background watchPosition hijack it!
-            if (STATE.isManualLocation && source !== 'user-button-gps') {
-              return;
-            }
-
-            const accMeters = Math.round(accuracy || 20);
-
-            const fix = {
-              lat: latitude,
-              lng: longitude,
-              speed: (speed || 0) * 3.6,
-              speedMs: speed || 0,
-              heading: (heading !== null && !isNaN(heading)) ? heading : (STATE.userLocation?.heading || 0),
-              altitude: altitude || 920,
-              accuracy: accMeters,
-              timestamp: pos.timestamp || Date.now()
-            };
-
-            const isFirstFix = !STATE.hasRealDeviceFix;
-            STATE.hasRealDeviceFix = true;
-            STATE.isManualLocation = false;
-            STATE.bestFixAccuracy = accMeters;
-            STATE.userLocation = fix;
-            STATE.isTrackingLocation = true;
-
-            try {
-              localStorage.setItem('openpark_last_device_fix', JSON.stringify({
-                lat: fix.lat,
-                lng: fix.lng,
-                heading: fix.heading,
-                accuracy: fix.accuracy,
-                ts: Date.now()
-              }));
-            } catch {}
-
-            GPSMonitor.onValidFix(accMeters);
-            if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
-
-            MapEngine.updateVehicle(fix);
-            if (MapEngine.tracker) MapEngine.tracker.feedDirectFix(fix);
-
-            if (STATE.isCameraFollowing && MapEngine.map) {
-              MapEngine.map.flyTo({
-                center: [fix.lng, fix.lat],
-                zoom: Math.max(MapEngine.map.getZoom(), 17.2),
-                duration: isFirstFix ? 700 : 400
-              });
-            }
-
-            if (!STATE.selectedPlace) {
-              ParkingApp.loadNearbyLots(fix.lat, fix.lng);
-            }
-            API.sendTraccarPing(fix);
-            TelemetryController.update(fix);
-
-            if (STATE.activeTrip && NavigationEngine.trimRouteFrom) {
-              NavigationEngine.trimRouteFrom(fix.lng, fix.lat);
-            }
-
-            if (isFirstFix) {
-              const label = `Live Device GPS: [${fix.lat.toFixed(5)}, ${fix.lng.toFixed(5)}] ±${accMeters}m`;
-              ParkingApp.showToast(label, 'success', 2800);
-            }
-          };
-
-          // Step 1: Immediate Wi-Fi / GPS lock (allow 30s cache so Mac Wi-Fi database resolves immediately)
-          navigator.geolocation.getCurrentPosition(
-            (pos) => applyPositionFix(pos, 'fresh-gps'),
-            (err) => {
-              console.warn('[Geolocation] Primary lock notice:', err.message);
-              if (err.code === 1) { // PERMISSION_DENIED
-                if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
-                STATE.isTrackingLocation = false;
-                ParkingApp.showToast("Location permission requested: please click 'Allow' in your browser URL bar for live GPS.", "info", 5000);
-                return;
-              }
-              // Secondary fallback with standard accuracy
-              navigator.geolocation.getCurrentPosition(
-                (pos2) => applyPositionFix(pos2, 'fresh-gps'),
-                (err2) => {
-                  console.warn('[Geolocation] Secondary lock notice:', err2.message);
-                },
-                { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
-              );
-            },
-            { enableHighAccuracy: true, timeout: 6000, maximumAge: 30000 }
-          );
-
-          // Step 2: Continuous real-time watching
-          if (STATE.watchId) {
-            navigator.geolocation.clearWatch(STATE.watchId);
-            STATE.watchId = null;
-          }
-          STATE.watchId = navigator.geolocation.watchPosition(
-            (pos) => applyPositionFix(pos, 'live-gps'),
-            (err) => {
-              console.warn('[Geolocation] watchPosition notice:', err.code, err.message);
-              if (err.code === 1) {
-                if (locBtn) locBtn.classList.remove('active-blue', 'active-pulse');
-                STATE.isTrackingLocation = false;
-              }
-            },
-            { enableHighAccuracy: true, maximumAge: 10000 }
-          );
+          startLocating();
         },
 
         async fallbackToIpLocation(force = false) {
-          // If the user already has a real fix or a saved location, NEVER overwrite with IP!
-          if (STATE.hasRealDeviceFix && !force) return;
-          if (lastKnownFix && !force) return;
-
-          const providers = [
-            async () => {
-              const r = await fetch('/api/geolocate');
-              if (!r.ok) return null;
-              const d = await r.json();
-              return (d && d.lat && d.lon) ? { lat: d.lat, lon: d.lon, city: d.city || 'Your Area' } : null;
-            },
-            async () => {
-              const r = await fetch('https://ipwho.is/');
-              if (!r.ok) return null;
-              const d = await r.json();
-              return (d && d.success && d.latitude && d.longitude) ? { lat: d.latitude, lon: d.longitude, city: d.city || 'Your Area' } : null;
-            }
-          ];
-
-          for (const fetchProvider of providers) {
-            if (STATE.hasRealDeviceFix) return;
-            try {
-              const loc = await fetchProvider();
-              if (loc && Number.isFinite(Number(loc.lat)) && Number.isFinite(Number(loc.lon))) {
-                if (STATE.hasRealDeviceFix) return;
-                // Only update the city label in the welcome modal; DO NOT teleport vehicle marker to IP!
-                if (typeof WelcomeController !== 'undefined' && WelcomeController.updateGpsLabel) {
-                  WelcomeController.updateGpsLabel({ lat: loc.lat, lng: loc.lon, accuracy: 2000, city: loc.city });
-                }
-                return;
-              }
-            } catch (e) {
-              console.debug('[IP Geolocation] provider skip:', e);
-            }
-          }
+          // Rule: No IP guess. The map only moves when we have a REAL fix.
+          return null;
         },
 
         async loadNearbyLots(lat, lon) {
-          const uLat = (STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lat))) ? Number(STATE.userLocation.lat) : CONFIG.DEFAULT_COORDS[1];
-          const uLon = (STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lng))) ? Number(STATE.userLocation.lng) : CONFIG.DEFAULT_COORDS[0];
-          const targetLat = Number.isFinite(Number(lat)) ? Number(lat) : uLat;
-          const targetLon = Number.isFinite(Number(lon)) ? Number(lon) : uLon;
+          let targetLat = Number(lat);
+          let targetLon = Number(lon);
+          if (!Number.isFinite(targetLat) || !Number.isFinite(targetLon)) {
+            if (STATE.selectedPlace && Number.isFinite(Number(STATE.selectedPlace.lat))) {
+              targetLat = Number(STATE.selectedPlace.lat);
+              targetLon = Number(STATE.selectedPlace.lon);
+            } else if ((STATE.hasRealDeviceFix || STATE.isManualLocation) && STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lat))) {
+              targetLat = Number(STATE.userLocation.lat);
+              targetLon = Number(STATE.userLocation.lng);
+            } else {
+              // Rule: No random lot. Do not load parking lots when there is no real fix or searched place!
+              STATE.lots = [];
+              MapEngine.renderLotMarkers([]);
+              UIController.renderLotList([]);
+              this.updateAiScanVisibility();
+              return;
+            }
+          }
           STATE.lots = await API.getNearbyLots(targetLat, targetLon);
           MapEngine.renderLotMarkers(STATE.lots);
           UIController.renderLotList(STATE.lots);
@@ -9361,14 +9313,14 @@
 
           STATE.userLocation = { ...updatedFix };
           if (source !== 'ip' && source !== 'default') {
-            STATE.hasRealDeviceFix = true;
+            STATE.hasRealDeviceFix = !isManual;
             STATE.bestFixAccuracy = acc;
             if (isManual) {
               STATE.isManualLocation = true;
               const pillText = document.getElementById('traccar-pill-text');
               if (pillText) pillText.innerText = 'Pinned Spot';
               const speedPill = MapEngine.vehicleEl?.querySelector('#v-speed-pill');
-              if (speedPill) speedPill.innerText = 'Pinned Location';
+              if (speedPill) speedPill.innerText = 'Pinned Spot';
             }
             GPSMonitor.onValidFix(acc);
             if (isManual) {
@@ -9615,17 +9567,17 @@
               this.hide();
               MapEngine.clearDestinationMarker();
               await ParkingApp.locateAndCenterDevice(true, true);
-              const lat = STATE.userLocation?.lat || CONFIG.DEFAULT_COORDS[1];
-              const lng = STATE.userLocation?.lng || CONFIG.DEFAULT_COORDS[0];
-
-              if (MapEngine.map) {
-                MapEngine.map.flyTo({ center: [lng, lat], zoom: 16.5, duration: 600 });
+              if (LOC.lat && LOC.lon) {
+                const lat = LOC.lat;
+                const lng = LOC.lon;
+                if (MapEngine.map) {
+                  MapEngine.map.flyTo({ center: [lng, lat], zoom: 16.5, duration: 600 });
+                }
+                await Promise.all([
+                  ParkingApp.loadNearbyLots(lat, lng),
+                  AIScannerEngine.scanCurrentArea(lat, lng)
+                ]);
               }
-
-              await Promise.all([
-                ParkingApp.loadNearbyLots(lat, lng),
-                AIScannerEngine.scanCurrentArea(lat, lng)
-              ]);
             };
           }
 
@@ -10466,13 +10418,14 @@
       });
     })();
   </script>
-  <script src="/app/js/animated-list.js?v=20261120_v34"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v34"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v34"></script>
+  <script type="module" src="/app/js/locate.js?v=20261120_v35"></script>
+  <script src="/app/js/animated-list.js?v=20261120_v35"></script>
+  <script src="/app/js/ui-polish.js?v=20261120_v35"></script>
+  <script src="/app/js/jelly-radio.js?v=20261120_v35"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v34', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261120_v35', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
