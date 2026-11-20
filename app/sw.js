@@ -2,19 +2,20 @@
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v37-fresh-frontend';
+const CACHE_NAME = 'openpark-offline-v36-gps-accuracy-circle';
 const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/app/',
   '/app/index.html',
   '/app/manifest.json',
-  '/app/css/app.css',
+  '/app/css/ui-polish.css',
   '/app/js/locate.js',
-  '/app/js/api.js',
-  '/app/js/map-engine.js',
-  '/app/js/app.js',
+  '/app/js/ui-polish.js',
+  '/app/js/animated-list.js',
+  '/app/js/jelly-radio.js',
   '/app/vendor/maplibre-gl.js',
   '/app/vendor/maplibre-gl.css',
+  '/app/vendor/gsap.min.js',
   '/app/vendor/fonts/fonts.css',
   '/app/vendor/fonts/inter-400.woff2',
   '/app/vendor/fonts/inter-600.woff2',
