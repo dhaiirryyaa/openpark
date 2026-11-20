@@ -1852,6 +1852,7 @@
     .gmap-poi-park      { background: #16a34a; }
     .gmap-poi-metro     { background: #8b2be2; }
     .gmap-poi-hotel     { background: #db2777; }
+    .gmap-poi-school    { background: #4f46e5; }
     .gmap-poi-tech      { background: #0369a1; }
     .gmap-poi-mall      { background: #0891b2; }
     .gmap-poi-stadium   { background: #b45309; }
@@ -2559,7 +2560,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v43" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v44" />
 </head>
 <body class="welcome-active">
 
@@ -2820,12 +2821,12 @@
 
     <!-- Scrollable View Host -->
     <div class="sidebar-views">
-      <!-- OpenPark AI Parking Copilot -->
+      <!-- OpenPark AI Parking & Mobility Copilot -->
       <div class="ai-copilot-card">
         <div class="ai-copilot-input-row">
           <svg class="svg-icon-sm" viewBox="0 0 24 24" style="color: var(--apple-blue); flex-shrink: 0;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-          <input type="text" id="copilot-input" class="copilot-input-field" placeholder="Ask AI Copilot (e.g. 'SUV covered parking')..." />
-          <button id="btn-copilot-mic" class="copilot-icon-btn" title="Voice Search" aria-label="Voice input for AI parking copilot">
+          <input type="text" id="copilot-input" class="copilot-input-field" placeholder="Ask AI Copilot (e.g. 'nearest hotel or school')..." />
+          <button id="btn-copilot-mic" class="copilot-icon-btn" title="Voice Search" aria-label="Voice input for AI copilot">
             <svg class="svg-icon-xs" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
           </button>
           <button id="btn-copilot-send" class="copilot-send-btn" title="Ask AI Copilot" aria-label="Send query">
@@ -2833,19 +2834,23 @@
           </button>
         </div>
         <div class="copilot-quick-chips">
+          <button class="copilot-chip" data-copilot-prompt="Nearest hotels nearby">🏨 Hotels</button>
+          <button class="copilot-chip" data-copilot-prompt="Schools and colleges nearby">🏫 Schools</button>
+          <button class="copilot-chip" data-copilot-prompt="Hospitals and clinics nearby">🏥 Hospitals</button>
           <button class="copilot-chip" data-copilot-prompt="Covered basement parking for SUV">🛡️ Covered SUV</button>
           <button class="copilot-chip" data-copilot-prompt="Parking with EV charging station">⚡ EV Ready</button>
-          <button class="copilot-chip" data-copilot-prompt="Quick stop under 20 mins near destination">⏱️ Quick Stop</button>
           <button class="copilot-chip" data-copilot-prompt="Cheapest or free parking nearby">💰 Budget</button>
         </div>
         <div id="copilot-result-box" class="copilot-result-box" style="display: none;">
           <div class="copilot-response-header">
             <div class="copilot-badge">
               <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span>AI Copilot Recommendation</span>
+              <span id="copilot-header-title">AI Copilot Recommendation</span>
             </div>
+            <button id="btn-copilot-clear" class="copilot-clear-btn" title="Close AI Copilot results" aria-label="Close AI Copilot results">✕</button>
           </div>
           <div id="copilot-speech-text" class="copilot-speech-text"></div>
+          <div id="copilot-results-list" class="copilot-results-list"></div>
         </div>
       </div>
 
@@ -6754,6 +6759,9 @@
             } else if (/hotel|four seasons|marriott|🏨/.test(badge + cat)) {
               colorClass = 'gmap-poi-hotel';
               badgeContent = '<svg class="poi-svg-icon" viewBox="0 0 24 24"><path d="M3 7v14M21 7v14M3 11h18M7 7h10a2 2 0 0 1 2 2v2H5V9a2 2 0 0 1 2-2z"/></svg>';
+            } else if (/school|college|university|institute|campus|academy|education|🏫|🎓/.test(badge + cat)) {
+              colorClass = 'gmap-poi-school';
+              badgeContent = '<svg class="poi-svg-icon" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
             } else if (/stadium|sports|ground|🏏|⚽/.test(badge + cat)) {
               colorClass = 'gmap-poi-stadium';
               badgeContent = '<svg class="poi-svg-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20"/></svg>';
@@ -10672,6 +10680,7 @@
           const btnSend = document.getElementById('btn-copilot-send');
           const btnMic = document.getElementById('btn-copilot-mic');
           const btnSpeak = document.getElementById('btn-copilot-speak');
+          const btnClear = document.getElementById('btn-copilot-clear');
           const quickChips = document.querySelectorAll('.copilot-chip');
 
           if (inputEl) {
@@ -10686,6 +10695,16 @@
           if (btnSend) {
             btnSend.onclick = () => {
               if (inputEl) this.ask(inputEl.value);
+            };
+          }
+
+          if (btnClear) {
+            btnClear.onclick = () => {
+              const resultBox = document.getElementById('copilot-result-box');
+              if (resultBox) resultBox.style.display = 'none';
+              if (MapEngine && typeof MapEngine.clearPoiMarkers === 'function') {
+                MapEngine.clearPoiMarkers();
+              }
             };
           }
 
@@ -10746,7 +10765,7 @@
             this.recognition.onstart = () => {
               this.isListening = true;
               if (btnMic) btnMic.classList.add('is-listening');
-              ParkingApp.showToast('Listening... Speak your parking preference.', 'info', 2500);
+              ParkingApp.showToast('Listening... Speak your request.', 'info', 2500);
             };
 
             this.recognition.onresult = (event) => {
@@ -10780,9 +10799,13 @@
 
           const resultBox = document.getElementById('copilot-result-box');
           const speechEl = document.getElementById('copilot-speech-text');
+          const resultsListEl = document.getElementById('copilot-results-list');
+          const headerTitleEl = document.getElementById('copilot-header-title');
 
           if (resultBox) resultBox.style.display = 'flex';
-          if (speechEl) speechEl.innerHTML = '<span style="color: var(--apple-blue);">Thinking... Evaluating satellite vision & live rush probability.</span>';
+          if (speechEl) speechEl.innerHTML = '<span style="color: var(--apple-blue);">Thinking... Finding all matching locations & parking options.</span>';
+          if (resultsListEl) resultsListEl.innerHTML = '';
+          if (headerTitleEl) headerTitleEl.textContent = 'AI Copilot Evaluating...';
 
           let center = null;
           if (STATE.selectedPlace && Number.isFinite(Number(STATE.selectedPlace.lat))) {
@@ -10804,13 +10827,21 @@
                 query: query,
                 lat: center.lat,
                 lon: center.lng,
-                radius_m: 1000
+                radius_m: 5000
               })
             });
 
             if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
             const data = await resp.json();
             this.lastQueryResult = data;
+
+            const allResults = Array.isArray(data.results) ? data.results : (Array.isArray(data.ranked_spots) ? data.ranked_spots : []);
+
+            if (headerTitleEl) {
+              headerTitleEl.textContent = allResults.length > 0
+                ? `AI Copilot (${allResults.length} Found)`
+                : 'AI Copilot Recommendation';
+            }
 
             if (speechEl) {
               speechEl.textContent = data.copilot_summary || data.audio_speech_text || 'Recommendation ready.';
@@ -10819,8 +10850,140 @@
             // Voice speech disabled per user preference
             if (window.speechSynthesis) window.speechSynthesis.cancel();
 
+            // Render all matching results as rich interactive Apple Glass cards
+            if (resultsListEl) {
+              resultsListEl.innerHTML = '';
+              if (allResults.length === 0) {
+                resultsListEl.innerHTML = '<div class="copilot-no-results">No matching spots or places found nearby. Try another search.</div>';
+              } else {
+                allResults.forEach((item, index) => {
+                  const card = document.createElement('div');
+                  card.className = 'copilot-result-card' + (index === 0 ? ' is-top-pick' : '');
+
+                  const emoji = item.badge_emoji || '📍';
+                  const cat = item.category || 'Location';
+                  const distKm = item.distance_km !== undefined ? item.distance_km : (item.distance_meters ? (item.distance_meters / 1000).toFixed(1) : '0.5');
+                  const etaMins = item.eta_mins || Math.max(1, Math.round(distKm / 0.45));
+                  const rating = item.rating ? Number(item.rating).toFixed(1) : '4.6';
+                  const reviews = item.reviews_count ? Number(item.reviews_count).toLocaleString() : '500+';
+                  const justification = item.copilot_justification || item.justification || `${cat} matching your criteria`;
+                  const scorePill = item.copilot_score ? `<span class="copilot-score-pill">${Math.round(item.copilot_score)} pts</span>` : '';
+
+                  card.innerHTML = `
+                    <div class="copilot-card-top">
+                      <div class="copilot-card-badge-row">
+                        <span class="copilot-item-icon">${emoji}</span>
+                        <span class="copilot-item-cat">${escapeHtml(cat)}</span>
+                        ${index === 0 ? '<span class="copilot-top-tag">★ Top Match</span>' : ''}
+                      </div>
+                      <div class="copilot-card-meta-pill">
+                        <span>${distKm} km</span>
+                        <span class="copilot-meta-dot">•</span>
+                        <span>~${etaMins}m</span>
+                        ${scorePill}
+                      </div>
+                    </div>
+                    <div class="copilot-card-title">${escapeHtml(item.name || 'Location')}</div>
+                    <div class="copilot-card-address">${escapeHtml(item.address || 'Bengaluru, Karnataka')}</div>
+                    <div class="copilot-card-rating">
+                      <span class="copilot-star">★</span>
+                      <span class="copilot-rating-num">${rating}</span>
+                      <span class="copilot-reviews-num">(${reviews} reviews)</span>
+                    </div>
+                    <div class="copilot-card-reason">
+                      <svg class="svg-icon-xs copilot-sparkle" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                      <span>${escapeHtml(justification)}</span>
+                    </div>
+                    <div class="copilot-card-actions">
+                      <button class="copilot-action-btn btn-route" title="Drive to destination">
+                        <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                        <span>Route & Drive</span>
+                      </button>
+                      <button class="copilot-action-btn btn-streetview" title="360° Street View">
+                        <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20"/></svg>
+                        <span>Street View</span>
+                      </button>
+                      <button class="copilot-action-btn btn-detail" title="View Details">
+                        <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span>Details</span>
+                      </button>
+                    </div>
+                  `;
+
+                  // Wire action buttons
+                  const btnRoute = card.querySelector('.btn-route');
+                  if (btnRoute) {
+                    btnRoute.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      SearchEngine.selectResult(item);
+                      ParkingApp.showToast(`Routing to ${item.name}`, 'info', 2500);
+                    });
+                  }
+
+                  const btnStreetView = card.querySelector('.btn-streetview');
+                  if (btnStreetView) {
+                    btnStreetView.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      if (typeof StreetViewEngine !== 'undefined' && StreetViewEngine.open) {
+                        StreetViewEngine.open(item.lat, item.lon, item.name);
+                      }
+                    });
+                  }
+
+                  const btnDetail = card.querySelector('.btn-detail');
+                  if (btnDetail) {
+                    btnDetail.addEventListener('click', (e) => {
+                      e.stopPropagation();
+                      SearchEngine.selectResult(item);
+                    });
+                  }
+
+                  // Clicking the card selects the place
+                  card.addEventListener('click', () => {
+                    SearchEngine.selectResult(item);
+                  });
+
+                  resultsListEl.appendChild(card);
+                });
+              }
+            }
+
+            // Render POI markers on map for all results!
+            if (MapEngine && typeof MapEngine.renderPoiMarkers === 'function' && allResults.length > 0) {
+              MapEngine.renderPoiMarkers(allResults);
+
+              // Fit map bounds to show all returned items + origin without locking camera
+              try {
+                const bounds = new maplibregl.LngLatBounds();
+                const uLat = (STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lat))) ? Number(STATE.userLocation.lat) : 12.9716;
+                const uLng = (STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lng))) ? Number(STATE.userLocation.lng) : 77.5946;
+                bounds.extend([uLng, uLat]);
+
+                allResults.forEach(r => {
+                  const rLat = Number(r.lat);
+                  const rLon = Number(r.lon !== undefined ? r.lon : r.lng);
+                  if (Number.isFinite(rLat) && Number.isFinite(rLon)) {
+                    bounds.extend([rLon, rLat]);
+                  }
+                });
+
+                const isDesktop = window.innerWidth > 768;
+                const sidebarEl = document.getElementById('sidebar');
+                const isCollapsed = sidebarEl && sidebarEl.classList.contains('is-collapsed');
+                const padLeft = (isDesktop && !isCollapsed) ? 420 : 60;
+
+                MapEngine.map.fitBounds(bounds, {
+                  padding: { top: 110, bottom: 90, left: padLeft, right: 60 },
+                  maxZoom: 15.5,
+                  duration: 800
+                });
+              } catch (e) {
+                console.warn("[AICopilotEngine] fitBounds notice:", e);
+              }
+            }
+
+            // Top pick toast
             if (data.best_spot) {
-              AIScannerEngine.selectDiscoveredSpot(data.best_spot);
               ParkingApp.showToast(`AI Pick: ${data.best_spot.name}`, 'success', 3500);
             }
           } catch (err) {

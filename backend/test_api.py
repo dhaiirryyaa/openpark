@@ -708,6 +708,26 @@ def test_ai_copilot_and_vision_inspector():
     assert "audio_speech_text" in d_copilot
     assert len(d_copilot["ranked_spots"]) > 0
 
+    # 3. AI Copilot Multi-Place Search (hotels, schools, amenities)
+    r_places = client.post("/api/ai/copilot", json={
+        "query": "i want a nearest hotel or school",
+        "lat": 12.9716,
+        "lon": 77.5946,
+        "radius_m": 5000
+    })
+    assert r_places.status_code == 200
+    d_places = r_places.json()
+    assert d_places["status"] == "ok"
+    assert d_places["query_type"] == "place_search"
+    assert d_places["total_found"] > 0
+    assert len(d_places["results"]) > 0
+    top_place = d_places["results"][0]
+    assert "name" in top_place
+    assert "category" in top_place
+    assert "badge_emoji" in top_place
+    assert "distance_km" in top_place
+    assert "copilot_justification" in top_place
+
 
 
 

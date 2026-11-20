@@ -1023,6 +1023,9 @@ async def ai_copilot_endpoint(payload: CopilotQueryPayload):
 
     return await run_copilot_assistant(
         query=payload.query,
+        lat=payload.lat,
+        lon=payload.lon,
+        radius_m=payload.radius_m,
         spots=candidate_spots,
         gemini_key=payload.gemini_key
     )
