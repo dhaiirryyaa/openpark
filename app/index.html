@@ -1318,19 +1318,24 @@
         bottom: 0;
         width: 100%;
         max-width: 100%;
-        height: 85vh;
+        height: min(78vh, 640px);
+        max-height: 82vh;
         border-radius: var(--radius-panel) var(--radius-panel) 0 0;
         border-bottom: none;
-        transform: translateY(calc(100% - 130px));
-        box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+        transform: translateY(0);
+        box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
       }
 
-      #sidebar.is-collapsed {
-        transform: translateY(100%);
+      #sidebar.is-collapsed,
+      body.sidebar-collapsed #sidebar {
+        transform: translateY(100%) !important;
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
       }
 
       .sidebar-drag-handle {
-        width: 36px;
+        width: 44px;
         height: 5px;
         background: var(--color-border-subtle);
         border-radius: 999px;
@@ -1437,7 +1442,7 @@
       transform: translateX(-50%) translateY(130%);
       width: min(500px, calc(100vw - 448px));
       padding: 18px 22px 20px 22px;
-      z-index: 26;
+      z-index: 1100;
       transition: transform 0.45s var(--spring-curve), left 0.32s var(--spring-curve), width 0.32s var(--spring-curve);
     }
     .bottom-drawer.open {
@@ -2560,7 +2565,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261121_v44" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v45" />
 </head>
 <body class="welcome-active">
 
@@ -2694,7 +2699,7 @@
         type="text" 
         id="search-input" 
         class="search-input" 
-        placeholder="Search destinations (e.g. MG Road, Indiranagar)..." 
+        placeholder="Search destinations..." 
         autocomplete="off" 
         spellcheck="false"
         aria-label="Search places, addresses, destinations"
@@ -7298,22 +7303,31 @@
             restorePill.onclick = () => this.setSidebarCollapsed(false);
           }
 
-          // Mobile Sheet Drag Handler
+          // Mobile Sheet Drag & Tap Handler
           const dragHandle = document.getElementById('sheet-drag-handle');
           let startY = 0, currentY = 0;
-          dragHandle.addEventListener('touchstart', (e) => {
-            startY = e.touches[0].clientY;
-          }, { passive: true });
+          if (dragHandle) {
+            dragHandle.addEventListener('touchstart', (e) => {
+              startY = e.touches[0].clientY;
+            }, { passive: true });
 
-          dragHandle.addEventListener('touchmove', (e) => {
-            currentY = e.touches[0].clientY;
-            const diff = currentY - startY;
-            if (diff > 50) {
-              sidebar.style.transform = 'translateY(calc(100% - 130px))'; // Peek
-            } else if (diff < -50) {
-              sidebar.style.transform = 'translateY(0)'; // Full
-            }
-          }, { passive: true });
+            dragHandle.addEventListener('touchmove', (e) => {
+              currentY = e.touches[0].clientY;
+              const diff = currentY - startY;
+              if (diff > 55) {
+                // Drag down collapses sheet to view map
+                this.setSidebarCollapsed(true);
+              } else if (diff < -40) {
+                // Drag up expands sheet
+                this.setSidebarCollapsed(false);
+              }
+            }, { passive: true });
+
+            dragHandle.addEventListener('click', () => {
+              const currentlyCollapsed = sidebar ? sidebar.classList.contains('is-collapsed') : document.body.classList.contains('sidebar-collapsed');
+              this.setSidebarCollapsed(!currentlyCollapsed);
+            });
+          }
 
           // Map Control Cluster Handlers
           document.getElementById('btn-zoom-in').onclick = () => MapEngine.map.zoomIn({ duration: 250 });
@@ -7905,6 +7919,7 @@
           const toggleBtn = document.getElementById('btn-toggle-sidebar');
           const restorePill = document.getElementById('btn-restore-deck');
           if (sidebar) {
+            sidebar.style.transform = '';
             sidebar.classList.toggle('is-collapsed', isCollapsed);
           }
           document.body.classList.toggle('sidebar-collapsed', isCollapsed);
@@ -10137,10 +10152,13 @@
 
           if (navigator.vibrate) navigator.vibrate(8);
 
-          // On mobile keep bottom sheet tucked so the Apple Glass drawer is unobstructed
+          // On mobile hide background bottom sheet so the Apple Glass drawer is unobstructed
           const sidebar = document.getElementById('sidebar');
           if (window.innerWidth < 900 && sidebar) {
-            sidebar.style.transform = 'translateY(calc(100% - 84px))';
+            sidebar.style.transform = '';
+            sidebar.classList.add('is-collapsed');
+            const restorePill = document.getElementById('btn-restore-deck');
+            if (restorePill) restorePill.style.display = 'none';
           }
         },
 
@@ -10156,7 +10174,10 @@
           }
           if (window.innerWidth < 900) {
             const sidebar = document.getElementById('sidebar');
-            if (sidebar) sidebar.style.transform = 'translateY(calc(100% - 130px))';
+            if (sidebar) {
+              sidebar.style.transform = '';
+              sidebar.classList.remove('is-collapsed');
+            }
           }
         },
 
