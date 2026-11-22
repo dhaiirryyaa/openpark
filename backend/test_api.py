@@ -729,6 +729,32 @@ def test_ai_copilot_and_vision_inspector():
     assert "copilot_justification" in top_place
 
 
+def test_supabase_integration_endpoints():
+    """Validates Supabase public config, status endpoint, and fallback sync handling."""
+    # 1. Config public exposes Supabase metadata
+    res = client.get("/api/config/public")
+    assert res.status_code == 200
+    data = res.json()
+    assert "supabase_configured" in data
+    assert "supabase_url" in data
+    assert "supabase_anon_key" in data
+
+    # 2. Supabase status endpoint returns health dict
+    status_res = client.get("/api/supabase/status")
+    assert status_res.status_code == 200
+    s_data = status_res.json()
+    assert "status" in s_data
+    assert "connected" in s_data
+
+    # 3. Supabase sync endpoint handles fallback sync gracefully
+    sync_res = client.post("/api/supabase/sync")
+    assert sync_res.status_code == 200
+    sync_data = sync_res.json()
+    assert "status" in sync_data
+    assert "lots_synced" in sync_data
+
+
+
 
 
 

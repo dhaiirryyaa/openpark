@@ -708,7 +708,7 @@ body.nav-active .top-command-island {
   color: var(--text-primary) !important;
   font-size: 13.5px !important;
   font-family: inherit !important;
-  padding: 0 !important;
+  padding: 0 6px 0 8px !important;
   margin: 0 !important;
   box-shadow: none !important;
   min-width: 0 !important;
@@ -824,11 +824,12 @@ body.nav-active .top-command-island {
     max-width: none !important;
     height: 38px !important;
     padding: 0 8px 0 10px !important;
-    gap: 6px !important;
+    gap: 8px !important;
   }
   .island-search .search-input {
     min-width: 0 !important;
     font-size: 13px !important;
+    padding: 0 4px 0 6px !important;
   }
   .island-search .search-kbd-hint {
     display: none !important;
@@ -1045,7 +1046,7 @@ body.sidebar-collapsed #sidebar {
   -webkit-backdrop-filter: blur(28px) saturate(180%) !important;
   border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.14)) !important;
   box-shadow: 0 16px 36px rgba(0, 0, 0, 0.48) !important;
-  max-height: calc(100vh - 120px) !important;
+  max-height: min(72vh, 460px) !important;
   overflow-y: auto !important;
   overflow-x: hidden !important;
   scrollbar-width: none !important;
@@ -1153,7 +1154,7 @@ body.sidebar-collapsed #sidebar {
   .control-cluster {
     bottom: 198px !important;
     right: 14px !important;
-    max-height: calc(100vh - 220px) !important;
+    max-height: min(60vh, 380px) !important;
   }
 }
 

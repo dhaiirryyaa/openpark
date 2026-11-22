@@ -49,6 +49,29 @@ except ImportError:
     from overpass_service import get_overpass_features
 
 try:
+    from backend.supabase_service import (
+        is_supabase_configured,
+        check_supabase_health,
+        sync_fallback_lots_to_supabase,
+        update_lot_in_supabase,
+        save_vehicle_telemetry_to_supabase,
+        save_reservation_to_supabase,
+        save_report_to_supabase,
+        log_copilot_query_to_supabase,
+    )
+except ImportError:
+    from supabase_service import (
+        is_supabase_configured,
+        check_supabase_health,
+        sync_fallback_lots_to_supabase,
+        update_lot_in_supabase,
+        save_vehicle_telemetry_to_supabase,
+        save_reservation_to_supabase,
+        save_report_to_supabase,
+        log_copilot_query_to_supabase,
+    )
+
+try:
     from backend.iiot_service import get_lot_telemetry
 except ImportError:
     from iiot_service import get_lot_telemetry
@@ -287,6 +310,20 @@ class ConnectionManager:
         for ws in dead_sockets:
             self.vehicle_sockets.discard(ws)
 
+        if is_supabase_configured() and data.get("lat") and data.get("lon"):
+            try:
+                asyncio.create_task(save_vehicle_telemetry_to_supabase(
+                    vehicle_id=str(data.get("device_id") or data.get("id") or "device-1"),
+                    lat=float(data["lat"]),
+                    lon=float(data["lon"]),
+                    speed_kmh=float(data.get("speed") or 0.0),
+                    bearing=float(data.get("course") or data.get("bearing") or 0.0),
+                    battery_pct=float(data["battery"]) if data.get("battery") is not None else None,
+                    raw_data=data
+                ))
+            except Exception as e:
+                logger.debug(f"Supabase telemetry sync skipped: {e}")
+
 
 manager = ConnectionManager()
 redis_client: Optional[aioredis.Redis] = None
@@ -428,6 +465,14 @@ async def lifespan(app: FastAPI):
     t_server = await start_traccar_port_5055(manager.broadcast_vehicle)
     if t_server:
         print("Traccar Port 5055 listener active on 0.0.0.0:5055")
+
+    # Auto-sync fallback lots to Supabase if Supabase is configured
+    try:
+        if is_supabase_configured():
+            asyncio.create_task(sync_fallback_lots_to_supabase(FALLBACK_LOTS))
+            print("Initiated background sync of parking lots to Supabase.")
+    except Exception as e:
+        print(f"Supabase startup sync warning: {e}")
 
     yield
 
@@ -1021,7 +1066,7 @@ async def ai_copilot_endpoint(payload: CopilotQueryPayload):
             "vision_confidence": 96
         })
 
-    return await run_copilot_assistant(
+    result = await run_copilot_assistant(
         query=payload.query,
         lat=payload.lat,
         lon=payload.lon,
@@ -1029,6 +1074,27 @@ async def ai_copilot_endpoint(payload: CopilotQueryPayload):
         spots=candidate_spots,
         gemini_key=payload.gemini_key
     )
+
+    if is_supabase_configured():
+        try:
+            best_id = ""
+            if isinstance(result, dict) and result.get("best_spot"):
+                best_id = str(result["best_spot"].get("id") or "")
+            conf = 0.0
+            if isinstance(result, dict) and "confidence" in result:
+                conf = float(result["confidence"])
+            asyncio.create_task(log_copilot_query_to_supabase(
+                query=payload.query,
+                lat=payload.lat,
+                lon=payload.lon,
+                response_text=result.get("recommendation", "") if isinstance(result, dict) else str(result),
+                recommended_spot_id=best_id,
+                confidence=conf
+            ))
+        except Exception as e:
+            logger.debug(f"Supabase copilot log skipped: {e}")
+
+    return result
 
 
 @app.get("/api/ai/vision-inspect")
@@ -1097,15 +1163,33 @@ def public_runtime_config():
     """Non-sensitive runtime configuration flags for client UI initialization."""
     ola_env = os.getenv("OLAMAPS_API_KEY", "")
     google_env = os.getenv("GOOGLE_MAPS_API_KEY", "")
+    supabase_url = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+    supabase_anon_key = os.getenv("SUPABASE_ANON_KEY", "").strip()
     return {
         "status": "ok",
         "olamaps_configured": bool(ola_env),
         "olamaps_key": ola_env,
         "google_maps_configured": bool(google_env),
         "google_maps_key": google_env,
+        "supabase_configured": is_supabase_configured(),
+        "supabase_url": supabase_url,
+        "supabase_anon_key": supabase_anon_key,
         "default_map_style": "google-hybrid",
         "scan_radius_m": 1000,
     }
+
+
+@app.get("/api/supabase/status")
+async def supabase_status_endpoint():
+    """Returns Supabase connection health, table status, and connection diagnostics."""
+    return await check_supabase_health()
+
+
+@app.post("/api/supabase/sync")
+async def supabase_sync_endpoint():
+    """Manual trigger to push fallback lots into Supabase database."""
+    ok = await sync_fallback_lots_to_supabase(FALLBACK_LOTS)
+    return {"status": "ok" if ok else "failed", "lots_synced": len(FALLBACK_LOTS)}
 
 
 # --------------------------------------------------------------------------
@@ -2059,6 +2143,13 @@ async def update_availability(
         except Exception as e:
             print(f"Redis publish error: {e}")
 
+    # Synchronize to Supabase if configured
+    if is_supabase_configured():
+        try:
+            asyncio.create_task(update_lot_in_supabase(lot_id, payload.free_spots, payload.source))
+        except Exception as e:
+            logger.debug(f"Supabase availability sync skipped: {e}")
+
     return {
         "status": "success",
         "lot_id": lot_id,
@@ -2107,6 +2198,21 @@ async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le
         "free_spots": lot["free_spots"],
         "status": lot_status(lot["free_spots"], lot["capacity"], lot["updated_at"]),
     })
+
+    if is_supabase_configured():
+        try:
+            asyncio.create_task(save_reservation_to_supabase(
+                lot_id=lot_id,
+                pass_code=pass_code,
+                bay_number=hold_record["bay_number"],
+                user_id=None,
+                duration_mins=duration_mins,
+                expires_at=expires_at
+            ))
+            asyncio.create_task(update_lot_in_supabase(lot_id, lot["free_spots"], source="hold"))
+        except Exception as e:
+            logger.debug(f"Supabase reservation sync skipped: {e}")
+
     return {"status": "held", **hold_record}
 
 
@@ -2165,6 +2271,14 @@ async def submit_crowdsourced_report(lot_id: int, payload: ReportPayload):
             elif payload.kind == "got_spot":
                 lot["free_spots"] = max(0, (lot["free_spots"] or 10) - 1)
             lot["updated_at"] = now
+
+            if is_supabase_configured():
+                try:
+                    asyncio.create_task(save_report_to_supabase(lot_id=lot_id, kind=payload.kind, reporter_id=payload.reporter_id))
+                    asyncio.create_task(update_lot_in_supabase(lot_id, lot["free_spots"], source=f"report_{payload.kind}"))
+                except Exception as e:
+                    logger.debug(f"Supabase report sync skipped: {e}")
+
             return {
                 "message": f"Report '{payload.kind}' recorded successfully",
                 "lot_id": lot_id,

@@ -16,6 +16,8 @@
   <link rel="stylesheet" href="vendor/maplibre-gl.css" />
   <script src="vendor/maplibre-gl.js"></script>
   <script src="vendor/gsap.min.js"></script>
+  <!-- Supabase Cloud Database & Realtime Pub/Sub Engine -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     /* ==========================================================================
@@ -2565,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v45" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v46" />
 </head>
 <body class="welcome-active">
 
@@ -3320,6 +3322,28 @@
                 <button class="btn-pill-secondary" id="btn-refresh-lots" style="width: auto; padding: 5px 12px; font-size: 12px;">
                   Refresh
                 </button>
+              </div>
+            </div>
+
+            <!-- Supabase Cloud Engine & Realtime Synchronization -->
+            <div class="setting-group" style="margin: 0; padding: 0; border: none; margin-top: 14px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px;">
+              <div class="setting-group-title" style="font-size: 10.5px; display: flex; justify-content: space-between; align-items: center;">
+                <span>Supabase Cloud Engine</span>
+                <span id="supabase-status-pill" class="status-pill status-unknown" style="font-size: 10px; padding: 2px 8px;">Checking...</span>
+              </div>
+              <div class="setting-row" style="flex-direction: column; align-items: flex-start; gap: 8px;">
+                <div style="font-size: 11px; color: var(--color-text-secondary); line-height: 1.45;" id="supabase-status-sub">
+                  PostgreSQL, PostGIS spatial indexing &amp; Realtime WebSocket live broadcast.
+                </div>
+                <div style="display: flex; gap: 8px; width: 100%; margin-top: 4px;">
+                  <button class="btn-pill-secondary" id="btn-supabase-sync" style="flex: 1; padding: 7px 12px; font-size: 11.5px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+                    <span>Push Lots to Supabase</span>
+                  </button>
+                  <button class="btn-pill-secondary" id="btn-supabase-status" style="width: auto; padding: 7px 12px; font-size: 11.5px;">
+                    Check Health
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -9858,6 +9882,158 @@
       };
 
       // --------------------------------------------------------------------------
+      // 5.8.8 Supabase Cloud Database & Realtime Pub/Sub Engine
+      // --------------------------------------------------------------------------
+      const SupabaseRealtime = {
+        client: null,
+        channel: null,
+        isConfigured: false,
+        isConnected: false,
+
+        async init() {
+          const syncBtn = document.getElementById('btn-supabase-sync');
+          const statusBtn = document.getElementById('btn-supabase-status');
+          const statusPill = document.getElementById('supabase-status-pill');
+          const statusSub = document.getElementById('supabase-status-sub');
+
+          if (syncBtn) {
+            syncBtn.onclick = async () => {
+              syncBtn.disabled = true;
+              syncBtn.innerHTML = `<span>Syncing...</span>`;
+              try {
+                const resp = await fetch('/api/supabase/sync', { method: 'POST' });
+                const d = await resp.json();
+                if (d.status === 'ok') {
+                  ParkingApp.showToast(`Synced ${d.lots_synced} lots to Supabase`, 'success');
+                } else {
+                  ParkingApp.showToast(d.message || 'Supabase unconfigured or sync failed', 'warning');
+                }
+              } catch (e) {
+                ParkingApp.showToast('Supabase sync request failed', 'error');
+              } finally {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = `<svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg><span>Push Lots to Supabase</span>`;
+              }
+            };
+          }
+
+          if (statusBtn) {
+            statusBtn.onclick = async () => {
+              statusBtn.disabled = true;
+              try {
+                const resp = await fetch('/api/supabase/status');
+                const d = await resp.json();
+                if (d.connected) {
+                  ParkingApp.showToast(`Supabase Connected (${d.tables?.parking_lots?.count || 0} lots)`, 'success');
+                } else {
+                  ParkingApp.showToast(`Supabase: ${d.message || d.status}`, 'warning');
+                }
+              } catch (e) {
+                ParkingApp.showToast('Could not query Supabase health', 'error');
+              } finally {
+                statusBtn.disabled = false;
+              }
+            };
+          }
+
+          try {
+            const resp = await fetch('/api/config/public');
+            if (!resp.ok) return;
+            const data = await resp.json();
+
+            if (!data.supabase_configured || !data.supabase_url || !data.supabase_anon_key) {
+              if (statusPill) {
+                statusPill.className = 'status-pill status-unknown';
+                statusPill.innerText = 'Local Mode';
+              }
+              if (statusSub) {
+                statusSub.innerText = 'Operating with local database. To connect cloud, set SUPABASE_URL and SUPABASE_ANON_KEY in Railway or .env.';
+              }
+              return;
+            }
+
+            this.isConfigured = true;
+            if (statusPill) {
+              statusPill.className = 'status-pill status-filling';
+              statusPill.innerText = 'Connecting...';
+            }
+
+            if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
+              this.client = window.supabase.createClient(data.supabase_url, data.supabase_anon_key);
+
+              // Subscribe to live postgres_changes on parking_lots & vehicle_telemetry
+              this.channel = this.client
+                .channel('openpark-live')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'parking_lots' }, (payload) => {
+                  this.handleLotUpdate(payload);
+                })
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'vehicle_telemetry' }, (payload) => {
+                  this.handleTelemetryUpdate(payload);
+                })
+                .subscribe((st) => {
+                  if (st === 'SUBSCRIBED') {
+                    this.isConnected = true;
+                    if (statusPill) {
+                      statusPill.className = 'status-pill status-available';
+                      statusPill.innerText = 'Live Realtime';
+                    }
+                    if (statusSub) {
+                      const host = data.supabase_url.replace(/https?:\/\//, '').split('.')[0];
+                      statusSub.innerText = `Connected to ${host}.supabase.co • Realtime pub/sub synchronization active.`;
+                    }
+                  } else if (st === 'CLOSED' || st === 'CHANNEL_ERROR') {
+                    if (statusPill) {
+                      statusPill.className = 'status-pill status-unknown';
+                      statusPill.innerText = 'Disconnected';
+                    }
+                  }
+                });
+            }
+          } catch (err) {
+            console.warn('[SupabaseRealtime] Notice:', err);
+          }
+        },
+
+        handleLotUpdate(payload) {
+          const updated = payload.new;
+          if (!updated || !updated.id) return;
+          const lotId = parseInt(updated.id, 10);
+          const list = STATE.lots || [];
+          const idx = list.findIndex(l => l.id === lotId);
+          if (idx !== -1) {
+            list[idx].free_spots = updated.free_spots;
+            list[idx].updated_at = updated.updated_at || new Date().toISOString();
+            if (typeof MapEngine !== 'undefined' && MapEngine.renderLotMarkers) {
+              MapEngine.renderLotMarkers(list);
+            }
+            if (typeof UIController !== 'undefined' && UIController.renderLotList) {
+              UIController.renderLotList(list);
+            }
+            if (STATE.selectedLot && STATE.selectedLot.id === lotId) {
+              STATE.selectedLot.free_spots = updated.free_spots;
+              if (typeof UIController !== 'undefined' && UIController.renderLotDetail) {
+                UIController.renderLotDetail(STATE.selectedLot);
+              }
+            }
+          }
+        },
+
+        handleTelemetryUpdate(payload) {
+          const rec = payload.new;
+          if (!rec || !rec.latitude || !rec.longitude) return;
+          if (typeof MapEngine !== 'undefined' && MapEngine.updateLiveVehicleMarker) {
+            MapEngine.updateLiveVehicleMarker({
+              lat: rec.latitude,
+              lon: rec.longitude,
+              speed: rec.speed_kmh,
+              bearing: rec.bearing,
+              device_id: rec.vehicle_id
+            });
+          }
+        }
+      };
+
+      // --------------------------------------------------------------------------
       // 5.10 Main Application Orchestration
       // --------------------------------------------------------------------------
       const ParkingApp = {
@@ -9868,6 +10044,7 @@
           SearchEngine.init();
           StreetViewEngine.init();
           ToolbarController.init();
+          SupabaseRealtime.init();
           try {
             MapEngine.init();
           } catch (e) {

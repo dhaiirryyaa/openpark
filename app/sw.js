@@ -2,7 +2,7 @@
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v45-mobile-responsive-fit';
+const CACHE_NAME = 'openpark-offline-v46-supabase-cloud-sync';
 const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/app/',
