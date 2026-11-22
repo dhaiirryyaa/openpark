@@ -236,7 +236,9 @@ async def save_reservation_to_supabase(
     lot_name: str,
     pass_code: str,
     duration_mins: int,
-    expires_at: datetime
+    expires_at: datetime,
+    user_id: Optional[str] = None,
+    user_email: Optional[str] = None
 ) -> bool:
     """Records a new parking hold in Supabase reservations table."""
     if not (SUPABASE_URL and SUPABASE_KEY):
@@ -253,6 +255,11 @@ async def save_reservation_to_supabase(
             "created_at": datetime.now(timezone.utc).isoformat(),
             "expires_at": expires_at.isoformat()
         }
+        if user_id:
+            payload["user_id"] = user_id
+        if user_email:
+            payload["user_email"] = user_email
+
         async with httpx.AsyncClient(timeout=3.0) as client:
             resp = await client.post(
                 f"{SUPABASE_URL}/rest/v1/reservations",
@@ -262,6 +269,124 @@ async def save_reservation_to_supabase(
             return resp.status_code in (200, 201, 204)
     except Exception as e:
         logger.warning(f"[Supabase] Reservation save error: {e}")
+        return False
+
+
+_TOKEN_CACHE: Dict[str, Dict[str, Any]] = {}
+
+
+async def verify_supabase_token(token: str) -> Optional[Dict[str, Any]]:
+    """
+    Verifies a Supabase Auth access token by calling GET /auth/v1/user.
+    Returns user dict with id, email, role, user_metadata.
+    Includes in-memory TTL caching for 60 seconds.
+    """
+    if not token or not SUPABASE_URL or not SUPABASE_KEY:
+        return None
+
+    now = datetime.now(timezone.utc)
+    cached = _TOKEN_CACHE.get(token)
+    if cached and cached["expires_at"] > now:
+        return cached["user"]
+
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(
+                f"{SUPABASE_URL}/auth/v1/user",
+                headers={
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": f"Bearer {token}"
+                }
+            )
+            if resp.status_code == 200:
+                user_data = resp.json()
+                _TOKEN_CACHE[token] = {
+                    "user": user_data,
+                    "expires_at": now + timedelta(seconds=60)
+                }
+                if len(_TOKEN_CACHE) > 1000:
+                    oldest_k = next(iter(_TOKEN_CACHE))
+                    _TOKEN_CACHE.pop(oldest_k, None)
+                return user_data
+    except Exception as e:
+        logger.debug(f"[Supabase Auth] Token verify note: {e}")
+    return None
+
+
+async def fetch_user_profile(user_id: str) -> Optional[Dict[str, Any]]:
+    """Fetches user profile row from public.user_profiles."""
+    if not (SUPABASE_URL and SUPABASE_KEY and user_id):
+        return None
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.get(
+                f"{SUPABASE_URL}/rest/v1/user_profiles?id=eq.{user_id}",
+                headers=get_headers()
+            )
+            if resp.status_code == 200:
+                rows = resp.json()
+                return rows[0] if rows else None
+    except Exception as e:
+        logger.debug(f"[Supabase] User profile fetch note: {e}")
+    return None
+
+
+async def update_user_profile(user_id: str, profile_data: Dict[str, Any]) -> bool:
+    """Upserts user profile in public.user_profiles."""
+    if not (SUPABASE_URL and SUPABASE_KEY and user_id):
+        return False
+    try:
+        payload = {
+            "id": user_id,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+            **profile_data
+        }
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.post(
+                f"{SUPABASE_URL}/rest/v1/user_profiles",
+                headers={
+                    **get_headers(),
+                    "Prefer": "resolution=merge-duplicates"
+                },
+                json=payload
+            )
+            return resp.status_code in (200, 201, 204)
+    except Exception as e:
+        logger.warning(f"[Supabase] User profile update error: {e}")
+        return False
+
+
+async def fetch_user_reservations(user_id: str) -> List[Dict[str, Any]]:
+    """Fetches active and recent reservations for an authenticated user."""
+    if not (SUPABASE_URL and SUPABASE_KEY and user_id):
+        return []
+    try:
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.get(
+                f"{SUPABASE_URL}/rest/v1/reservations?user_id=eq.{user_id}&order=created_at.desc&limit=20",
+                headers=get_headers()
+            )
+            if resp.status_code == 200:
+                return resp.json()
+    except Exception as e:
+        logger.debug(f"[Supabase] User reservations fetch note: {e}")
+    return []
+
+
+async def cancel_user_reservation(user_id: str, hold_id: str) -> bool:
+    """Cancels a reservation owned by user."""
+    if not (SUPABASE_URL and SUPABASE_KEY and user_id and hold_id):
+        return False
+    try:
+        async with httpx.AsyncClient(timeout=3.0) as client:
+            resp = await client.patch(
+                f"{SUPABASE_URL}/rest/v1/reservations?id=eq.{hold_id}&user_id=eq.{user_id}",
+                headers=get_headers(),
+                json={"status": "cancelled", "expires_at": datetime.now(timezone.utc).isoformat()}
+            )
+            return resp.status_code in (200, 204)
+    except Exception as e:
+        logger.warning(f"[Supabase] Cancel reservation error: {e}")
         return False
 
 

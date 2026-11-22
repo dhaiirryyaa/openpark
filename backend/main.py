@@ -34,7 +34,7 @@ from psycopg2.extras import RealDictCursor
 import redis.asyncio as aioredis
 import urllib.parse
 import logging
-from fastapi import FastAPI, HTTPException, Header, WebSocket, WebSocketDisconnect, status, Query, Request
+from fastapi import FastAPI, HTTPException, Header, WebSocket, WebSocketDisconnect, status, Query, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import RedirectResponse, PlainTextResponse, Response
@@ -58,6 +58,11 @@ try:
         save_reservation_to_supabase,
         save_report_to_supabase,
         log_copilot_query_to_supabase,
+        verify_supabase_token,
+        fetch_user_profile,
+        update_user_profile,
+        fetch_user_reservations,
+        cancel_user_reservation,
     )
 except ImportError:
     from supabase_service import (
@@ -69,6 +74,11 @@ except ImportError:
         save_reservation_to_supabase,
         save_report_to_supabase,
         log_copilot_query_to_supabase,
+        verify_supabase_token,
+        fetch_user_profile,
+        update_user_profile,
+        fetch_user_reservations,
+        cancel_user_reservation,
     )
 
 try:
@@ -1193,6 +1203,80 @@ async def supabase_sync_endpoint():
 
 
 # --------------------------------------------------------------------------
+# Supabase Auth & Protected Routes (User Profile, Reservations & Security)
+# --------------------------------------------------------------------------
+
+async def get_current_user(authorization: Optional[str] = Header(None)) -> Optional[Dict[str, Any]]:
+    """Optional user dependency: extracts and verifies Supabase JWT if present."""
+    if not authorization or not authorization.startswith("Bearer "):
+        return None
+    token = authorization.split("Bearer ", 1)[1].strip()
+    return await verify_supabase_token(token)
+
+
+async def require_auth(user: Optional[Dict[str, Any]] = Depends(get_current_user)) -> Dict[str, Any]:
+    """Strict authentication dependency: raises 401 if user is not authenticated."""
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please sign in with Supabase Auth."
+        )
+    return user
+
+
+class ProfileUpdatePayload(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    vehicle_model: Optional[str] = None
+    vehicle_plate: Optional[str] = None
+    vehicle_type: Optional[str] = Field(None, pattern="^(car|suv|ev|bike)$")
+
+
+@app.get("/api/auth/me")
+async def get_my_profile(user: Dict[str, Any] = Depends(require_auth)):
+    """Returns the authenticated user's profile and metadata from Supabase."""
+    profile = await fetch_user_profile(user["id"])
+    return {
+        "status": "ok",
+        "user_id": user["id"],
+        "email": user.get("email"),
+        "role": user.get("role", "authenticated"),
+        "profile": profile or {
+            "id": user["id"],
+            "email": user.get("email"),
+            "full_name": user.get("user_metadata", {}).get("full_name") or (user.get("email", "").split("@")[0]),
+            "vehicle_type": user.get("user_metadata", {}).get("vehicle_type", "car"),
+            "vehicle_model": user.get("user_metadata", {}).get("vehicle_model", ""),
+            "vehicle_plate": user.get("user_metadata", {}).get("vehicle_plate", "")
+        }
+    }
+
+
+@app.put("/api/auth/profile")
+async def update_my_profile(payload: ProfileUpdatePayload, user: Dict[str, Any] = Depends(require_auth)):
+    """Protected route: Updates authenticated user's profile in Supabase user_profiles table."""
+    data = {k: v for k, v in payload.dict().items() if v is not None}
+    ok = await update_user_profile(user["id"], data)
+    return {"status": "ok" if ok else "failed", "user_id": user["id"], "updated": data}
+
+
+@app.get("/api/user/reservations")
+async def get_my_reservations(user: Dict[str, Any] = Depends(require_auth)):
+    """Protected route: Returns active & past reservations for the signed-in driver."""
+    res = await fetch_user_reservations(user["id"])
+    return {"status": "ok", "count": len(res), "reservations": res}
+
+
+@app.delete("/api/user/reservations/{hold_id}")
+async def cancel_my_reservation(hold_id: str, user: Dict[str, Any] = Depends(require_auth)):
+    """Protected route: Cancels a reservation owned by the signed-in driver."""
+    ok = await cancel_user_reservation(user["id"], hold_id)
+    if hold_id in ACTIVE_HOLDS:
+        ACTIVE_HOLDS.pop(hold_id, None)
+    return {"status": "cancelled" if ok else "not_found", "hold_id": hold_id}
+
+
+# --------------------------------------------------------------------------
 # OSM Overpass REST API (Parking Outlines, Fuel Stations, Toll Plazas)
 # --------------------------------------------------------------------------
 
@@ -2165,8 +2249,12 @@ ACTIVE_HOLDS: Dict[str, Dict[str, Any]] = {}
 
 
 @app.post("/lots/{lot_id}/hold")
-async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le=60)):
-    """Reserves 1 bay at an OpenPark lot for 15 minutes and issues a pass code."""
+async def hold_parking_spot(
+    lot_id: int,
+    duration_mins: int = Query(15, ge=5, le=60),
+    user: Optional[Dict[str, Any]] = Depends(get_current_user)
+):
+    """Reserves 1 bay at an OpenPark lot for 15 minutes and issues a pass code. Associates with signed-in Supabase user if authenticated."""
     lot = next((item for item in FALLBACK_LOTS if item["id"] == lot_id), None)
     if not lot:
         raise HTTPException(status_code=404, detail="Parking lot not found")
@@ -2179,6 +2267,8 @@ async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le
     bay_num = (lot_id * 7 + len(ACTIVE_HOLDS)) % 30 + 1
     pass_code = f"OP-PASS-{lot_id}{1000 + (len(ACTIVE_HOLDS) * 37) % 8999}-IN"
     expires_at = datetime.now(timezone.utc) + timedelta(minutes=duration_mins)
+    user_id = user["id"] if user else None
+    user_email = user.get("email") if user else None
     hold_record = {
         "hold_id": pass_code,
         "lot_id": lot_id,
@@ -2188,6 +2278,9 @@ async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le
         "free_spots": lot["free_spots"],
         "expires_at": expires_at.isoformat(),
         "duration_mins": duration_mins,
+        "user_id": user_id,
+        "user_email": user_email,
+        "authenticated": user is not None,
     }
     ACTIVE_HOLDS[pass_code] = hold_record
     if len(ACTIVE_HOLDS) > 500:
@@ -2202,12 +2295,14 @@ async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le
     if is_supabase_configured():
         try:
             asyncio.create_task(save_reservation_to_supabase(
+                reservation_id=pass_code,
                 lot_id=lot_id,
+                lot_name=lot["name"],
                 pass_code=pass_code,
-                bay_number=hold_record["bay_number"],
-                user_id=None,
                 duration_mins=duration_mins,
-                expires_at=expires_at
+                expires_at=expires_at,
+                user_id=user_id,
+                user_email=user_email
             ))
             asyncio.create_task(update_lot_in_supabase(lot_id, lot["free_spots"], source="hold"))
         except Exception as e:
@@ -2217,13 +2312,22 @@ async def hold_parking_spot(lot_id: int, duration_mins: int = Query(15, ge=5, le
 
 
 @app.delete("/lots/{lot_id}/hold")
-async def release_parking_hold(lot_id: int, hold_id: Optional[str] = Query(None)):
+async def release_parking_hold(
+    lot_id: int,
+    hold_id: Optional[str] = Query(None),
+    user: Optional[Dict[str, Any]] = Depends(get_current_user)
+):
     """Releases an active parking bay hold and restores availability."""
     lot = next((item for item in FALLBACK_LOTS if item["id"] == lot_id), None)
     if not lot:
         raise HTTPException(status_code=404, detail="Parking lot not found")
     if hold_id and hold_id in ACTIVE_HOLDS:
         ACTIVE_HOLDS.pop(hold_id, None)
+    if user and hold_id and is_supabase_configured():
+        try:
+            asyncio.create_task(cancel_user_reservation(user["id"], hold_id))
+        except Exception:
+            pass
     cap = int(lot.get("capacity") or 100)
     lot["free_spots"] = min(cap, int(lot.get("free_spots") or 0) + 1)
     lot["updated_at"] = datetime.now(timezone.utc)
@@ -2236,7 +2340,11 @@ async def release_parking_hold(lot_id: int, hold_id: Optional[str] = Query(None)
 
 
 @app.post("/lots/{lot_id}/reports", status_code=status.HTTP_201_CREATED)
-async def submit_crowdsourced_report(lot_id: int, payload: ReportPayload):
+async def submit_crowdsourced_report(
+    lot_id: int,
+    payload: ReportPayload,
+    user: Optional[Dict[str, Any]] = Depends(get_current_user)
+):
     """
     Step 13: Drivers submit crowdsourced report:
     - got_spot, lot_full, or has_space
@@ -2246,7 +2354,8 @@ async def submit_crowdsourced_report(lot_id: int, payload: ReportPayload):
     if payload.kind not in ("got_spot", "lot_full", "has_space"):
         raise HTTPException(status_code=400, detail="Invalid report kind. Must be got_spot, lot_full, or has_space")
 
-    key = (payload.reporter_id, lot_id)
+    reporter = user["id"] if user else payload.reporter_id
+    key = (reporter, lot_id)
     now = datetime.now(timezone.utc)
     if key in REPORTS_RATE_LIMIT:
         last_reported = REPORTS_RATE_LIMIT[key]

@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v47" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v48" />
 </head>
 <body class="welcome-active">
 
@@ -2719,6 +2719,12 @@
 
     <!-- Island Actions -->
     <div class="island-actions">
+      <!-- Supabase Auth Driver Button -->
+      <button id="btn-user-auth" class="header-icon-btn pressable auth-trigger-btn" title="Driver Account & Sign In" aria-label="Driver Account" data-cursor-label="Account">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        </svg>
+      </button>
       <button id="btn-open-welcome" class="header-icon-btn pressable cursor-target" data-cursor-label="Where to?" title="Quick Destinations & Neighborhoods">
         <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
       </button>
@@ -3166,6 +3172,47 @@
 
       <!-- 5. Settings & System Preferences View -->
       <div id="view-more">
+        <!-- Driver Account & Supabase Auth Card -->
+        <div class="setting-group" id="settings-auth-card" style="background: rgba(0, 113, 227, 0.08); border: 1px solid rgba(0, 113, 227, 0.25); border-radius: 16px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div id="settings-auth-avatar" style="width: 32px; height: 32px; border-radius: 50%; background: var(--apple-blue); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px;">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              </div>
+              <div>
+                <div id="settings-auth-title" style="font-size: 13px; font-weight: 700; color: var(--color-text-primary);">Driver Account</div>
+                <div id="settings-auth-email" style="font-size: 11px; color: var(--color-text-secondary);">Sign in to unlock personalized bookings &amp; pass codes</div>
+              </div>
+            </div>
+            <span id="settings-auth-badge" class="status-pill status-unknown" style="font-size: 10px; padding: 2px 8px;">Guest</span>
+          </div>
+
+          <div id="settings-auth-actions" style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="btn-pill-primary" id="btn-settings-signin" style="flex: 1; padding: 7px 12px; font-size: 12px; font-weight: 600;">
+              Sign In with Supabase
+            </button>
+            <button class="btn-pill-secondary" id="btn-settings-register" style="flex: 1; padding: 7px 12px; font-size: 12px;">
+              Create Account
+            </button>
+          </div>
+
+          <!-- Logged-in Driver Details (hidden until authenticated) -->
+          <div id="settings-auth-loggedin-view" style="display: none; flex-direction: column; gap: 8px; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 11.5px;">
+              <span style="color: var(--color-text-tertiary);">Vehicle:</span>
+              <span id="settings-auth-vehicle" style="font-weight: 600; color: var(--color-text-primary);">Car</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <button class="btn-pill-secondary" id="btn-view-my-reservations" style="flex: 1; padding: 6px 10px; font-size: 11.5px; font-weight: 600;">
+                My Reservations (<span id="user-holds-count">0</span>)
+              </button>
+              <button class="btn-pill-secondary" id="btn-settings-signout" style="padding: 6px 14px; font-size: 11.5px; color: #ef4444; border-color: rgba(239, 68, 68, 0.3);">
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+
         <!-- Clean Consumer-Facing Map & App Preferences -->
         <div class="setting-group">
           <div class="setting-group-title">Map &amp; Display Preferences</div>
@@ -3724,6 +3771,114 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px; color: var(--text-secondary);">
         <span>Drag to pan 360° • Pinch / scroll to zoom</span>
         <span style="color: #facc15; font-weight: 600;">Ground-Level Panorama</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Supabase Auth Modal (Sign In / Register) -->
+  <div class="modal-backdrop" id="modal-auth" style="display: none; z-index: 2200;" role="dialog" aria-modal="true" aria-label="Supabase Authentication">
+    <div class="modal-sheet glass-surface" style="max-width: 420px; width: 92vw; padding: 22px; border-radius: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 9px;">
+          <div style="width: 32px; height: 32px; border-radius: 10px; background: rgba(0, 113, 227, 0.15); border: 1px solid rgba(0, 113, 227, 0.35); display: flex; align-items: center; justify-content: center; color: var(--apple-blue);">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <div id="auth-modal-title" style="font-weight: 700; font-size: 16px; color: var(--color-text-primary);">Driver Account</div>
+            <div style="font-size: 11px; color: var(--color-text-tertiary);">Powered by Supabase Auth</div>
+          </div>
+        </div>
+        <button id="modal-auth-close" aria-label="Close" style="background:none; border:none; color:var(--color-text-secondary); cursor:pointer; padding: 4px;">
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div style="font-size: 12px; color: var(--color-text-secondary); line-height: 1.45; margin-bottom: 14px;" id="auth-modal-sub">
+        Sign in or create your driver account to unlock personalized reservations, digital pass codes, and sync across devices.
+      </div>
+
+      <!-- Segmented Tab: Sign In vs Create Account -->
+      <div style="display: flex; background: rgba(0,0,0,0.25); padding: 3px; border-radius: 12px; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+        <button id="tab-auth-signin" class="btn-pill-primary" style="flex: 1; border-radius: 9px; padding: 6px; font-size: 12px; font-weight: 600;">Sign In</button>
+        <button id="tab-auth-signup" class="btn-pill-secondary" style="flex: 1; border-radius: 9px; padding: 6px; font-size: 12px; font-weight: 600; border: none; background: transparent;">Create Account</button>
+      </div>
+
+      <form id="form-auth" style="display: flex; flex-direction: column; gap: 10px;" onsubmit="return false;">
+        <div>
+          <label style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; display: block;">Email Address</label>
+          <input type="email" id="auth-input-email" class="styled-input" placeholder="driver@example.com" required style="width: 100%; height: 38px; font-size: 13px;" />
+        </div>
+
+        <div>
+          <label style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; display: block;">Password</label>
+          <input type="password" id="auth-input-password" class="styled-input" placeholder="••••••••" required style="width: 100%; height: 38px; font-size: 13px;" />
+        </div>
+
+        <!-- Extra fields shown only for Create Account -->
+        <div id="auth-signup-fields" style="display: none; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; display: block;">Full Name</label>
+            <input type="text" id="auth-input-name" class="styled-input" placeholder="Dhairya Khandelwal" style="width: 100%; height: 38px; font-size: 13px;" />
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <div style="flex: 1;">
+              <label style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; display: block;">Vehicle Type</label>
+              <select id="auth-input-vehicle-type" class="styled-input" style="width: 100%; height: 38px; font-size: 12.5px;">
+                <option value="car">Car (Sedan/Hatchback)</option>
+                <option value="suv">SUV</option>
+                <option value="ev">Electric Vehicle (EV)</option>
+                <option value="bike">Motorcycle / Two-Wheeler</option>
+              </select>
+            </div>
+            <div style="flex: 1;">
+              <label style="font-size: 11px; font-weight: 600; color: var(--color-text-secondary); margin-bottom: 4px; display: block;">Plate / Reg No.</label>
+              <input type="text" id="auth-input-plate" class="styled-input" placeholder="KA-01-AB-1234" style="width: 100%; height: 38px; font-size: 13px; text-transform: uppercase;" />
+            </div>
+          </div>
+        </div>
+
+        <div id="auth-error-msg" style="display: none; font-size: 11.5px; color: #ef4444; background: rgba(239, 68, 68, 0.12); padding: 8px 10px; border-radius: 8px; border: 1px solid rgba(239, 68, 68, 0.25);"></div>
+
+        <button type="submit" id="btn-auth-submit" class="btn-pill-primary" style="margin-top: 6px; height: 40px; font-size: 13px; font-weight: 700; width: 100%;">
+          <span>Sign In</span>
+        </button>
+
+        <div style="display: flex; align-items: center; gap: 8px; margin: 6px 0;">
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08);"></div>
+          <span style="font-size: 10px; color: var(--color-text-tertiary); text-transform: uppercase;">or quick test</span>
+          <div style="flex: 1; height: 1px; background: rgba(255,255,255,0.08);"></div>
+        </div>
+
+        <button type="button" id="btn-auth-demo" class="btn-pill-secondary" style="height: 36px; font-size: 12px; font-weight: 600; width: 100%; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+          <span>One-Tap Demo Login (instant testing)</span>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- User Active Reservations Modal -->
+  <div class="modal-backdrop" id="modal-user-reservations" style="display: none; z-index: 2200;" role="dialog" aria-modal="true" aria-label="My Parking Reservations">
+    <div class="modal-sheet glass-surface" style="max-width: 480px; width: 92vw; padding: 20px; border-radius: 24px; max-height: 80vh; overflow-y: auto;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="width: 32px; height: 32px; border-radius: 10px; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); display: flex; align-items: center; justify-content: center; color: #10b981;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div>
+            <div style="font-weight: 700; font-size: 16px; color: var(--color-text-primary);">My Reservations &amp; Entry Passes</div>
+            <div style="font-size: 11px; color: var(--color-text-tertiary);">Protected Supabase User Records</div>
+          </div>
+        </div>
+        <button id="modal-reservations-close" aria-label="Close" style="background:none; border:none; color:var(--color-text-secondary); cursor:pointer; padding: 4px;">
+          <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+
+      <div id="user-reservations-list" style="display: flex; flex-direction: column; gap: 10px; margin-top: 10px;">
+        <div style="text-align: center; padding: 24px 0; color: var(--color-text-tertiary); font-size: 13px;">
+          No active parking bay reservations.
+        </div>
       </div>
     </div>
   </div>
@@ -7575,7 +7730,11 @@
                 holdBtn.style.color = "#34d399";
                 if (STATE.selectedLot && Number.isFinite(Number(STATE.selectedLot.id))) {
                   try {
-                    const rel = await fetch(`/lots/${STATE.selectedLot.id}/hold${activeHoldId ? `?hold_id=${encodeURIComponent(activeHoldId)}` : ''}`, { method: 'DELETE' });
+                    const authHdrs = (typeof SupabaseAuth !== 'undefined' ? SupabaseAuth.getAuthHeader() : {});
+                    const rel = await fetch(`/lots/${STATE.selectedLot.id}/hold${activeHoldId ? `?hold_id=${encodeURIComponent(activeHoldId)}` : ''}`, {
+                      method: 'DELETE',
+                      headers: authHdrs
+                    });
                     if (rel.ok) {
                       const d = await rel.json();
                       STATE.selectedLot.free_spots = d.free_spots;
@@ -7595,9 +7754,20 @@
                   ParkingApp.showToast("No vacant spots available to hold", "warning");
                   return;
                 }
+                // Protected action: prompt user to sign in if not authenticated
+                if (typeof SupabaseAuth !== 'undefined' && SupabaseAuth.client && !SupabaseAuth.user) {
+                  SupabaseAuth.openAuthModal("Sign in with Supabase Auth to reserve this spot and get your verified pass code.", () => {
+                    if (holdBtn) holdBtn.click();
+                  });
+                  return;
+                }
                 if (Number.isFinite(Number(STATE.selectedLot.id))) {
                   try {
-                    const res = await fetch(`/lots/${STATE.selectedLot.id}/hold?duration_mins=15`, { method: 'POST' });
+                    const authHdrs = (typeof SupabaseAuth !== 'undefined' ? SupabaseAuth.getAuthHeader() : {});
+                    const res = await fetch(`/lots/${STATE.selectedLot.id}/hold?duration_mins=15`, {
+                      method: 'POST',
+                      headers: authHdrs
+                    });
                     if (res.ok) {
                       const d = await res.json();
                       activeHoldId = d.hold_id || d.pass_code || null;
@@ -9961,6 +10131,9 @@
 
             if (typeof window.supabase !== 'undefined' && window.supabase.createClient) {
               this.client = window.supabase.createClient(data.supabase_url, data.supabase_anon_key);
+              if (typeof SupabaseAuth !== 'undefined') {
+                SupabaseAuth.init(this.client);
+              }
 
               // Subscribe to live postgres_changes on parking_lots & vehicle_telemetry
               this.channel = this.client
@@ -10030,6 +10203,368 @@
               bearing: rec.bearing,
               device_id: rec.vehicle_id
             });
+          }
+        }
+      };
+
+      // --------------------------------------------------------------------------
+      // 5.8.9 Supabase Auth & Protected Driver Profile Engine
+      // --------------------------------------------------------------------------
+      const SupabaseAuth = {
+        client: null,
+        user: null,
+        session: null,
+        profile: null,
+        pendingAction: null,
+
+        async init(client) {
+          this.client = client;
+          if (!this.client) return;
+
+          try {
+            const { data: { session }, error } = await this.client.auth.getSession();
+            if (session) {
+              this.session = session;
+              this.user = session.user;
+              await this.loadUserProfile();
+              this.updateUI(true);
+            }
+          } catch (e) {
+            console.warn('[SupabaseAuth] getSession note:', e);
+          }
+
+          this.client.auth.onAuthStateChange(async (event, session) => {
+            console.log('[SupabaseAuth] Auth state event:', event);
+            this.session = session;
+            this.user = session?.user || null;
+            if (session && session.user) {
+              await this.loadUserProfile();
+              this.updateUI(true);
+              if (this.pendingAction) {
+                const action = this.pendingAction;
+                this.pendingAction = null;
+                setTimeout(() => action(), 200);
+              }
+            } else {
+              this.profile = null;
+              this.updateUI(false);
+            }
+          });
+
+          this.bindDOM();
+        },
+
+        getAuthHeader() {
+          if (this.session && this.session.access_token) {
+            return { 'Authorization': `Bearer ${this.session.access_token}` };
+          }
+          return {};
+        },
+
+        async loadUserProfile() {
+          if (!this.user) return;
+          try {
+            const resp = await fetch('/api/auth/me', {
+              headers: this.getAuthHeader()
+            });
+            if (resp.ok) {
+              const d = await resp.json();
+              this.profile = d.profile;
+            }
+          } catch (e) {
+            console.debug('[SupabaseAuth] loadUserProfile note:', e);
+          }
+        },
+
+        openAuthModal(reason = null, onLoginSuccess = null) {
+          if (onLoginSuccess) this.pendingAction = onLoginSuccess;
+          const modal = document.getElementById('modal-auth');
+          const sub = document.getElementById('auth-modal-sub');
+          const errEl = document.getElementById('auth-error-msg');
+          if (errEl) errEl.style.display = 'none';
+          if (sub && reason) sub.innerText = reason;
+          if (modal) modal.style.display = 'flex';
+        },
+
+        closeAuthModal() {
+          const modal = document.getElementById('modal-auth');
+          if (modal) modal.style.display = 'none';
+        },
+
+        openReservationsModal() {
+          const modal = document.getElementById('modal-user-reservations');
+          if (modal) modal.style.display = 'flex';
+          this.loadUserReservations();
+        },
+
+        closeReservationsModal() {
+          const modal = document.getElementById('modal-user-reservations');
+          if (modal) modal.style.display = 'none';
+        },
+
+        async loadUserReservations() {
+          const listEl = document.getElementById('user-reservations-list');
+          if (!listEl) return;
+          listEl.innerHTML = '<div style="text-align:center; padding:18px 0; font-size:12px; color:var(--text-secondary);">Loading reservations...</div>';
+          try {
+            const resp = await fetch('/api/user/reservations', {
+              headers: this.getAuthHeader()
+            });
+            if (resp.ok) {
+              const d = await resp.json();
+              const items = d.reservations || [];
+              const countEl = document.getElementById('user-holds-count');
+              if (countEl) countEl.innerText = items.length;
+
+              if (items.length === 0) {
+                listEl.innerHTML = '<div style="text-align:center; padding:24px 0; color:var(--color-text-tertiary); font-size:13px;">No active parking bay reservations. Hold a spot to get your digital pass.</div>';
+                return;
+              }
+
+              listEl.innerHTML = items.map(res => `
+                <div style="background: rgba(255,255,255,0.04); border: 1px solid var(--color-border-subtle); border-radius: 14px; padding: 12px 14px; display: flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 700; font-size: 13.5px; color: var(--color-text-primary);">${res.lot_name || 'Parking Bay'}</div>
+                    <div style="font-size: 11px; font-family: ui-monospace, monospace; color: #34d399; margin-top: 2px;">Pass: ${res.pass_code || res.id}</div>
+                    <div style="font-size: 10.5px; color: var(--color-text-tertiary); margin-top: 2px;">Expires: ${new Date(res.expires_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+                  </div>
+                  <button class="btn-pill-secondary btn-cancel-res pressable" data-id="${res.id}" style="font-size: 11px; padding: 4px 10px; color: #ef4444; border-color: rgba(239,68,68,0.3);">
+                    Cancel
+                  </button>
+                </div>
+              `).join('');
+
+              listEl.querySelectorAll('.btn-cancel-res').forEach(btn => {
+                btn.onclick = async () => {
+                  const id = btn.getAttribute('data-id');
+                  btn.disabled = true;
+                  btn.innerText = 'Cancelling...';
+                  try {
+                    const cResp = await fetch(`/api/user/reservations/${encodeURIComponent(id)}`, {
+                      method: 'DELETE',
+                      headers: this.getAuthHeader()
+                    });
+                    if (cResp.ok) {
+                      ParkingApp.showToast('Reservation cancelled', 'info');
+                      this.loadUserReservations();
+                    }
+                  } catch (e) {
+                    ParkingApp.showToast('Could not cancel reservation', 'error');
+                  }
+                };
+              });
+            }
+          } catch (e) {
+            listEl.innerHTML = '<div style="text-align:center; padding:18px 0; font-size:12px; color:#ef4444;">Failed to load reservations.</div>';
+          }
+        },
+
+        bindDOM() {
+          const authBtn = document.getElementById('btn-user-auth');
+          const closeAuth = document.getElementById('modal-auth-close');
+          const modalAuth = document.getElementById('modal-auth');
+          const tabIn = document.getElementById('tab-auth-signin');
+          const tabUp = document.getElementById('tab-auth-signup');
+          const submitBtn = document.getElementById('btn-auth-submit');
+          const demoBtn = document.getElementById('btn-auth-demo');
+          const extraFields = document.getElementById('auth-signup-fields');
+          const errEl = document.getElementById('auth-error-msg');
+
+          const settingsIn = document.getElementById('btn-settings-signin');
+          const settingsUp = document.getElementById('btn-settings-register');
+          const settingsOut = document.getElementById('btn-settings-signout');
+          const viewHoldsBtn = document.getElementById('btn-view-my-reservations');
+          const closeRes = document.getElementById('modal-reservations-close');
+          const modalRes = document.getElementById('modal-user-reservations');
+
+          if (authBtn) {
+            authBtn.onclick = () => {
+              if (this.user) {
+                this.openReservationsModal();
+              } else {
+                this.openAuthModal();
+              }
+            };
+          }
+
+          if (closeAuth) closeAuth.onclick = () => this.closeAuthModal();
+          if (modalAuth) {
+            modalAuth.onclick = (e) => {
+              if (e.target === modalAuth) this.closeAuthModal();
+            };
+          }
+
+          if (closeRes) closeRes.onclick = () => this.closeReservationsModal();
+          if (modalRes) {
+            modalRes.onclick = (e) => {
+              if (e.target === modalRes) this.closeReservationsModal();
+            };
+          }
+
+          let isSignupMode = false;
+          const setMode = (signup) => {
+            isSignupMode = signup;
+            if (tabIn && tabUp) {
+              if (signup) {
+                tabUp.className = 'btn-pill-primary';
+                tabUp.style.background = '';
+                tabIn.className = 'btn-pill-secondary';
+                tabIn.style.background = 'transparent';
+                tabIn.style.border = 'none';
+                if (extraFields) extraFields.style.display = 'flex';
+                if (submitBtn) submitBtn.innerHTML = '<span>Create Driver Account</span>';
+              } else {
+                tabIn.className = 'btn-pill-primary';
+                tabIn.style.background = '';
+                tabUp.className = 'btn-pill-secondary';
+                tabUp.style.background = 'transparent';
+                tabUp.style.border = 'none';
+                if (extraFields) extraFields.style.display = 'none';
+                if (submitBtn) submitBtn.innerHTML = '<span>Sign In</span>';
+              }
+            }
+          };
+
+          if (tabIn) tabIn.onclick = () => setMode(false);
+          if (tabUp) tabUp.onclick = () => setMode(true);
+          if (settingsIn) settingsIn.onclick = () => { setMode(false); this.openAuthModal(); };
+          if (settingsUp) settingsUp.onclick = () => { setMode(true); this.openAuthModal(); };
+          if (settingsOut) settingsOut.onclick = () => this.signOut();
+          if (viewHoldsBtn) viewHoldsBtn.onclick = () => this.openReservationsModal();
+
+          const emailIn = document.getElementById('auth-input-email');
+          const passIn = document.getElementById('auth-input-password');
+          const nameIn = document.getElementById('auth-input-name');
+          const vTypeIn = document.getElementById('auth-input-vehicle-type');
+          const vPlateIn = document.getElementById('auth-input-plate');
+
+          // Demo quick login
+          if (demoBtn) {
+            demoBtn.onclick = async () => {
+              if (emailIn) emailIn.value = 'demo@openpark.io';
+              if (passIn) passIn.value = 'openpark123!';
+              submitBtn.click();
+            };
+          }
+
+          const form = document.getElementById('form-auth');
+          if (form) {
+            form.onsubmit = async (e) => {
+              e.preventDefault();
+              const email = (emailIn?.value || '').trim();
+              const password = passIn?.value || '';
+              if (!email || !password) return;
+
+              if (submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span>Authenticating...</span>';
+              }
+              if (errEl) errEl.style.display = 'none';
+
+              try {
+                if (isSignupMode) {
+                  const metadata = {
+                    full_name: (nameIn?.value || '').trim() || email.split('@')[0],
+                    vehicle_type: vTypeIn?.value || 'car',
+                    vehicle_plate: (vPlateIn?.value || '').trim().toUpperCase()
+                  };
+                  const { data, error } = await this.client.auth.signUp({
+                    email,
+                    password,
+                    options: { data: metadata }
+                  });
+                  if (error) throw error;
+                  ParkingApp.showToast("Account created successfully!", "success");
+                  this.closeAuthModal();
+                } else {
+                  const { data, error } = await this.client.auth.signInWithPassword({
+                    email,
+                    password
+                  });
+                  if (error) {
+                    // If demo user doesn't exist yet, auto sign-up demo user on the fly!
+                    if (email === 'demo@openpark.io' && error.message.toLowerCase().includes('invalid login')) {
+                      const resUp = await this.client.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { full_name: 'OpenPark Demo Driver', vehicle_type: 'suv', vehicle_plate: 'KA-01-MJ-9999' } }
+                      });
+                      if (!resUp.error) {
+                        ParkingApp.showToast("Demo driver account registered and logged in!", "success");
+                        this.closeAuthModal();
+                        return;
+                      }
+                    }
+                    throw error;
+                  }
+                  ParkingApp.showToast("Welcome back!", "success");
+                  this.closeAuthModal();
+                }
+              } catch (err) {
+                console.error('[SupabaseAuth] Auth error:', err);
+                if (errEl) {
+                  errEl.innerText = err.message || 'Authentication failed. Please check credentials.';
+                  errEl.style.display = 'block';
+                }
+                ParkingApp.showToast(err.message || 'Authentication error', 'error');
+              } finally {
+                if (submitBtn) {
+                  submitBtn.disabled = false;
+                  submitBtn.innerHTML = isSignupMode ? '<span>Create Driver Account</span>' : '<span>Sign In</span>';
+                }
+              }
+            };
+          }
+        },
+
+        updateUI(isLoggedIn) {
+          const authBtn = document.getElementById('btn-user-auth');
+          const authBadge = document.getElementById('settings-auth-badge');
+          const authTitle = document.getElementById('settings-auth-title');
+          const authEmail = document.getElementById('settings-auth-email');
+          const authAvatar = document.getElementById('settings-auth-avatar');
+          const authActions = document.getElementById('settings-auth-actions');
+          const loggedInView = document.getElementById('settings-auth-loggedin-view');
+          const vehicleEl = document.getElementById('settings-auth-vehicle');
+
+          if (isLoggedIn && this.user) {
+            const displayName = this.profile?.full_name || this.user.user_metadata?.full_name || this.user.email.split('@')[0];
+            const initial = displayName.charAt(0).toUpperCase();
+
+            if (authBtn) {
+              authBtn.classList.add('active-blue');
+              authBtn.innerHTML = `<span style="font-weight:700; font-size:12px;">${initial}</span>`;
+              authBtn.title = `Driver: ${displayName} (${this.user.email})`;
+            }
+            if (authBadge) {
+              authBadge.className = 'status-pill status-available';
+              authBadge.innerText = 'Authenticated';
+            }
+            if (authTitle) authTitle.innerText = displayName;
+            if (authEmail) authEmail.innerText = this.user.email;
+            if (authAvatar) authAvatar.innerText = initial;
+            if (authActions) authActions.style.display = 'none';
+            if (loggedInView) loggedInView.style.display = 'flex';
+            if (vehicleEl) {
+              const vType = this.profile?.vehicle_type || this.user.user_metadata?.vehicle_type || 'Car';
+              const vPlate = this.profile?.vehicle_plate || this.user.user_metadata?.vehicle_plate || '';
+              vehicleEl.innerText = `${vType.toUpperCase()} ${vPlate ? `(${vPlate})` : ''}`;
+            }
+          } else {
+            if (authBtn) {
+              authBtn.classList.remove('active-blue');
+              authBtn.innerHTML = `<svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+              authBtn.title = 'Driver Account & Sign In';
+            }
+            if (authBadge) {
+              authBadge.className = 'status-pill status-unknown';
+              authBadge.innerText = 'Guest';
+            }
+            if (authTitle) authTitle.innerText = 'Driver Account';
+            if (authEmail) authEmail.innerText = 'Sign in to unlock personalized bookings & pass codes';
+            if (authAvatar) authAvatar.innerHTML = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>`;
+            if (authActions) authActions.style.display = 'flex';
+            if (loggedInView) loggedInView.style.display = 'none';
           }
         }
       };

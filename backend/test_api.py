@@ -754,6 +754,53 @@ def test_supabase_integration_endpoints():
     assert "lots_synced" in sync_data
 
 
+def test_supabase_auth_and_protected_routes(monkeypatch):
+    """Verifies that protected routes enforce Supabase authentication and handle tokens."""
+    # 1. Unauthenticated requests to protected routes return 401 Unauthorized
+    r_me = client.get("/api/auth/me")
+    assert r_me.status_code == 401
+    assert "Authentication required" in r_me.json()["detail"]
+
+    r_profile = client.put("/api/auth/profile", json={"full_name": "Test Driver"})
+    assert r_profile.status_code == 401
+
+    r_res = client.get("/api/user/reservations")
+    assert r_res.status_code == 401
+
+    r_cancel = client.delete("/api/user/reservations/OP-PASS-999")
+    assert r_cancel.status_code == 401
+
+    # 2. Authenticated request with verified token succeeds
+    async def mock_verify(token):
+        if token == "valid-mock-jwt":
+            return {
+                "id": "00000000-0000-0000-0000-000000000001",
+                "email": "driver@openpark.io",
+                "role": "authenticated",
+                "user_metadata": {"full_name": "OpenPark Driver", "vehicle_type": "suv"}
+            }
+        return None
+
+    monkeypatch.setattr("main.verify_supabase_token", mock_verify)
+
+    auth_headers = {"Authorization": "Bearer valid-mock-jwt"}
+    r_auth_me = client.get("/api/auth/me", headers=auth_headers)
+    assert r_auth_me.status_code == 200
+    d_auth_me = r_auth_me.json()
+    assert d_auth_me["status"] == "ok"
+    assert d_auth_me["user_id"] == "00000000-0000-0000-0000-000000000001"
+    assert d_auth_me["email"] == "driver@openpark.io"
+
+    # 3. Holding a spot with auth token associates with user
+    r_hold = client.post("/lots/1/hold?duration_mins=15", headers=auth_headers)
+    assert r_hold.status_code == 200
+    d_hold = r_hold.json()
+    assert d_hold["status"] == "held"
+    assert d_hold["authenticated"] is True
+    assert d_hold["user_id"] == "00000000-0000-0000-0000-000000000001"
+    assert d_hold["user_email"] == "driver@openpark.io"
+
+
 
 
 
