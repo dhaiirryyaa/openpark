@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v46" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v47" />
 </head>
 <body class="welcome-active">
 
@@ -9924,7 +9924,8 @@
                 const resp = await fetch('/api/supabase/status');
                 const d = await resp.json();
                 if (d.connected) {
-                  ParkingApp.showToast(`Supabase Connected (${d.tables?.parking_lots?.count || 0} lots)`, 'success');
+                  const count = d.tables?.parking_lots?.row_count ?? d.tables?.parking_lots?.count ?? 0;
+                  ParkingApp.showToast(`Supabase Connected (${count} lots)`, 'success');
                 } else {
                   ParkingApp.showToast(`Supabase: ${d.message || d.status}`, 'warning');
                 }
