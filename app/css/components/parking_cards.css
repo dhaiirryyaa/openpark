@@ -1,0 +1,11 @@
+/* Component: Parking Lot Card */
+.op-card-lot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--op-space-2, 8px);
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: var(--op-theme-surface, rgba(30, 31, 38, 0.78));
+  border: 1px solid var(--op-theme-border, rgba(255, 255, 255, 0.08));
+  transition: transform var(--op-duration-fast) var(--op-ease-spring);
+}
