@@ -1,0 +1,17 @@
+[
+  {
+    "name": "Find Parking Near Me",
+    "short_name": "Near Me",
+    "url": "/app/?action=nearby"
+  },
+  {
+    "name": "Saved Parking Lots",
+    "short_name": "Saved",
+    "url": "/app/?filter=saved"
+  },
+  {
+    "name": "Ask AI Copilot",
+    "short_name": "Copilot",
+    "url": "/app/?action=copilot"
+  }
+]
