@@ -1,0 +1,18 @@
+[
+  {
+    "id": "ev-01",
+    "name": "Bescom Fast Charger UB City",
+    "lat": 12.9715,
+    "lon": 77.5947,
+    "connectors": 4,
+    "type": "CCS2"
+  },
+  {
+    "id": "ev-02",
+    "name": "Ather Grid Kasturba Road",
+    "lat": 12.973,
+    "lon": 77.5935,
+    "connectors": 2,
+    "type": "Type2"
+  }
+]
