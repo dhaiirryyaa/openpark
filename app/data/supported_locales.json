@@ -1,0 +1,56 @@
+[
+  {
+    "code": "en",
+    "name": "English",
+    "flag": "🇬🇧",
+    "native": "English"
+  },
+  {
+    "code": "kn",
+    "name": "Kannada",
+    "flag": "🇮🇳",
+    "native": "ಕನ್ನಡ"
+  },
+  {
+    "code": "hi",
+    "name": "Hindi",
+    "flag": "🇮🇳",
+    "native": "हिन्दी"
+  },
+  {
+    "code": "ta",
+    "name": "Tamil",
+    "flag": "🇮🇳",
+    "native": "தமிழ்"
+  },
+  {
+    "code": "te",
+    "name": "Telugu",
+    "flag": "🇮🇳",
+    "native": "తెలుగు"
+  },
+  {
+    "code": "es",
+    "name": "Spanish",
+    "flag": "🇪🇸",
+    "native": "Español"
+  },
+  {
+    "code": "fr",
+    "name": "French",
+    "flag": "🇫🇷",
+    "native": "Français"
+  },
+  {
+    "code": "de",
+    "name": "German",
+    "flag": "🇩🇪",
+    "native": "Deutsch"
+  },
+  {
+    "code": "ja",
+    "name": "Japanese",
+    "flag": "🇯🇵",
+    "native": "日本語"
+  }
+]
