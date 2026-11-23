@@ -1,0 +1,15 @@
+{
+  "morning_peak": {
+    "start": "08:30",
+    "end": "11:30",
+    "delay_factor": 1.65
+  },
+  "evening_peak": {
+    "start": "17:00",
+    "end": "21:00",
+    "delay_factor": 1.85
+  },
+  "off_peak": {
+    "delay_factor": 1.0
+  }
+}
