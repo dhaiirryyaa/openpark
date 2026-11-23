@@ -1,0 +1,8 @@
+/* Modal Fade & Scale */
+@keyframes opModalPop {
+  0% { transform: scale(0.94); opacity: 0; }
+  100% { transform: scale(1.0); opacity: 1; }
+}
+.op-modal-enter {
+  animation: opModalPop 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
