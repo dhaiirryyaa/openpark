@@ -1,0 +1,12 @@
+{
+  "cyber_obsidian": {
+    "name": "Cyber Obsidian",
+    "bg": "#0a0e17",
+    "glass": "rgba(15, 23, 42, 0.88)"
+  },
+  "arctic_quartz": {
+    "name": "Arctic Quartz",
+    "bg": "#f8fafc",
+    "glass": "rgba(255, 255, 255, 0.94)"
+  }
+}
