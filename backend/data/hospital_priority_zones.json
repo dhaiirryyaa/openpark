@@ -1,0 +1,14 @@
+[
+  {
+    "hospital": "Manipal Hospital Old Airport Rd",
+    "lat": 12.9587,
+    "lon": 77.6483,
+    "emergency_bays": 8
+  },
+  {
+    "hospital": "Fortis Hospital Bannerghatta",
+    "lat": 12.8938,
+    "lon": 77.5978,
+    "emergency_bays": 6
+  }
+]
