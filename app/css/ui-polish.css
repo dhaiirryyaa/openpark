@@ -2457,30 +2457,42 @@ body.sidebar-collapsed #sidebar {
    -------------------------------------------------------------------------- */
 
 .ai-copilot-card {
-  margin: 6px 0 10px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 10px 12px;
-  border-radius: 16px;
-  background: var(--text-contrast-layer, rgba(255, 255, 255, 0.04));
-  border: 1px solid var(--color-border-subtle, rgba(255, 255, 255, 0.08));
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  margin: 6px 0 10px 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 9px !important;
+  padding: 12px 14px !important;
+  border-radius: 18px !important;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.82)) !important;
+  backdrop-filter: blur(20px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+  border: 1px solid rgba(56, 189, 248, 0.24) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32), 0 0 0 1px rgba(56, 189, 248, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+[data-theme="light"] .ai-copilot-card {
+  background: linear-gradient(135deg, rgba(240, 249, 255, 0.95), rgba(255, 255, 255, 0.95)) !important;
+  border-color: rgba(0, 113, 227, 0.25) !important;
+  box-shadow: 0 4px 16px rgba(0, 113, 227, 0.08) !important;
 }
 
 .ai-copilot-input-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--glass-bg, rgba(28, 28, 30, 0.88));
-  border: 1px solid var(--glass-border-color, rgba(255, 255, 255, 0.12));
-  border-radius: 12px;
-  padding: 4px 8px 4px 10px;
-  transition: all 180ms ease;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: rgba(15, 23, 42, 0.85) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 12px !important;
+  padding: 5px 8px 5px 11px !important;
+  transition: all 180ms ease !important;
+}
+[data-theme="light"] .ai-copilot-input-row {
+  background: #ffffff !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
 }
 .ai-copilot-input-row:focus-within {
-  border-color: var(--apple-blue, #0071e3);
-  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.25);
+  border-color: var(--apple-blue, #0071e3) !important;
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.25), 0 0 12px rgba(0, 113, 227, 0.2) !important;
 }
 
 .copilot-input-field {
@@ -2544,26 +2556,27 @@ body.sidebar-collapsed #sidebar {
 }
 .copilot-chip {
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 4px 9px;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 999px;
+  padding: 4px 10px;
   font-size: 11px;
   font-weight: 600;
-  color: var(--text-secondary, #8e8e93);
+  color: #94a3b8;
   white-space: nowrap;
   cursor: pointer;
-  transition: all 160ms ease;
+  transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-theme="light"] .copilot-chip {
   background: rgba(0, 0, 0, 0.04);
   border-color: rgba(0, 0, 0, 0.08);
-  color: #6e6e73;
+  color: #64748b;
 }
 .copilot-chip:hover {
-  background: rgba(0, 113, 227, 0.12);
-  border-color: rgba(0, 113, 227, 0.35);
-  color: var(--apple-blue, #0071e3);
-  transform: translateY(-1px);
+  background: rgba(0, 113, 227, 0.18);
+  border-color: rgba(56, 189, 248, 0.5);
+  color: #38bdf8;
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
 }
 
 /* Copilot Result Card & Speech Output */
@@ -3136,31 +3149,6 @@ body.sidebar-collapsed #sidebar {
   transform: scale(0.98) !important;
 }
 
-/* 4. Compact AI Copilot Card */
-.ai-copilot-card {
-  background: rgba(255, 255, 255, 0.03) !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 14px !important;
-  padding: 6px 12px !important;
-  margin-bottom: 8px !important;
-}
-.ai-copilot-input-row {
-  display: flex !important;
-  align-items: center !important;
-  gap: 8px !important;
-  height: 38px !important;
-}
-.copilot-input-field {
-  flex: 1 !important;
-  background: transparent !important;
-  border: none !important;
-  outline: none !important;
-  color: #ffffff !important;
-  font-size: 13px !important;
-}
-.copilot-input-field::placeholder {
-  color: rgba(255, 255, 255, 0.42) !important;
-}
 
 /* 5. Prevent column squish in AI scan bar */
 #ai-scan-bar-container,
