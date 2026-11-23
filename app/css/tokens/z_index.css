@@ -1,0 +1,12 @@
+/* OpenPark Design System: Z-Index Stacking Contexts */
+:root {
+  --op-z-map: 1;
+  --op-z-route: 10;
+  --op-z-pins: 50;
+  --op-z-hud: 900;
+  --op-z-sidebar: 1000;
+  --op-z-drawer: 1100;
+  --op-z-island: 1200;
+  --op-z-modal: 1400;
+  --op-z-toast: 1600;
+}
