@@ -1,0 +1,15 @@
+/* OpenPark Design System: Typography Tokens */
+:root {
+  --op-font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  --op-font-mono: "SF Mono", "JetBrains Mono", Consolas, monospace;
+  --op-text-xs: 10.5px;
+  --op-text-sm: 12px;
+  --op-text-base: 13.5px;
+  --op-text-md: 15px;
+  --op-text-lg: 18px;
+  --op-text-xl: 22px;
+  --op-weight-normal: 400;
+  --op-weight-medium: 500;
+  --op-weight-semibold: 600;
+  --op-weight-bold: 700;
+}
