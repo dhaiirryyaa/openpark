@@ -1,0 +1,16 @@
+[
+  {
+    "name": "Orion Mall Parking",
+    "capacity": 1800,
+    "levels": 4,
+    "lat": 13.011,
+    "lon": 77.555
+  },
+  {
+    "name": "Phoenix Marketcity",
+    "capacity": 2200,
+    "levels": 3,
+    "lat": 12.9961,
+    "lon": 77.6963
+  }
+]
