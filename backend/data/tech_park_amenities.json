@@ -1,0 +1,14 @@
+[
+  {
+    "park": "Manyata Tech Park",
+    "capacity": 5500,
+    "lat": 13.0475,
+    "lon": 77.62
+  },
+  {
+    "park": "Bagmane Tech Park",
+    "capacity": 3200,
+    "lat": 12.9815,
+    "lon": 77.6625
+  }
+]
