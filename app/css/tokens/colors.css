@@ -1,0 +1,14 @@
+/* OpenPark Design System: Color Tokens */
+:root {
+  --op-color-bg-base: #0a0e17;
+  --op-color-bg-surface: #111827;
+  --op-color-bg-elevated: #1f2937;
+  --op-color-brand-primary: #0071e3;
+  --op-color-brand-accent: #38bdf8;
+  --op-color-status-success: #10b981;
+  --op-color-status-warning: #f59e0b;
+  --op-color-status-danger: #ef4444;
+  --op-color-text-primary: #f8fafc;
+  --op-color-text-secondary: #94a3b8;
+  --op-color-text-muted: #64748b;
+}
