@@ -1,0 +1,8 @@
+/* AI Sparkle Twinkle */
+@keyframes opSparkleTwinkle {
+  0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.85; }
+  50% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+}
+.op-sparkle-active {
+  animation: opSparkleTwinkle 1.8s ease-in-out infinite;
+}
