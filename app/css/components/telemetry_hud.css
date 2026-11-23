@@ -1,0 +1,10 @@
+/* Component: Telemetry HUD Ribbon */
+.op-telemetry-hud {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-family: var(--op-font-mono);
+  font-size: 11px;
+}
