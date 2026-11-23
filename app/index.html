@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v49" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v50" />
 </head>
 <body class="welcome-active">
 
@@ -3744,8 +3744,8 @@
   </div>
 
   <!-- 360° Google Street View Modal -->
-  <div class="modal-backdrop" id="modal-street-view" style="display: none;" role="dialog" aria-modal="true" aria-label="360° Street View Panorama">
-    <div class="modal-sheet glass-surface street-view-sheet" style="max-width: 720px; width: 92vw; padding: 18px; border-radius: 24px;">
+  <div class="modal-backdrop" id="modal-street-view" style="display: none; z-index: 2500; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);" role="dialog" aria-modal="true" aria-label="360° Street View Panorama">
+    <div class="modal-sheet glass-surface street-view-sheet" style="max-width: 740px; width: 92vw; padding: 18px; border-radius: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.85); border: 1px solid rgba(255, 255, 255, 0.15); margin: auto;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
         <div style="display: flex; align-items: center; gap: 9px;">
           <div style="width: 30px; height: 30px; border-radius: 9px; background: rgba(250, 204, 21, 0.15); border: 1px solid rgba(250, 204, 21, 0.35); display: flex; align-items: center; justify-content: center; color: #facc15;">
@@ -9908,6 +9908,8 @@
       const StreetViewEngine = {
         isOpen: false,
         googleKey: null,
+        _sdkPromise: null,
+        activePanorama: null,
 
         async init() {
           try {
@@ -9929,7 +9931,32 @@
           }
         },
 
-        open(lat, lon, title = '360° Street View') {
+        loadGoogleMapsSdk() {
+          if (window.google && window.google.maps && window.google.maps.StreetViewService) {
+            return Promise.resolve(window.google);
+          }
+          if (this._sdkPromise) return this._sdkPromise;
+
+          this._sdkPromise = new Promise((resolve) => {
+            if (!this.googleKey) {
+              resolve(null);
+              return;
+            }
+            const script = document.createElement('script');
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(this.googleKey)}`;
+            script.async = true;
+            script.defer = true;
+            script.onload = () => resolve(window.google);
+            script.onerror = (err) => {
+              console.warn('[StreetViewEngine] Google Maps SDK load notice:', err);
+              resolve(null);
+            };
+            document.head.appendChild(script);
+          });
+          return this._sdkPromise;
+        },
+
+        async open(lat, lon, title = '360° Street View') {
           if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) {
             if (STATE.selectedLot) {
               lat = STATE.selectedLot.lat;
@@ -9959,6 +9986,11 @@
           lon = Number(lon);
           this.isOpen = true;
 
+          // Retract location options drawer to avoid screen overlap
+          if (typeof LocationActionEngine !== 'undefined' && LocationActionEngine.hide) {
+            LocationActionEngine.hide();
+          }
+
           const modal = document.getElementById('modal-street-view');
           const titleEl = document.getElementById('street-view-title');
           const coordsEl = document.getElementById('street-view-coords');
@@ -9971,14 +10003,77 @@
             extBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lon.toFixed(6)}`;
           }
 
-          let embedSrc = '';
-          if (this.googleKey) {
-            embedSrc = `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(this.googleKey)}&location=${lat.toFixed(6)},${lon.toFixed(6)}&heading=0&pitch=0&fov=90&solution_id=gmp_git_agentskills_v1`;
-          } else {
-            embedSrc = `https://maps.google.com/maps?q=&layer=c&cbll=${lat.toFixed(6)},${lon.toFixed(6)}&cbp=11,0,0,0,0&output=svembed`;
+          if (container) {
+            container.innerHTML = `
+              <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 13px; gap: 8px;">
+                <span class="status-pulse status-blue"></span>
+                <span>Connecting to 360° Ground Panorama for ${title}…</span>
+              </div>
+            `;
           }
 
+          if (modal) modal.style.display = 'flex';
+          const svBtn = document.getElementById('btn-street-view');
+          if (svBtn) svBtn.classList.add('active-blue');
+
+          // Attempt Google Maps JavaScript StreetViewPanorama first
+          try {
+            const googleObj = await this.loadGoogleMapsSdk();
+            if (googleObj && googleObj.maps && googleObj.maps.StreetViewService && container) {
+              const svService = new googleObj.maps.StreetViewService();
+              svService.getPanorama({
+                location: { lat, lng: lon },
+                radius: 450,
+                preference: googleObj.maps.StreetViewPreference ? googleObj.maps.StreetViewPreference.NEAREST : 'nearest',
+                source: googleObj.maps.StreetViewSource ? googleObj.maps.StreetViewSource.DEFAULT : 'default'
+              }, (data, status) => {
+                if (!this.isOpen) return;
+                if (status === 'OK' && data && data.location) {
+                  container.innerHTML = '';
+                  this.activePanorama = new googleObj.maps.StreetViewPanorama(container, {
+                    position: data.location.latLng,
+                    pov: { heading: 165, pitch: 0 },
+                    zoom: 1,
+                    addressControl: true,
+                    linksControl: true,
+                    panControl: true,
+                    enableCloseButton: false,
+                    fullscreenControl: false
+                  });
+                  return;
+                }
+
+                // If no direct car camera imagery inside this exact spot (e.g. inner park lawn)
+                container.innerHTML = `
+                  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--text-secondary); background: radial-gradient(circle at 50% 40%, rgba(250, 204, 21, 0.05), transparent 70%);">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(250, 204, 21, 0.15); border: 1px solid rgba(250, 204, 21, 0.35); display: flex; align-items: center; justify-content: center; color: #facc15; margin-bottom: 12px;">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
+                    </div>
+                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary); margin-bottom: 6px;">360° Street View Not Directly Inside This Spot</div>
+                    <p style="font-size: 12.5px; max-width: 440px; margin-bottom: 18px; line-height: 1.45; color: var(--text-secondary);">
+                      Google does not have street camera car imagery inside this specific park path or property (${title}). You can view the surrounding perimeter roads and user photos in Google Maps.
+                    </p>
+                    <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lon.toFixed(6)}" target="_blank" rel="noopener noreferrer" class="btn-primary pressable" style="padding: 10px 18px; font-size: 12.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      Open Nearest View in Google Maps
+                    </a>
+                  </div>
+                `;
+              });
+              return;
+            }
+          } catch (sdkErr) {
+            console.warn('[StreetViewEngine] JS Panorama fallback:', sdkErr);
+          }
+
+          // Fallback iframe embed without solution_id
           if (container) {
+            let embedSrc = '';
+            if (this.googleKey) {
+              embedSrc = `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(this.googleKey)}&location=${lat.toFixed(6)},${lon.toFixed(6)}&heading=0&pitch=0&fov=90`;
+            } else {
+              embedSrc = `https://maps.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}&output=embed`;
+            }
             container.innerHTML = `
               <iframe
                 src="${embedSrc}"
@@ -9991,11 +10086,6 @@
               </iframe>
             `;
           }
-
-          if (modal) modal.style.display = 'flex';
-          const svBtn = document.getElementById('btn-street-view');
-          if (svBtn) svBtn.classList.add('active-blue');
-          ParkingApp.showToast(`Loading 360° Street View for ${title}…`, 'info', 2500);
         },
 
         close() {
@@ -10004,6 +10094,7 @@
           if (modal) modal.style.display = 'none';
           const container = document.getElementById('street-view-iframe-container');
           if (container) container.innerHTML = '';
+          this.activePanorama = null;
           const svBtn = document.getElementById('btn-street-view');
           if (svBtn) svBtn.classList.remove('active-blue');
         },
@@ -12528,7 +12619,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261123_v49', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261123_v50', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
