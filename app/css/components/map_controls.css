@@ -1,0 +1,9 @@
+/* Component: Map Control Cluster */
+.op-map-toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 22px;
+  background: rgba(14, 18, 27, 0.92);
+}
