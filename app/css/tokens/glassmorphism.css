@@ -1,0 +1,8 @@
+/* OpenPark Design System: Glassmorphism Material Presets */
+:root {
+  --op-glass-blur-sm: blur(12px) saturate(160%);
+  --op-glass-blur-md: blur(24px) saturate(180%);
+  --op-glass-blur-lg: blur(36px) saturate(210%);
+  --op-glass-border-dark: 1px solid rgba(255, 255, 255, 0.12);
+  --op-glass-border-light: 1px solid rgba(0, 0, 0, 0.08);
+}
