@@ -1,0 +1,14 @@
+[
+  {
+    "station": "Baiyappanahalli",
+    "capacity": 450,
+    "lat": 12.9912,
+    "lon": 77.6525
+  },
+  {
+    "station": "Mysuru Road",
+    "capacity": 600,
+    "lat": 12.9463,
+    "lon": 77.5287
+  }
+]
