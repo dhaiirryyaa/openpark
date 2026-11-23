@@ -1,0 +1,10 @@
+/* Component: Location Action Drawer */
+.op-action-drawer {
+  position: absolute;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-radius: 20px;
+  padding: 16px 20px;
+  z-index: var(--op-z-drawer, 1100);
+}
