@@ -1,0 +1,8 @@
+/* Refresh Icon Spin */
+@keyframes opSpinSync {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.op-spinning {
+  animation: opSpinSync 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
