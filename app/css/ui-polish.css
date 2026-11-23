@@ -3256,6 +3256,13 @@ body.sidebar-collapsed #location-options-drawer {
   }
 }
 
+/* 12. Hide Google Maps "For development purposes only" Watermark Badge */
+#street-view-iframe-container .gm-err-container,
+#street-view-iframe-container .gm-style-cc {
+  opacity: 0.25 !important;
+}
+
+
 
 
 

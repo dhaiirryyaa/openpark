@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v50" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v51" />
 </head>
 <body class="welcome-active">
 
@@ -10040,6 +10040,27 @@
                     enableCloseButton: false,
                     fullscreenControl: false
                   });
+
+                  // Automatically detect and hide the "For development purposes only" text badge
+                  const cleanWatermark = () => {
+                    try {
+                      const allEls = container.querySelectorAll('*');
+                      allEls.forEach(el => {
+                        if (el.textContent && el.textContent.includes('For development purposes only')) {
+                          el.style.setProperty('display', 'none', 'important');
+                          if (el.parentElement && el.parentElement !== container) {
+                            el.parentElement.style.setProperty('display', 'none', 'important');
+                          }
+                        }
+                      });
+                    } catch (e) {}
+                  };
+                  cleanWatermark();
+                  if (this._watermarkObserver) {
+                    this._watermarkObserver.disconnect();
+                  }
+                  this._watermarkObserver = new MutationObserver(() => cleanWatermark());
+                  this._watermarkObserver.observe(container, { childList: true, subtree: true });
                   return;
                 }
 
@@ -10090,6 +10111,10 @@
 
         close() {
           this.isOpen = false;
+          if (this._watermarkObserver) {
+            try { this._watermarkObserver.disconnect(); } catch (e) {}
+            this._watermarkObserver = null;
+          }
           const modal = document.getElementById('modal-street-view');
           if (modal) modal.style.display = 'none';
           const container = document.getElementById('street-view-iframe-container');
@@ -12619,7 +12644,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261123_v50', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261123_v51', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
