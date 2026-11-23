@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v51" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v52" />
 </head>
 <body class="welcome-active">
 
@@ -3091,10 +3091,6 @@
             <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
             <span>Directions</span>
           </button>
-          <button class="pv-action-btn" id="btn-pv-street-view" title="View in 360° Google Street View">
-            <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="4.5" r="2.5" fill="currentColor"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z" fill="currentColor"/></svg>
-            <span>Street View</span>
-          </button>
           <button class="pv-action-btn" id="btn-pv-set-loc" title="Set this place as my current location">
             <svg class="pv-action-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
             <span>Set As Mine</span>
@@ -3445,12 +3441,6 @@
     <button class="cluster-btn pressable" id="btn-tilt-3d" aria-label="Toggle 3D tilt" title="Toggle 3D View">
       <span style="font-size: 12px; font-weight: 700; letter-spacing: -0.5px;">3D</span>
     </button>
-    <button class="cluster-btn pressable" id="btn-street-view" aria-label="Open 360° Street View" title="Open 360° Street View Panorama [Shortcut: S]">
-      <svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <circle cx="12" cy="4.5" r="2.5" fill="currentColor"/>
-        <path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z" fill="currentColor"/>
-      </svg>
-    </button>
     <div class="hud-divider"></div>
     <button class="cluster-btn pressable" id="btn-theme" aria-label="Toggle dark or light glass" title="Toggle Dark / Light Liquid Glass">
       <svg class="svg-icon" viewBox="0 0 24 24">
@@ -3743,38 +3733,6 @@
     </div>
   </div>
 
-  <!-- 360° Google Street View Modal -->
-  <div class="modal-backdrop" id="modal-street-view" style="display: none; z-index: 2500; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);" role="dialog" aria-modal="true" aria-label="360° Street View Panorama">
-    <div class="modal-sheet glass-surface street-view-sheet" style="max-width: 740px; width: 92vw; padding: 18px; border-radius: 24px; box-shadow: 0 24px 60px rgba(0,0,0,0.85); border: 1px solid rgba(255, 255, 255, 0.15); margin: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-        <div style="display: flex; align-items: center; gap: 9px;">
-          <div style="width: 30px; height: 30px; border-radius: 9px; background: rgba(250, 204, 21, 0.15); border: 1px solid rgba(250, 204, 21, 0.35); display: flex; align-items: center; justify-content: center; color: #facc15;">
-            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
-          </div>
-          <div>
-            <div style="font-weight: 700; font-size: 14.5px; color: var(--text-primary);" id="street-view-title">360° Street View</div>
-            <div style="font-size: 11.5px; color: var(--text-secondary); font-family: monospace;" id="street-view-coords">12.97160, 77.59460</div>
-          </div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <a id="btn-street-view-external" href="#" target="_blank" rel="noopener noreferrer" class="btn-pill-secondary pressable" style="text-decoration: none; display: flex; align-items: center; gap: 5px; padding: 5px 12px; font-size: 11.5px;" title="Open full 360° in Google Maps">
-            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-            <span>Google Maps</span>
-          </a>
-          <button id="modal-street-view-close" aria-label="Close Street View" style="background:none; border:none; color:var(--color-text-secondary); cursor:pointer; padding: 4px;">
-            <svg class="svg-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          </button>
-        </div>
-      </div>
-      <div id="street-view-iframe-container" style="width: 100%; height: min(420px, 58vh); border-radius: 16px; overflow: hidden; background: #0b0f19; border: 1px solid var(--glass-border-color); position: relative;">
-      </div>
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; font-size: 11px; color: var(--text-secondary);">
-        <span>Drag to pan 360° • Pinch / scroll to zoom</span>
-        <span style="color: #facc15; font-weight: 600;">Ground-Level Panorama</span>
-      </div>
-    </div>
-  </div>
-
   <!-- Supabase Auth Modal (Sign In / Register) -->
   <div class="modal-backdrop" id="modal-auth" style="display: none; z-index: 2200;" role="dialog" aria-modal="true" aria-label="Supabase Authentication">
     <div class="modal-sheet glass-surface" style="max-width: 420px; width: 92vw; padding: 22px; border-radius: 24px;">
@@ -3987,10 +3945,6 @@
 
     <div class="action-grid">
       <button class="btn-secondary pressable" id="drawer-btn-dismiss">Dismiss</button>
-      <button class="btn-secondary pressable" id="drawer-btn-street-view" title="Inspect ground-level entrance in 360° Street View">
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
-        <span>Street View</span>
-      </button>
       <button class="btn-secondary pressable" id="drawer-btn-details">Full Info</button>
       <button class="btn-primary pressable" id="drawer-btn-navigate">
         <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -4020,12 +3974,8 @@
       </button>
     </div>
 
-    <!-- Quick Location Action Grid (360° Street View, Directions, Parking, Set Location) -->
+    <!-- Quick Location Action Grid (Directions, Parking, Set Location) -->
     <div class="action-grid loc-actions-grid" style="margin-top: 14px;">
-      <button class="btn-secondary pressable loc-action-sv" id="loc-btn-street-view" title="Inspect ground-level in 360° Street View">
-        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
-        <span>360° Street View</span>
-      </button>
       <button class="btn-primary pressable" id="loc-btn-navigate" title="Start turn-by-turn navigation to this location">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="12" y1="19" x2="12" y2="5"></line>
@@ -7658,8 +7608,6 @@
               if (btn) btn.click();
             } else if (e.key === 'p' || e.key === 'P') {
               PinLocationEngine.toggle();
-            } else if (e.key === 's' || e.key === 'S') {
-              StreetViewEngine.toggle();
             } else if (e.key === 't' || e.key === 'T') {
               if (window.ToolbarController) ToolbarController.toggle();
             } else if (e.key === 'v' || e.key === 'V') {
@@ -7670,35 +7618,6 @@
           document.getElementById('btn-my-location').onclick = () => {
             ParkingApp.toggleLiveLocation();
           };
-
-          const streetViewBtn = document.getElementById('btn-street-view');
-          if (streetViewBtn) {
-            streetViewBtn.onclick = () => {
-              StreetViewEngine.toggle();
-            };
-          }
-
-          const drawerSvBtn = document.getElementById('drawer-btn-street-view');
-          if (drawerSvBtn) {
-            drawerSvBtn.onclick = () => {
-              if (STATE.selectedLot) {
-                StreetViewEngine.open(STATE.selectedLot.lat, STATE.selectedLot.lon, STATE.selectedLot.name);
-              } else {
-                StreetViewEngine.open();
-              }
-            };
-          }
-
-          const pvSvBtn = document.getElementById('btn-pv-street-view');
-          if (pvSvBtn) {
-            pvSvBtn.onclick = () => {
-              if (STATE.selectedPlace) {
-                StreetViewEngine.open(STATE.selectedPlace.lat, STATE.selectedPlace.lon, STATE.selectedPlace.name);
-              } else {
-                StreetViewEngine.open();
-              }
-            };
-          }
 
           const pinBtn = document.getElementById('btn-pin-exact-spot');
           if (pinBtn) {
@@ -9903,235 +9822,18 @@
       };
 
       // --------------------------------------------------------------------------
-      // 5.8.6 Google Street View 360° Panorama Engine
+      // 5.8.6 Street View Engine (Removed)
       // --------------------------------------------------------------------------
       const StreetViewEngine = {
         isOpen: false,
-        googleKey: null,
-        _sdkPromise: null,
-        activePanorama: null,
-
-        async init() {
-          try {
-            const resp = await fetch('/api/config/public');
-            if (resp.ok) {
-              const data = await resp.json();
-              if (data.google_maps_key) this.googleKey = data.google_maps_key;
-            }
-          } catch (e) {}
-
-          const closeBtn = document.getElementById('modal-street-view-close');
-          if (closeBtn) closeBtn.onclick = () => this.close();
-
-          const modal = document.getElementById('modal-street-view');
-          if (modal) {
-            modal.addEventListener('click', (e) => {
-              if (e.target === modal) this.close();
-            });
-          }
-        },
-
-        loadGoogleMapsSdk() {
-          if (window.google && window.google.maps && window.google.maps.StreetViewService) {
-            return Promise.resolve(window.google);
-          }
-          if (this._sdkPromise) return this._sdkPromise;
-
-          this._sdkPromise = new Promise((resolve) => {
-            if (!this.googleKey) {
-              resolve(null);
-              return;
-            }
-            const script = document.createElement('script');
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(this.googleKey)}`;
-            script.async = true;
-            script.defer = true;
-            script.onload = () => resolve(window.google);
-            script.onerror = (err) => {
-              console.warn('[StreetViewEngine] Google Maps SDK load notice:', err);
-              resolve(null);
-            };
-            document.head.appendChild(script);
-          });
-          return this._sdkPromise;
-        },
-
-        async open(lat, lon, title = '360° Street View') {
-          if (!Number.isFinite(Number(lat)) || !Number.isFinite(Number(lon))) {
-            if (STATE.selectedLot) {
-              lat = STATE.selectedLot.lat;
-              lon = STATE.selectedLot.lon;
-              title = STATE.selectedLot.name;
-            } else if (STATE.selectedPlace) {
-              lat = STATE.selectedPlace.lat;
-              lon = STATE.selectedPlace.lon;
-              title = STATE.selectedPlace.name;
-            } else if (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) {
-              lat = STATE.userLocation.lat;
-              lon = STATE.userLocation.lng;
-              title = 'Current Location';
-            } else if (MapEngine.map) {
-              const c = MapEngine.map.getCenter();
-              lat = c.lat;
-              lon = c.lng;
-              title = 'Map Center';
-            } else {
-              lat = CONFIG.DEFAULT_COORDS[1];
-              lon = CONFIG.DEFAULT_COORDS[0];
-              title = 'Bengaluru';
-            }
-          }
-
-          lat = Number(lat);
-          lon = Number(lon);
-          this.isOpen = true;
-
-          // Retract location options drawer to avoid screen overlap
-          if (typeof LocationActionEngine !== 'undefined' && LocationActionEngine.hide) {
-            LocationActionEngine.hide();
-          }
-
-          const modal = document.getElementById('modal-street-view');
-          const titleEl = document.getElementById('street-view-title');
-          const coordsEl = document.getElementById('street-view-coords');
-          const extBtn = document.getElementById('btn-street-view-external');
-          const container = document.getElementById('street-view-iframe-container');
-
-          if (titleEl) titleEl.innerText = title;
-          if (coordsEl) coordsEl.innerText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
-          if (extBtn) {
-            extBtn.href = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lon.toFixed(6)}`;
-          }
-
-          if (container) {
-            container.innerHTML = `
-              <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #94a3b8; font-size: 13px; gap: 8px;">
-                <span class="status-pulse status-blue"></span>
-                <span>Connecting to 360° Ground Panorama for ${title}…</span>
-              </div>
-            `;
-          }
-
-          if (modal) modal.style.display = 'flex';
-          const svBtn = document.getElementById('btn-street-view');
-          if (svBtn) svBtn.classList.add('active-blue');
-
-          // Attempt Google Maps JavaScript StreetViewPanorama first
-          try {
-            const googleObj = await this.loadGoogleMapsSdk();
-            if (googleObj && googleObj.maps && googleObj.maps.StreetViewService && container) {
-              const svService = new googleObj.maps.StreetViewService();
-              svService.getPanorama({
-                location: { lat, lng: lon },
-                radius: 450,
-                preference: googleObj.maps.StreetViewPreference ? googleObj.maps.StreetViewPreference.NEAREST : 'nearest',
-                source: googleObj.maps.StreetViewSource ? googleObj.maps.StreetViewSource.DEFAULT : 'default'
-              }, (data, status) => {
-                if (!this.isOpen) return;
-                if (status === 'OK' && data && data.location) {
-                  container.innerHTML = '';
-                  this.activePanorama = new googleObj.maps.StreetViewPanorama(container, {
-                    position: data.location.latLng,
-                    pov: { heading: 165, pitch: 0 },
-                    zoom: 1,
-                    addressControl: true,
-                    linksControl: true,
-                    panControl: true,
-                    enableCloseButton: false,
-                    fullscreenControl: false
-                  });
-
-                  // Automatically detect and hide the "For development purposes only" text badge
-                  const cleanWatermark = () => {
-                    try {
-                      const allEls = container.querySelectorAll('*');
-                      allEls.forEach(el => {
-                        if (el.textContent && el.textContent.includes('For development purposes only')) {
-                          el.style.setProperty('display', 'none', 'important');
-                          if (el.parentElement && el.parentElement !== container) {
-                            el.parentElement.style.setProperty('display', 'none', 'important');
-                          }
-                        }
-                      });
-                    } catch (e) {}
-                  };
-                  cleanWatermark();
-                  if (this._watermarkObserver) {
-                    this._watermarkObserver.disconnect();
-                  }
-                  this._watermarkObserver = new MutationObserver(() => cleanWatermark());
-                  this._watermarkObserver.observe(container, { childList: true, subtree: true });
-                  return;
-                }
-
-                // If no direct car camera imagery inside this exact spot (e.g. inner park lawn)
-                container.innerHTML = `
-                  <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; padding: 24px; text-align: center; color: var(--text-secondary); background: radial-gradient(circle at 50% 40%, rgba(250, 204, 21, 0.05), transparent 70%);">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; background: rgba(250, 204, 21, 0.15); border: 1px solid rgba(250, 204, 21, 0.35); display: flex; align-items: center; justify-content: center; color: #facc15; margin-bottom: 12px;">
-                      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
-                    </div>
-                    <div style="font-weight: 700; font-size: 15px; color: var(--text-primary); margin-bottom: 6px;">360° Street View Not Directly Inside This Spot</div>
-                    <p style="font-size: 12.5px; max-width: 440px; margin-bottom: 18px; line-height: 1.45; color: var(--text-secondary);">
-                      Google does not have street camera car imagery inside this specific park path or property (${title}). You can view the surrounding perimeter roads and user photos in Google Maps.
-                    </p>
-                    <a href="https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat.toFixed(6)},${lon.toFixed(6)}" target="_blank" rel="noopener noreferrer" class="btn-primary pressable" style="padding: 10px 18px; font-size: 12.5px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                      <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                      Open Nearest View in Google Maps
-                    </a>
-                  </div>
-                `;
-              });
-              return;
-            }
-          } catch (sdkErr) {
-            console.warn('[StreetViewEngine] JS Panorama fallback:', sdkErr);
-          }
-
-          // Fallback iframe embed without solution_id
-          if (container) {
-            let embedSrc = '';
-            if (this.googleKey) {
-              embedSrc = `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(this.googleKey)}&location=${lat.toFixed(6)},${lon.toFixed(6)}&heading=0&pitch=0&fov=90`;
-            } else {
-              embedSrc = `https://maps.google.com/maps?q=${lat.toFixed(6)},${lon.toFixed(6)}&output=embed`;
-            }
-            container.innerHTML = `
-              <iframe
-                src="${embedSrc}"
-                width="100%"
-                height="100%"
-                style="border:0; width:100%; height:100%;"
-                allowfullscreen=""
-                loading="lazy"
-                referrerpolicy="strict-origin-when-cross-origin">
-              </iframe>
-            `;
-          }
-        },
-
-        close() {
-          this.isOpen = false;
-          if (this._watermarkObserver) {
-            try { this._watermarkObserver.disconnect(); } catch (e) {}
-            this._watermarkObserver = null;
-          }
-          const modal = document.getElementById('modal-street-view');
-          if (modal) modal.style.display = 'none';
-          const container = document.getElementById('street-view-iframe-container');
-          if (container) container.innerHTML = '';
-          this.activePanorama = null;
-          const svBtn = document.getElementById('btn-street-view');
-          if (svBtn) svBtn.classList.remove('active-blue');
-        },
-
-        toggle() {
-          if (this.isOpen) this.close();
-          else this.open();
-        }
+        init() {},
+        open() {},
+        close() {},
+        toggle() {}
       };
 
       // --------------------------------------------------------------------------
-      // 5.8.6.5 Interactive Location Options Controller (Any-Location Click & Street View)
+      // 5.8.6.5 Interactive Location Options Controller (Any-Location Click)
       // --------------------------------------------------------------------------
       const LocationActionEngine = {
         currentLocation: null,
@@ -10141,23 +9843,12 @@
         init() {
           const closeBtn = document.getElementById('loc-btn-close');
           const dragDismiss = document.getElementById('loc-drag-dismiss');
-          const btnSv = document.getElementById('loc-btn-street-view');
           const btnNav = document.getElementById('loc-btn-navigate');
           const btnPark = document.getElementById('loc-btn-parking');
           const btnSetLoc = document.getElementById('loc-btn-set-loc');
 
           if (closeBtn) closeBtn.onclick = () => this.hide();
           if (dragDismiss) dragDismiss.onclick = () => this.hide();
-
-          if (btnSv) {
-            btnSv.onclick = () => {
-              if (this.currentLocation) {
-                StreetViewEngine.open(this.currentLocation.lat, this.currentLocation.lon, this.currentLocation.name);
-              } else {
-                StreetViewEngine.open();
-              }
-            };
-          }
 
           if (btnNav) {
             btnNav.onclick = () => {
@@ -10288,12 +9979,12 @@
               <div style="font-weight: 700; font-size: 13.5px; color: #fff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">${place.name}</div>
               <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">${distKm} km away • ${etaMins} min drive</div>
               <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-                <button class="map-popup-action-btn sv-btn" onclick="StreetViewEngine.open(${place.lat}, ${place.lon}, '${escapedName}')">
-                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
-                  360° Street View
-                </button>
                 <button class="map-popup-action-btn nav-btn" onclick="NavigationEngine.startTrip({id:'dest-${Date.now()}', name:'${escapedName}', lat:${place.lat}, lon:${place.lon}})">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
                   Directions
+                </button>
+                <button class="map-popup-action-btn" style="background: rgba(255,255,255,0.14); color: #fff;" onclick="ParkingApp.searchParkingNearCoords(${place.lat}, ${place.lon}, '${escapedName}')">
+                  Find Parking
                 </button>
               </div>
             </div>
@@ -10929,7 +10620,6 @@
           GPSMonitor.init();
           UIController.init();
           SearchEngine.init();
-          StreetViewEngine.init();
           LocationActionEngine.init();
           ToolbarController.init();
           SupabaseRealtime.init();
@@ -12020,10 +11710,6 @@
                         <svg class="svg-icon-xs" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
                         <span>Route & Drive</span>
                       </button>
-                      <button class="copilot-action-btn btn-streetview" title="360° Street View">
-                        <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20M12 2a14.5 14.5 0 0 1 0 20M2 12h20"/></svg>
-                        <span>Street View</span>
-                      </button>
                       <button class="copilot-action-btn btn-detail" title="View Details">
                         <svg class="svg-icon-xs" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
                         <span>Details</span>
@@ -12041,15 +11727,6 @@
                     });
                   }
 
-                  const btnStreetView = card.querySelector('.btn-streetview');
-                  if (btnStreetView) {
-                    btnStreetView.addEventListener('click', (e) => {
-                      e.stopPropagation();
-                      if (typeof StreetViewEngine !== 'undefined' && StreetViewEngine.open) {
-                        StreetViewEngine.open(item.lat, item.lon, item.name);
-                      }
-                    });
-                  }
 
                   const btnDetail = card.querySelector('.btn-detail');
                   if (btnDetail) {
@@ -12644,7 +12321,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261123_v51', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261123_v52', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

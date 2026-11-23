@@ -2713,15 +2713,6 @@ body.sidebar-collapsed #sidebar {
     box-sizing: border-box !important;
   }
 
-  /* 360° Street View Modal Mobile Fit */
-  .street-view-sheet {
-    padding: 12px 14px !important;
-    border-radius: 20px !important;
-    width: 95vw !important;
-  }
-  #street-view-iframe-container {
-    height: 48vh !important;
-  }
 }
 
 /* AI Reasoning Row inside Lot Cards */
@@ -3098,42 +3089,15 @@ body.sidebar-collapsed #location-options-drawer {
 
 .loc-actions-grid {
   display: grid;
-  grid-template-columns: 1.35fr 1fr 1fr 1fr;
+  grid-template-columns: 1.35fr 1fr 1fr;
   gap: 8px;
 }
 
 @media (max-width: 640px) {
   .loc-actions-grid {
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: auto auto;
-    gap: 8px;
+    grid-template-columns: 1.2fr 1fr 1fr;
+    gap: 6px;
   }
-}
-
-.loc-action-sv,
-#btn-pv-street-view,
-#drawer-btn-street-view {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.16), rgba(0, 113, 227, 0.22)) !important;
-  border: 1px solid rgba(234, 179, 8, 0.45) !important;
-  color: #fef08a !important;
-  font-weight: 600 !important;
-  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.12);
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.loc-action-sv:hover,
-#btn-pv-street-view:hover,
-#drawer-btn-street-view:hover {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.26), rgba(0, 113, 227, 0.32)) !important;
-  border-color: rgba(234, 179, 8, 0.8) !important;
-  box-shadow: 0 0 16px rgba(234, 179, 8, 0.35);
-  transform: translateY(-1px);
-}
-
-.loc-action-sv:active,
-#btn-pv-street-view:active,
-#drawer-btn-street-view:active {
-  transform: scale(0.97);
 }
 
 /* 10. MapLibre Glass Popup for Clicked Location */
@@ -3187,15 +3151,6 @@ body.sidebar-collapsed #location-options-drawer {
   white-space: nowrap;
 }
 
-.map-popup-action-btn.sv-btn {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(0, 113, 227, 0.35));
-  border: 1px solid rgba(234, 179, 8, 0.6);
-  color: #fef08a;
-}
-.map-popup-action-btn.sv-btn:hover {
-  background: linear-gradient(135deg, rgba(234, 179, 8, 0.4), rgba(0, 113, 227, 0.5));
-  box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
-}
 
 .map-popup-action-btn.nav-btn {
   background: var(--apple-blue, #0071e3);
@@ -3256,11 +3211,6 @@ body.sidebar-collapsed #location-options-drawer {
   }
 }
 
-/* 12. Hide Google Maps "For development purposes only" Watermark Badge */
-#street-view-iframe-container .gm-err-container,
-#street-view-iframe-container .gm-style-cc {
-  opacity: 0.25 !important;
-}
 
 
 
