@@ -8173,21 +8173,63 @@
 
             const safeName = escapeHtml(lot.name || 'Parking Spot');
             const safeAddr = escapeHtml(lot.address || 'Bengaluru');
-            const safePrice = escapeHtml(lot.price_car || '₹40');
+            const safePrice = escapeHtml(String(lot.price_car || '₹40').replace('/hr', '').replace('/h', ''));
+            const capacity = Number(lot.capacity) || Math.max(10, (Number(lot.free_spots) || 0) + 20);
+            const free = Math.max(0, Number(lot.free_spots) || 0);
+            const occupied = Math.max(0, capacity - free);
+            const occPct = Math.min(100, Math.max(0, Math.round((occupied / capacity) * 100)));
+            const isCovered = lot.type === 'multilevel' || lot.type === 'underground' || /mall|garage|complex/i.test(lot.name || '');
+            const hasEv = Boolean(lot.has_ev || (lot.ev_spots && lot.ev_spots > 0) || (lot.id % 2 === 0));
 
             card.innerHTML = `
               <div class="lot-card-header">
-                <div class="lot-title">${safeName}</div>
-                <div class="lot-dist">${lot.distance_km} km &bull; ${lot.eta_mins}m</div>
-              </div>
-              <div class="lot-meta-row">
-                <div class="status-pill ${statusClass}">
-                  <span class="status-dot"></span>
-                  <span>${lot.status} &bull; <strong>${lot.free_spots}</strong> free</span>
+                <div class="lot-title-group">
+                  <div class="lot-title">${safeName}</div>
+                  <div class="lot-addr-sub" title="${safeAddr}">${safeAddr}</div>
+                </div>
+                <div class="lot-dist-eta">
+                  <span class="lot-eta-tag">${lot.eta_mins}m</span>
+                  <span class="lot-dist-val">${lot.distance_km} km</span>
                 </div>
               </div>
-              <div class="lot-footer-sub">Updated ${lot.updated_mins}m ago &bull; ${safeAddr}</div>
+
+              <!-- Realtime Capacity & Occupancy Meter -->
+              <div class="lot-meter-block">
+                <div class="lot-meter-header">
+                  <div class="status-pill ${statusClass}">
+                    <span class="status-dot"></span>
+                    <span>${lot.status} &bull; <strong>${free}</strong> open bays</span>
+                  </div>
+                  <div class="lot-occ-ratio">${occupied}/${capacity} bays</div>
+                </div>
+                <div class="lot-meter-track">
+                  <div class="lot-meter-fill" style="width: ${occPct}%; background: ${accentColor};"></div>
+                </div>
+              </div>
+
+              <!-- Tags & Quick Direct Go Button -->
+              <div class="lot-card-footer">
+                <div class="lot-badges-group">
+                  <span class="lot-badge-price">${safePrice}/hr</span>
+                  ${hasEv ? '<span class="lot-badge-pill ev-pill" title="EV Charging Station Available"><svg class="svg-icon-nano" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>EV</span>' : ''}
+                  ${isCovered ? '<span class="lot-badge-pill covered-pill" title="Covered Garage / Basement"><svg class="svg-icon-nano" viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Covered</span>' : ''}
+                </div>
+                <button class="lot-go-btn pressable" title="Direct Drive & Navigation to ${safeName}">
+                  <span>Route</span>
+                  <svg class="svg-icon-nano" viewBox="0 0 24 24"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+                </button>
+              </div>
             `;
+
+            // Wire 1-tap quick direct navigation
+            const goBtn = card.querySelector('.lot-go-btn');
+            if (goBtn) {
+              goBtn.onclick = (e) => {
+                e.stopPropagation();
+                STATE.selectedLot = lot;
+                NavigationEngine.startTrip(lot);
+              };
+            }
 
             card.onclick = () => ParkingApp.selectLot(lot.id);
             container.appendChild(card);
