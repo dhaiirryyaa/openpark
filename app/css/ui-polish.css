@@ -3062,6 +3062,201 @@ body.map-scrolling #btn-restore-deck {
   transform: translateY(20px) !important;
 }
 
+/* 9. Location Options on Any Clicked Location & 360° Street View Actions */
+#location-options-drawer {
+  position: absolute;
+  bottom: 24px;
+  left: calc(50% + 202px);
+  transform: translateX(-50%) translateY(140%);
+  width: min(520px, calc(100vw - 448px));
+  padding: 16px 20px 18px 20px;
+  z-index: 1105;
+  transition: transform 0.42s var(--spring-curve, cubic-bezier(0.16, 1, 0.3, 1)), opacity 0.28s ease, left 0.32s ease, width 0.32s ease;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#location-options-drawer.open {
+  transform: translateX(-50%) translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+body.sidebar-collapsed #location-options-drawer {
+  left: 50%;
+  width: min(540px, calc(100vw - 32px));
+}
+
+@media (max-width: 899px) {
+  #location-options-drawer {
+    left: 50% !important;
+    bottom: 16px !important;
+    width: calc(100vw - 20px) !important;
+    padding: 14px 16px 16px 16px !important;
+  }
+}
+
+.loc-actions-grid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .loc-actions-grid {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 8px;
+  }
+}
+
+.loc-action-sv,
+#btn-pv-street-view,
+#drawer-btn-street-view {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.16), rgba(0, 113, 227, 0.22)) !important;
+  border: 1px solid rgba(234, 179, 8, 0.45) !important;
+  color: #fef08a !important;
+  font-weight: 600 !important;
+  box-shadow: 0 2px 8px rgba(234, 179, 8, 0.12);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.loc-action-sv:hover,
+#btn-pv-street-view:hover,
+#drawer-btn-street-view:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.26), rgba(0, 113, 227, 0.32)) !important;
+  border-color: rgba(234, 179, 8, 0.8) !important;
+  box-shadow: 0 0 16px rgba(234, 179, 8, 0.35);
+  transform: translateY(-1px);
+}
+
+.loc-action-sv:active,
+#btn-pv-street-view:active,
+#drawer-btn-street-view:active {
+  transform: scale(0.97);
+}
+
+/* 10. MapLibre Glass Popup for Clicked Location */
+.apple-glass-map-popup .maplibregl-popup-content {
+  background: rgba(15, 23, 42, 0.94) !important;
+  backdrop-filter: blur(24px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(190%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.15) !important;
+  border-radius: 18px !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(0, 113, 227, 0.18) !important;
+  padding: 12px 14px !important;
+  color: #fff !important;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif !important;
+}
+
+.apple-glass-map-popup .maplibregl-popup-tip {
+  border-top-color: rgba(15, 23, 42, 0.94) !important;
+}
+
+.apple-glass-map-popup .maplibregl-popup-close-button {
+  color: #94a3b8 !important;
+  font-size: 15px !important;
+  padding: 4px 8px !important;
+  right: 4px !important;
+  top: 4px !important;
+  border-radius: 50%;
+  transition: color 0.18s;
+}
+.apple-glass-map-popup .maplibregl-popup-close-button:hover {
+  color: #fff !important;
+}
+
+.map-popup-inner {
+  display: flex;
+  flex-direction: column;
+  min-width: 190px;
+}
+
+.map-popup-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.map-popup-action-btn.sv-btn {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.25), rgba(0, 113, 227, 0.35));
+  border: 1px solid rgba(234, 179, 8, 0.6);
+  color: #fef08a;
+}
+.map-popup-action-btn.sv-btn:hover {
+  background: linear-gradient(135deg, rgba(234, 179, 8, 0.4), rgba(0, 113, 227, 0.5));
+  box-shadow: 0 0 10px rgba(234, 179, 8, 0.4);
+}
+
+.map-popup-action-btn.nav-btn {
+  background: var(--apple-blue, #0071e3);
+  color: #fff;
+}
+.map-popup-action-btn.nav-btn:hover {
+  background: #0077ed;
+  box-shadow: 0 0 10px rgba(0, 113, 227, 0.4);
+}
+
+/* 11. Animated Tapped Location Reticle Pin */
+.tapped-location-pin {
+  position: relative;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.tapped-pin-pulse {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: rgba(0, 113, 227, 0.35);
+  animation: tappedPinWave 1.6s ease-out infinite;
+  pointer-events: none;
+}
+
+.tapped-pin-core {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #38bdf8, #0284c7 70%, #0369a1);
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 4px 14px rgba(2, 132, 199, 0.55), 0 0 0 1px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tapped-location-pin:hover .tapped-pin-core {
+  transform: scale(1.15);
+}
+
+@keyframes tappedPinWave {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+
 
 
 

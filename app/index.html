@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261122_v48" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v49" />
 </head>
 <body class="welcome-active">
 
@@ -3998,6 +3998,48 @@
           <polyline points="5 12 12 5 19 12"></polyline>
         </svg>
         Navigate Now
+      </button>
+    </div>
+  </div>
+
+  <!-- Interactive Apple Glass Location Options Drawer (Appears when ANY location or pin is clicked) -->
+  <div class="apple-glass bottom-drawer" id="location-options-drawer" role="dialog" aria-label="Location options">
+    <div class="drawer-drag-pill" id="loc-drag-dismiss" title="Tap to dismiss"></div>
+    <div class="drawer-header" style="align-items: flex-start; justify-content: space-between; gap: 10px;">
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 2px;">
+          <span id="loc-badge-icon" style="display: inline-flex; align-items: center; justify-content: center; width: 26px; height: 26px; border-radius: 8px; background: rgba(0, 113, 227, 0.22); font-size: 14px; flex-shrink: 0;">📍</span>
+          <h3 class="drawer-title" id="loc-title" style="font-size: 16.5px; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Location Name</h3>
+        </div>
+        <p class="drawer-subtitle" id="loc-subtitle" style="font-size: 12px; margin: 0; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+          Calculating distance & drive time...
+        </p>
+      </div>
+      <button id="loc-btn-close" aria-label="Dismiss location options" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: var(--text-secondary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0;">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- Quick Location Action Grid (360° Street View, Directions, Parking, Set Location) -->
+    <div class="action-grid loc-actions-grid" style="margin-top: 14px;">
+      <button class="btn-secondary pressable loc-action-sv" id="loc-btn-street-view" title="Inspect ground-level in 360° Street View">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
+        <span>360° Street View</span>
+      </button>
+      <button class="btn-primary pressable" id="loc-btn-navigate" title="Start turn-by-turn navigation to this location">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="19" x2="12" y2="5"></line>
+          <polyline points="5 12 12 5 19 12"></polyline>
+        </svg>
+        <span>Directions</span>
+      </button>
+      <button class="btn-secondary pressable" id="loc-btn-parking" title="Find nearest parking lots to this location">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <span>Find Parking</span>
+      </button>
+      <button class="btn-secondary pressable" id="loc-btn-set-loc" title="Set this as my current vehicle location">
+        <svg class="svg-icon-xs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/></svg>
+        <span>Set As Mine</span>
       </button>
     </div>
   </div>
@@ -6496,28 +6538,10 @@
             const wBox = document.getElementById('welcome-autocomplete-box');
             if (wBox) wBox.classList.remove('open');
 
-            // 3. CRITICAL: If a destination is already selected or a trip is active,
-            // DO NOT wipe or forget the old location when tapping empty map space!
-            if (STATE.activeTrip || STATE.selectedPlace || STATE.selectedLot) {
-              return; // Keep existing searched destination and route completely safe and intact
+            // 3. User tapped ANY location on the map: show interactive Location Options (360° Street View, Directions, Parking, Set Location)
+            if (typeof LocationActionEngine !== 'undefined' && LocationActionEngine.show) {
+              LocationActionEngine.show(clickLat, clickLng);
             }
-
-            // 4. Only if NO destination is currently selected: inspect if user explicitly tapped a real building/POI
-            try {
-              const resp = await fetch(`/api/places/lookup?lat=${clickLat.toFixed(6)}&lon=${clickLng.toFixed(6)}`);
-              if (resp.ok) {
-                const data = await resp.json();
-                if (data && data.place && data.place.name && !data.place.name.toLowerCase().includes('pinned')) {
-                  this.setDestinationMarker(data.place);
-                  SearchEngine.selectResult(data.place);
-                  return;
-                }
-              }
-            } catch (err) {
-              console.warn('[MapEngine] building lookup error:', err);
-            }
-
-            // If tapped on blank ground and nothing was found, do NOT drop a disruptive pin or hijack screen.
           });
 
           // Right-click / Context menu anywhere on the map to place user device location
@@ -6964,6 +6988,9 @@
             el.addEventListener('click', (e) => {
               e.stopPropagation();
               SearchEngine.selectResult(place);
+              if (typeof LocationActionEngine !== 'undefined' && LocationActionEngine.show) {
+                LocationActionEngine.show(lat, lon, place);
+              }
             });
 
             const marker = new maplibregl.Marker({
@@ -8736,6 +8763,11 @@
               MapEngine.setDestinationMarker(item);
             }
 
+            // Show location action options drawer with 360° Street View & Directions
+            if (typeof LocationActionEngine !== 'undefined' && LocationActionEngine.show) {
+              LocationActionEngine.show(item.lat, item.lon, item);
+            }
+
             // Immediately frame both user device location and destination so whole path is visible
             const uLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
             const uLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
@@ -9983,6 +10015,209 @@
       };
 
       // --------------------------------------------------------------------------
+      // 5.8.6.5 Interactive Location Options Controller (Any-Location Click & Street View)
+      // --------------------------------------------------------------------------
+      const LocationActionEngine = {
+        currentLocation: null,
+        clickMarker: null,
+        clickPopup: null,
+
+        init() {
+          const closeBtn = document.getElementById('loc-btn-close');
+          const dragDismiss = document.getElementById('loc-drag-dismiss');
+          const btnSv = document.getElementById('loc-btn-street-view');
+          const btnNav = document.getElementById('loc-btn-navigate');
+          const btnPark = document.getElementById('loc-btn-parking');
+          const btnSetLoc = document.getElementById('loc-btn-set-loc');
+
+          if (closeBtn) closeBtn.onclick = () => this.hide();
+          if (dragDismiss) dragDismiss.onclick = () => this.hide();
+
+          if (btnSv) {
+            btnSv.onclick = () => {
+              if (this.currentLocation) {
+                StreetViewEngine.open(this.currentLocation.lat, this.currentLocation.lon, this.currentLocation.name);
+              } else {
+                StreetViewEngine.open();
+              }
+            };
+          }
+
+          if (btnNav) {
+            btnNav.onclick = () => {
+              if (this.currentLocation) {
+                const destObj = {
+                  id: `loc-${Date.now()}`,
+                  name: this.currentLocation.name,
+                  address: this.currentLocation.address,
+                  lat: this.currentLocation.lat,
+                  lon: this.currentLocation.lon,
+                  capacity: 100,
+                  free_spots: 45,
+                  price_car: '₹40',
+                  price_bike: '₹15'
+                };
+                this.hide();
+                NavigationEngine.startTrip(destObj);
+              }
+            };
+          }
+
+          if (btnPark) {
+            btnPark.onclick = () => {
+              if (this.currentLocation) {
+                ParkingApp.searchParkingNearCoords(this.currentLocation.lat, this.currentLocation.lon, this.currentLocation.name);
+                this.hide();
+              }
+            };
+          }
+
+          if (btnSetLoc) {
+            btnSetLoc.onclick = () => {
+              if (this.currentLocation) {
+                ParkingApp.setUserLocation(this.currentLocation.lat, this.currentLocation.lon, 'manual');
+                ParkingApp.showToast(`Starting point set to ${this.currentLocation.name}`, 'success');
+                this.hide();
+              }
+            };
+          }
+        },
+
+        async show(lat, lon, knownPlace = null) {
+          lat = Number(lat);
+          lon = Number(lon);
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+          // Close parking drawer if open to prevent overlap
+          const pDrawer = document.getElementById('parking-drawer');
+          if (pDrawer) pDrawer.classList.remove('open');
+
+          // Initialize location object
+          let place = knownPlace ? { ...knownPlace } : {
+            name: `Location @ ${lat.toFixed(4)}, ${lon.toFixed(4)}`,
+            address: `Coordinates: ${lat.toFixed(5)}, ${lon.toFixed(5)}`,
+            lat,
+            lon,
+            badge: '📍'
+          };
+          this.currentLocation = place;
+
+          // Calculate driver distance and ETA
+          const uLat = (STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) ? STATE.userLocation.lat : CONFIG.DEFAULT_COORDS[1];
+          const uLng = (STATE.userLocation && Number.isFinite(STATE.userLocation.lng)) ? STATE.userLocation.lng : CONFIG.DEFAULT_COORDS[0];
+          const distM = calculateDistanceMeters(uLat, uLng, lat, lon);
+          const distKm = (distM / 1000).toFixed(1);
+          const etaMins = Math.max(1, Math.round((distM / 1000 / 30) * 60));
+
+          this.updateDrawerUI(place, distKm, etaMins);
+          this.renderMapMarkerAndPopup(place, distKm, etaMins);
+
+          const drawer = document.getElementById('location-options-drawer');
+          if (drawer) drawer.classList.add('open');
+
+          // Asynchronously reverse-geocode if not already detailed
+          if (!knownPlace || !knownPlace.name || knownPlace.name.startsWith('Location @')) {
+            try {
+              const resp = await fetch(`/api/places/lookup?lat=${lat.toFixed(6)}&lon=${lon.toFixed(6)}`);
+              if (resp.ok) {
+                const data = await resp.json();
+                if (data && data.place && data.place.name) {
+                  const enriched = data.place;
+                  this.currentLocation = {
+                    ...enriched,
+                    lat,
+                    lon
+                  };
+                  this.updateDrawerUI(this.currentLocation, distKm, etaMins);
+                  this.renderMapMarkerAndPopup(this.currentLocation, distKm, etaMins);
+                }
+              }
+            } catch (e) {
+              console.warn('[LocationActionEngine] Reverse lookup warning:', e);
+            }
+          }
+        },
+
+        updateDrawerUI(place, distKm, etaMins) {
+          const titleEl = document.getElementById('loc-title');
+          const subEl = document.getElementById('loc-subtitle');
+          const badgeEl = document.getElementById('loc-badge-icon');
+
+          if (titleEl) titleEl.innerText = place.name || 'Selected Location';
+          if (subEl) subEl.innerText = `${distKm} km away • ${etaMins} mins drive • ${place.address || (place.lat.toFixed(4) + ', ' + place.lon.toFixed(4))}`;
+          if (badgeEl) badgeEl.innerText = place.badge || '📍';
+        },
+
+        renderMapMarkerAndPopup(place, distKm, etaMins) {
+          if (!MapEngine.map) return;
+
+          // Remove previous click marker if present
+          if (this.clickMarker) {
+            try { this.clickMarker.remove(); } catch (e) {}
+            this.clickMarker = null;
+          }
+
+          const el = document.createElement('div');
+          el.className = 'tapped-location-pin';
+          el.innerHTML = `
+            <div class="tapped-pin-pulse"></div>
+            <div class="tapped-pin-core">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="white"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2" fill="none"/></svg>
+            </div>
+          `;
+
+          const escapedName = (place.name || 'Location').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+          const popupHtml = `
+            <div class="map-popup-inner">
+              <div style="font-weight: 700; font-size: 13.5px; color: #fff; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px;">${place.name}</div>
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 8px;">${distKm} km away • ${etaMins} min drive</div>
+              <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                <button class="map-popup-action-btn sv-btn" onclick="StreetViewEngine.open(${place.lat}, ${place.lon}, '${escapedName}')">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor"><circle cx="12" cy="4.5" r="2.5"/><path d="M9 9h6a1 1 0 0 1 1 1v4l-2 1v5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1v-5l-2-1v-4a1 1 0 0 1 1-1z"/></svg>
+                  360° Street View
+                </button>
+                <button class="map-popup-action-btn nav-btn" onclick="NavigationEngine.startTrip({id:'dest-${Date.now()}', name:'${escapedName}', lat:${place.lat}, lon:${place.lon}})">
+                  Directions
+                </button>
+              </div>
+            </div>
+          `;
+
+          this.clickPopup = new maplibregl.Popup({
+            closeButton: true,
+            closeOnClick: false,
+            className: 'apple-glass-map-popup',
+            maxWidth: '280px',
+            offset: [0, -18]
+          }).setHTML(popupHtml);
+
+          this.clickMarker = new maplibregl.Marker({
+            element: el,
+            anchor: 'center'
+          })
+            .setLngLat([place.lon, place.lat])
+            .setPopup(this.clickPopup)
+            .addTo(MapEngine.map);
+
+          this.clickPopup.addTo(MapEngine.map);
+        },
+
+        hide() {
+          const drawer = document.getElementById('location-options-drawer');
+          if (drawer) drawer.classList.remove('open');
+          if (this.clickMarker) {
+            try { this.clickMarker.remove(); } catch (e) {}
+            this.clickMarker = null;
+          }
+          if (this.clickPopup) {
+            try { this.clickPopup.remove(); } catch (e) {}
+            this.clickPopup = null;
+          }
+          this.currentLocation = null;
+        }
+      };
+
+      // --------------------------------------------------------------------------
       // 5.8.7 Collapsible Map Toolbar HUD Controller
       // --------------------------------------------------------------------------
       const ToolbarController = {
@@ -10579,6 +10814,7 @@
           UIController.init();
           SearchEngine.init();
           StreetViewEngine.init();
+          LocationActionEngine.init();
           ToolbarController.init();
           SupabaseRealtime.init();
           try {
@@ -10794,6 +11030,41 @@
           if (btnRescanArea && !showAiButton) {
             btnRescanArea.style.display = 'none';
           }
+        },
+
+        searchParkingNearCoords(lat, lon, name = 'Selected Location') {
+          lat = Number(lat);
+          lon = Number(lon);
+          if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+
+          STATE.selectedPlace = {
+            lat,
+            lon,
+            name
+          };
+
+          // Re-render parking pins centered around this location
+          if (MapEngine.renderLotMarkers) {
+            MapEngine.renderLotMarkers(STATE.lots || []);
+          }
+
+          // Trigger AI scanner to discover street bays and empty ground around this point
+          if (typeof AIScannerEngine !== 'undefined' && AIScannerEngine.scanArea) {
+            AIScannerEngine.scanArea(lat, lon);
+          }
+
+          // Smoothly frame the location
+          if (MapEngine.map) {
+            MapEngine.map.flyTo({
+              center: [lon, lat],
+              zoom: 16.5,
+              pitch: 45,
+              duration: 800
+            });
+          }
+
+          UIController.switchTab('explore');
+          ParkingApp.showToast(`Showing parking near ${name}`, 'info', 2500);
         },
 
         selectLot(lotId) {
@@ -12238,6 +12509,8 @@
         window.WelcomeController = WelcomeController;
         window.AICopilotEngine = AICopilotEngine;
         window.PinLocationEngine = PinLocationEngine;
+        window.StreetViewEngine = StreetViewEngine;
+        window.LocationActionEngine = LocationActionEngine;
         window.enrichPlaceDetails = enrichPlaceDetails;
         window.testDynamicIsland = () => NavigationEngine.demoDynamicIsland();
         ParkingApp.init();
@@ -12255,7 +12528,7 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261120_v40', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261123_v49', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
