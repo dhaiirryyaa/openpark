@@ -1,0 +1,8 @@
+/* Component: Supabase Auth Modal */
+.op-auth-modal {
+  max-width: 420px;
+  width: 90vw;
+  border-radius: 24px;
+  padding: 24px;
+  background: rgba(15, 23, 42, 0.96);
+}
