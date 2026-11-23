@@ -1,0 +1,8 @@
+/* 3D Navigation Puck Levitation */
+@keyframes opPuckHover {
+  0%, 100% { transform: translateY(0) rotateX(25deg); }
+  50% { transform: translateY(-4px) rotateX(25deg); }
+}
+.op-puck-floating {
+  animation: opPuckHover 2.4s ease-in-out infinite;
+}
