@@ -1,0 +1,14 @@
+[
+  {
+    "model": "OP-MAG-400",
+    "type": "geomagnetic",
+    "battery_life_years": 5,
+    "accuracy_pct": 99.2
+  },
+  {
+    "model": "OP-ULTRA-200",
+    "type": "ultrasonic",
+    "wired": true,
+    "accuracy_pct": 99.8
+  }
+]
