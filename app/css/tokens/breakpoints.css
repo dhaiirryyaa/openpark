@@ -1,0 +1,7 @@
+/* OpenPark Design System: Breakpoint Tokens */
+:root {
+  --op-bp-sm: 640px;
+  --op-bp-md: 768px;
+  --op-bp-lg: 1024px;
+  --op-bp-xl: 1280px;
+}
