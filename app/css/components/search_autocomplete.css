@@ -1,0 +1,9 @@
+/* Component: Search Autocomplete */
+.op-autocomplete-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  border-radius: 18px;
+  padding: 6px;
+  max-height: 400px;
+  overflow-y: auto;
+}
