@@ -8,4 +8,5 @@ def test_simulators():
     
     gate = BoomBarrierGate("G-IN")
     res = gate.process_vehicle_arrival("KA04MH9999")
-    assert res["barrier_open"] is True
+    assert gate.barrier_open is True
+    assert res["action"] == "barrier_opened"
