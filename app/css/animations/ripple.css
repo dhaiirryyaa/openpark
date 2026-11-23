@@ -1,0 +1,8 @@
+/* Ripple Touch Animation */
+@keyframes opRipple {
+  0% { transform: scale(0); opacity: 0.5; }
+  100% { transform: scale(4); opacity: 0; }
+}
+.op-ripple-active {
+  animation: opRipple 0.45s ease-out;
+}
