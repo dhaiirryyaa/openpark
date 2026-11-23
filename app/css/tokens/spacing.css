@@ -1,0 +1,12 @@
+/* OpenPark Design System: Spacing Tokens */
+:root {
+  --op-space-1: 4px;
+  --op-space-2: 8px;
+  --op-space-3: 12px;
+  --op-space-4: 16px;
+  --op-space-5: 20px;
+  --op-space-6: 24px;
+  --op-space-8: 32px;
+  --op-space-10: 40px;
+  --op-space-12: 48px;
+}
