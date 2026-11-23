@@ -1,0 +1,8 @@
+/* Spring Bottom Drawer Slide */
+@keyframes opDrawerSlideUp {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+.op-drawer-enter {
+  animation: opDrawerSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
