@@ -1,0 +1,9 @@
+/* Component: AI Copilot Widget */
+.op-copilot-box {
+  border-radius: 18px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.82));
+}
