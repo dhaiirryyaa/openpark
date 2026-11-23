@@ -1,0 +1,10 @@
+/* Component: Navigation Instruction Banner */
+.op-nav-banner {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(600px, calc(100vw - 28px));
+  border-radius: 18px;
+  padding: 12px 18px;
+}
