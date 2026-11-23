@@ -1,0 +1,32 @@
+[
+  {
+    "name": "UB City",
+    "lat": 12.9716,
+    "lon": 77.5946,
+    "category": "shopping"
+  },
+  {
+    "name": "Vidhana Soudha",
+    "lat": 12.9796,
+    "lon": 77.5907,
+    "category": "government"
+  },
+  {
+    "name": "Cubbon Park",
+    "lat": 12.9763,
+    "lon": 77.5929,
+    "category": "park"
+  },
+  {
+    "name": "MG Road Metro",
+    "lat": 12.9754,
+    "lon": 77.6066,
+    "category": "transit"
+  },
+  {
+    "name": "Brigade Road",
+    "lat": 12.974,
+    "lon": 77.6074,
+    "category": "commercial"
+  }
+]
