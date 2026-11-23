@@ -1,0 +1,14 @@
+{
+  "zone_A_central": {
+    "car_hourly": 50,
+    "bike_hourly": 20
+  },
+  "zone_B_commercial": {
+    "car_hourly": 40,
+    "bike_hourly": 15
+  },
+  "zone_C_suburban": {
+    "car_hourly": 20,
+    "bike_hourly": 10
+  }
+}
