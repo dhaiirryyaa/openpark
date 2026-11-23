@@ -1,0 +1,8 @@
+/* Occupancy Meter Fill */
+@keyframes opProgressFill {
+  from { width: 0%; }
+  to { width: var(--target-width, 100%); }
+}
+.op-meter-animated {
+  animation: opProgressFill 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
