@@ -1,0 +1,8 @@
+{
+  "target_p95_lot_search_ms": 45.0,
+  "target_p99_tile_load_ms": 80.0,
+  "haversine_us_per_op": 1.2,
+  "dijkstra_100_node_ms": 0.45,
+  "telemetry_throughput_ops_sec": 45000,
+  "recorded_at": "2026-11-24T00:15:00Z"
+}
