@@ -1,0 +1,13 @@
+/* Component: Top Command Island */
+.op-command-island {
+  position: fixed;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(860px, calc(100vw - 28px));
+  height: 52px;
+  display: flex;
+  align-items: center;
+  border-radius: 9999px;
+  z-index: var(--op-z-island, 1200);
+}
