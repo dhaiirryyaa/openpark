@@ -2843,7 +2843,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261125_v61" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261125_v62" />
 </head>
 <body class="welcome-active">
 
@@ -6708,6 +6708,22 @@
               }
             }
 
+            // Trigger Fable Motion touch shockwave ripple
+            try {
+              const mapContainer = this.map.getContainer();
+              if (mapContainer && e && e.point) {
+                const shockwave = document.createElement('div');
+                shockwave.className = 'fable-map-shockwave';
+                shockwave.style.left = `${e.point.x}px`;
+                shockwave.style.top = `${e.point.y}px`;
+                const echo = document.createElement('div');
+                echo.className = 'fable-map-echo';
+                shockwave.appendChild(echo);
+                mapContainer.appendChild(shockwave);
+                setTimeout(() => { if (shockwave.parentNode) shockwave.parentNode.removeChild(shockwave); }, 850);
+              }
+            } catch (err) {}
+
             // Collapse map toolbar if open when user taps on the map
             if (window.ToolbarController && ToolbarController.isOpen()) {
               ToolbarController.collapse();
@@ -7303,8 +7319,12 @@
         createVehicleMarker() {
           if (this.vehicleEl) return;
           this.vehicleEl = document.createElement('div');
-          this.vehicleEl.className = 'vehicle-marker-root';
+          this.vehicleEl.className = 'vehicle-marker-root fable-vehicle-root';
           this.vehicleEl.innerHTML = `
+            <div class="fable-vehicle-sonar">
+              <span class="fable-v-wave w1"></span>
+              <span class="fable-v-wave w2"></span>
+            </div>
             <div class="vehicle-accuracy-ring"></div>
             <div class="vehicle-heading-rotator" id="v-rotator">
               <svg viewBox="0 0 48 48" class="vehicle-chevron-svg">
@@ -7431,9 +7451,15 @@
           if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
 
           const el = document.createElement('div');
-          el.className = 'destination-pin';
+          el.className = 'destination-pin fable-dest-root';
           el.innerHTML = `
-            <svg viewBox="0 0 32 40" class="destination-pin-svg">
+            <div class="fable-ground-target">
+              <span class="fable-target-ring tr1"></span>
+              <span class="fable-target-ring tr2"></span>
+              <span class="fable-target-ring tr3"></span>
+              <span class="fable-target-core"></span>
+            </div>
+            <svg viewBox="0 0 32 40" class="destination-pin-svg fable-pin-bob">
               <path d="M16 0 C7.16 0 0 7.16 0 16 C0 26 16 40 16 40 C16 40 32 26 32 16 C32 7.16 24.84 0 16 0 Z" fill="#ef4444" stroke="#ffffff" stroke-width="2"/>
               <circle cx="16" cy="15" r="6" fill="#ffffff"/>
               <circle cx="16" cy="15" r="3" fill="#ef4444"/>
@@ -7531,7 +7557,7 @@
           const currentZoom = (this.map && typeof this.map.getZoom === 'function') ? this.map.getZoom() : 16.0;
           const maxPills = currentZoom < 14.0 ? 3 : (currentZoom < 15.5 ? 8 : 14);
 
-          relevantLots.slice(0, maxPills).forEach(lot => {
+          relevantLots.slice(0, maxPills).forEach((lot, idx) => {
             const lon = Number(lot.lon !== undefined ? lot.lon : lot.lng);
             const lat = Number(lot.lat);
             if (!Number.isFinite(lon) || !Number.isFinite(lat)) return;
@@ -7543,12 +7569,17 @@
             else if (lot.status === 'Unknown') pulseClass = 'status-muted';
 
             const el = document.createElement('div');
-            el.className = 'apple-glass parking-pin pressable';
+            el.className = 'apple-glass parking-pin fable-pin pressable';
+            const fableDelay = -((idx % 6) * 0.55).toFixed(2);
+            el.style.setProperty('--fable-delay', `${fableDelay}s`);
             if (STATE.selectedLot && STATE.selectedLot.id == lot.id) {
               el.classList.add('is-selected');
             }
             el.innerHTML = `
-              <div class="status-pulse ${pulseClass}"></div>
+              <div class="status-pulse ${pulseClass}">
+                <span class="fable-sonar-ring r1"></span>
+                <span class="fable-sonar-ring r2"></span>
+              </div>
               <span>${free > 0 ? free + ' bays' : 'Full'}</span>
             `;
             el.title = `${lot.name} • ${free} spots free`;
@@ -12773,15 +12804,15 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261125_v61"></script>
-  <script src="/app/js/animated-list.js?v=20261125_v61"></script>
-  <script src="/app/js/ui-polish.js?v=20261125_v61"></script>
-  <script src="/app/js/jelly-radio.js?v=20261125_v61"></script>
-  <script src="/app/js/fable-motion.js?v=20261125_v61"></script>
+  <script type="module" src="/app/js/locate.js?v=20261125_v62"></script>
+  <script src="/app/js/animated-list.js?v=20261125_v62"></script>
+  <script src="/app/js/ui-polish.js?v=20261125_v62"></script>
+  <script src="/app/js/jelly-radio.js?v=20261125_v62"></script>
+  <script src="/app/js/fable-motion.js?v=20261125_v62"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261125_v61', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261125_v62', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
