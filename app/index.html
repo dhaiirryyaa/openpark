@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v54" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v55" />
 </head>
 <body class="welcome-active">
 
@@ -4271,17 +4271,16 @@
           if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
           const now = p.timestamp || Date.now();
 
-          // Strict Device Fix Filter:
-          // Reject coarse IP or cellular tower estimates (> 200m).
-          // Real device live GPS / Wi-Fi fixes must have physical accuracy <= 200m.
-          if (accuracy > 200) {
-            console.warn(`[GPS] Coarse reading rejected (±${Math.round(accuracy)}m). Waiting for real hardware GPS fix.`);
+          // Real Hardware/Cellular/Wi-Fi Device Fix:
+          // Accept device location, refining accuracy as GPS locks
+          if (accuracy > 2500) {
+            console.warn(`[GPS] Coarse reading rejected (>2500m). Waiting for real hardware GPS fix.`);
             return;
           }
 
           // Prevent degradation: reject sudden jumps to poorer accuracy if we have recent precision fix
           if (LOC.lat != null && LOC.accuracy != null && (now - LOC.ts < 30000)) {
-            if (accuracy > LOC.accuracy * 2 && accuracy > 80) {
+            if (accuracy > LOC.accuracy * 3 && accuracy > 200) {
               return;
             }
           }
@@ -4352,29 +4351,16 @@
         localStorage.removeItem('openpark_debrecan_coords');
         localStorage.removeItem('openpark_bengaluru_coords');
         localStorage.removeItem('openpark_last_device_fix');
+        localStorage.removeItem('openpark_pinned_spot');
+        localStorage.removeItem('openpark_cached_lots');
       } catch {}
 
-      // Retrieve persistent user-pinned location if set
       let savedUserSpot = null;
-      try {
-        const rawSpot = localStorage.getItem('openpark_pinned_spot');
-        if (rawSpot) {
-          const parsed = JSON.parse(rawSpot);
-          if (Number.isFinite(Number(parsed.lat)) && Number.isFinite(Number(parsed.lng))) {
-            savedUserSpot = {
-              lat: Number(parsed.lat),
-              lng: Number(parsed.lng),
-              name: parsed.name || 'Pinned Spot'
-            };
-          }
-        }
-      } catch {}
-
       let lastKnownFix = null;
-      let isManualSaved = !!savedUserSpot;
+      let isManualSaved = false;
 
       const CONFIG = {
-        DEFAULT_COORDS: savedUserSpot ? [savedUserSpot.lng, savedUserSpot.lat] : [77.59460, 12.97160],
+        DEFAULT_COORDS: [77.59460, 12.97160],
         INITIAL_ZOOM: 16.5,
         PITCH_3D: 42,
         RADIUS_METERS: 1000,
@@ -4404,17 +4390,10 @@
       // 5.2 Application State
       // --------------------------------------------------------------------------
       const STATE = {
-        hasRealDeviceFix: !!savedUserSpot,
-        bestFixAccuracy: savedUserSpot ? 5 : Infinity,
-        isManualLocation: !!savedUserSpot,
-        userLocation: savedUserSpot ? {
-          lng: savedUserSpot.lng,
-          lat: savedUserSpot.lat,
-          heading: 0,
-          speed: 0,
-          altitude: 920,
-          accuracy: 5
-        } : {
+        hasRealDeviceFix: false,
+        bestFixAccuracy: null,
+        isManualLocation: false,
+        userLocation: {
           lng: null,
           lat: null,
           heading: 0,
@@ -4483,10 +4462,8 @@
         }
 
         if (loc.state === 'precise' || loc.state === 'acceptable') {
-          // Rule: If user manually placed or dragged their pin, DO NOT let background GPS overwrite it!
-          if (STATE.isManualLocation) {
-            return;
-          }
+          // Real device location received: clear any manual spot lock so user's true GPS takes priority!
+          STATE.isManualLocation = false;
 
           const isFirstFix = !STATE.hasRealDeviceFix;
           const accMeters = Math.round(loc.accuracy || 15);
@@ -5599,9 +5576,7 @@
                 if (Array.isArray(cached) && cached.length > 0) return cached;
               }
             } catch (e) {}
-            let fb = API.generateFallbackLots(lat, lon);
-            fb.sort((a, b) => parseFloat(a.distance_km || 99) - parseFloat(b.distance_km || 99));
-            return fb;
+            return [];
           }
           try {
             const res = await fetch(`/lots/nearby?lat=${lat}&lon=${lon}&radius_m=${maxMeters}`);
@@ -5613,12 +5588,11 @@
               try { localStorage.setItem('openpark_cached_lots', JSON.stringify(lots)); } catch (e) {}
               return lots;
             }
+            return [];
           } catch (err) {
-            console.warn("OpenPark: Using seed dataset fallback", err);
+            console.warn("OpenPark: nearby lots fetch notice:", err);
+            return [];
           }
-          let fallback = API.generateFallbackLots(lat, lon);
-          fallback.sort((a, b) => parseFloat(a.distance_km || 99) - parseFloat(b.distance_km || 99));
-          return fallback;
         },
 
         normalizeLot(raw, refLat = null, refLon = null) {
@@ -6033,37 +6007,8 @@
         },
 
         generateFallbackLots(centerLat, centerLon) {
-          const sampleNames = [
-            "UB City Underground Garage", "Brigade Road Multi-Level Deck", "Garuda Mall Parking Complex",
-            "MG Road Metro Parking Hub", "Church Street Smart Garage", "Commercial Street Surface Lot",
-            "Forum Mall Parking Plaza", "Indiranagar 100ft Rd Automated Lot"
-          ];
-          return sampleNames.map((name, i) => {
-            const latOffset = (Math.sin(i * 1.5) * 0.012);
-            const lonOffset = (Math.cos(i * 1.5) * 0.016);
-            const capacity = 100 + i * 35;
-            const free = Math.max(2, Math.floor(capacity * (0.15 + (i * 0.12) % 0.7)));
-            let status = 'Available';
-            if (free <= 5) status = 'Full';
-            else if (free < capacity * 0.25) status = 'Filling up';
-
-            return {
-              id: i + 1,
-              name: name,
-              address: `${10 + i * 14} Central Core, Bengaluru`,
-              lat: centerLat + latOffset,
-              lon: centerLon + lonOffset,
-              capacity: capacity,
-              free_spots: free,
-              status: status,
-              price_car: "₹40",
-              price_bike: "₹15",
-              distance_km: (0.5 + i * 0.4).toFixed(1),
-              eta_mins: Math.ceil(3 + i * 2),
-              updated_mins: 1 + (i % 5),
-              ev_chargers: (i % 2 === 0 ? 4 : 0)
-            };
-          });
+          // Never fabricate fake lots: return empty list if no real parking lots are in database
+          return [];
         }
       };
 
@@ -7248,33 +7193,20 @@
           if (!this.map || !Array.isArray(lots)) return;
 
           // Determine active anchor pin locations:
-          // 1. Searched destination pin (from SearchEngine, Place view, or custom destination pin)
+          // Lots ONLY show when a destination is searched or a place pin is set
           const activePins = [];
 
           if (STATE.selectedPlace && Number.isFinite(Number(STATE.selectedPlace.lat)) && Number.isFinite(Number(STATE.selectedPlace.lon))) {
-            activePins.push({ lat: Number(STATE.selectedPlace.lat), lon: Number(STATE.selectedPlace.lon), type: 'searched_place', radius: 2200 });
+            activePins.push({ lat: Number(STATE.selectedPlace.lat), lon: Number(STATE.selectedPlace.lon), type: 'searched_place', radius: 1500 });
           } else if (this.destinationMarker && typeof this.destinationMarker.getLngLat === 'function') {
             const ll = this.destinationMarker.getLngLat();
-            activePins.push({ lat: ll.lat, lon: ll.lng, type: 'destination_pin', radius: 2200 });
+            activePins.push({ lat: ll.lat, lon: ll.lng, type: 'destination_pin', radius: 1500 });
           } else if (STATE.destination && Number.isFinite(Number(STATE.destination.lat)) && Number.isFinite(Number(STATE.destination.lon))) {
-            activePins.push({ lat: Number(STATE.destination.lat), lon: Number(STATE.destination.lon), type: 'destination', radius: 2200 });
+            activePins.push({ lat: Number(STATE.destination.lat), lon: Number(STATE.destination.lon), type: 'destination', radius: 1500 });
           }
 
-          // 2. Active GPS / device location pin (when user has an active fix or located pin)
-          if (STATE.hasRealDeviceFix && STATE.userLocation && Number.isFinite(Number(STATE.userLocation.lat)) && Number.isFinite(Number(STATE.userLocation.lng))) {
-            activePins.push({ lat: Number(STATE.userLocation.lat), lon: Number(STATE.userLocation.lng), type: 'device_pin', radius: 2000 });
-          }
-
-          const currentZoom = (this.map && typeof this.map.getZoom === 'function') ? this.map.getZoom() : 12;
-
-          // 3. Street-level neighborhood inspection (Zoom >= 15.0): user is closely inspecting a neighborhood
-          if (currentZoom >= 15.0 && typeof this.map.getCenter === 'function') {
-            const center = this.map.getCenter();
-            activePins.push({ lat: center.lat, lon: center.lng, type: 'viewport_center', radius: 1400 });
-          }
-
-          // If no searched place and no pin location is active near lots:
-          // HIDE all lots as requested ("hide all this lots show when a place near it is searched or it have a pin location near")
+          // If no searched place, no destination pin, and no lot is selected:
+          // HIDE all lot badges to keep the map clean and uncluttered
           if (activePins.length === 0 && !STATE.selectedLot) {
             return;
           }
@@ -10893,6 +10825,7 @@
           STATE.isCameraFollowing = followCamera;
           STATE.isTrackingLocation = true;
           STATE.isManualLocation = false; // User explicitly tapped to acquire device GPS!
+          try { localStorage.removeItem('openpark_pinned_spot'); } catch (e) {}
           WakeLockManager.acquire();
 
           if (STATE.hasRealDeviceFix && STATE.userLocation && Number.isFinite(STATE.userLocation.lat)) {
@@ -10919,6 +10852,8 @@
           if (locBtn) locBtn.classList.add('active-blue', 'active-pulse');
           STATE.isCameraFollowing = true;
           STATE.isTrackingLocation = true;
+          STATE.isManualLocation = false;
+          try { localStorage.removeItem('openpark_pinned_spot'); } catch (e) {}
           WakeLockManager.acquire();
           startLocating();
         },
@@ -12494,14 +12429,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261124_v54"></script>
-  <script src="/app/js/animated-list.js?v=20261124_v54"></script>
-  <script src="/app/js/ui-polish.js?v=20261124_v54"></script>
-  <script src="/app/js/jelly-radio.js?v=20261124_v54"></script>
+  <script type="module" src="/app/js/locate.js?v=20261124_v55"></script>
+  <script src="/app/js/animated-list.js?v=20261124_v55"></script>
+  <script src="/app/js/ui-polish.js?v=20261124_v55"></script>
+  <script src="/app/js/jelly-radio.js?v=20261124_v55"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261124_v54', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261124_v55', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

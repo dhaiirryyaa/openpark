@@ -60,17 +60,16 @@ export async function startLocating({ timeoutMs = 15000 } = {}) {
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
     const now = p.timestamp || Date.now();
 
-    // Strict Device Fix Filter:
-    // Reject coarse IP or cellular tower estimates (> 200m).
-    // The user's device live GPS / Wi-Fi fix must be accurate to <= 200m.
-    if (accuracy > 200) {
-      console.warn(`[GPS] Coarse location reading rejected (±${Math.round(accuracy)}m). Waiting for real hardware GPS fix.`);
+    // Real Hardware/Cellular/Wi-Fi Device Fix:
+    // Accept device location, refining accuracy as GPS locks
+    if (accuracy > 2500) {
+      console.warn(`[GPS] Coarse reading rejected (>2500m). Waiting for real hardware GPS fix.`);
       return;
     }
 
     // Prevent degradation: if we already have a recent high-accuracy fix, reject sudden jumps to poorer accuracy
     if (LOC.lat != null && LOC.accuracy != null && (now - LOC.ts < 30000)) {
-      if (accuracy > LOC.accuracy * 2 && accuracy > 80) {
+      if (accuracy > LOC.accuracy * 3 && accuracy > 200) {
         return;
       }
     }
