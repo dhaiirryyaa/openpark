@@ -502,7 +502,7 @@
 .map-style-switcher {
   position: fixed;
   top: max(16px, env(safe-area-inset-top));
-  right: 72px;
+  right: 20px;
   z-index: 20;
   display: inline-flex;
   align-items: center;
