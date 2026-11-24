@@ -2195,19 +2195,24 @@
       opacity: 0;
     }
     .welcome-card::-webkit-scrollbar { display: none; }
+    .welcome-card > * {
+      flex-shrink: 0;
+    }
 
     /* iOS Top Grabber Handle */
     .ios-modal-grabber {
       width: 44px;
       height: 5px;
+      min-height: 5px;
+      flex-shrink: 0;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.35);
-      margin: -4px auto 2px;
+      background: rgba(255, 255, 255, 0.45);
+      margin: 0 auto 6px;
       cursor: pointer;
       transition: background 0.2s ease, width 0.2s ease;
     }
     .ios-modal-grabber:hover {
-      background: rgba(255, 255, 255, 0.65);
+      background: rgba(255, 255, 255, 0.75);
       width: 52px;
     }
 
@@ -2570,55 +2575,60 @@
     }
     .ios-home-indicator {
       width: 110px;
-      height: 4px;
+      height: 5px;
+      min-height: 5px;
+      flex-shrink: 0;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.25);
-      margin: 2px auto 0;
+      background: rgba(255, 255, 255, 0.35);
+      margin: 8px auto 2px;
       cursor: pointer;
       transition: all 0.2s ease;
     }
     .ios-home-indicator:hover {
-      background: rgba(255, 255, 255, 0.5);
+      background: rgba(255, 255, 255, 0.7);
       width: 130px;
     }
 
-    /* Pull-Down Control Center Notch on Map */
+    /* Pull-Down Control Center Notch at Screen Top-Right (iPhone Style) */
     #btn-pull-control-center {
       position: fixed;
       top: 0;
-      left: 50%;
-      transform: translateX(-50%);
+      right: clamp(16px, 3.5vw, 36px);
+      left: auto;
+      transform: none;
       z-index: 1040;
-      width: 130px;
+      width: 106px;
       height: 22px;
-      background: rgba(20, 22, 30, 0.72);
+      background: rgba(20, 22, 30, 0.82);
       backdrop-filter: blur(24px) saturate(180%);
       -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.15);
       border-top: none;
-      border-bottom-left-radius: 14px;
-      border-bottom-right-radius: 14px;
+      border-bottom-left-radius: 12px;
+      border-bottom-right-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 6px;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
       transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     #btn-pull-control-center:hover {
       height: 26px;
-      background: rgba(28, 30, 42, 0.9);
-      box-shadow: 0 6px 22px rgba(0, 113, 227, 0.25);
+      background: rgba(28, 30, 42, 0.95);
+      border-color: rgba(0, 113, 227, 0.4);
+      box-shadow: 0 6px 22px rgba(0, 113, 227, 0.3);
     }
     .ios-pull-pill {
       width: 36px;
       height: 4px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.45);
+      background: rgba(255, 255, 255, 0.55);
       transition: all 0.2s ease;
     }
     #btn-pull-control-center:hover .ios-pull-pill {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.9);
       width: 44px;
     }
 
@@ -2831,7 +2841,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v56" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v57" />
 </head>
 <body class="welcome-active">
 
@@ -12760,14 +12770,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261124_v56"></script>
-  <script src="/app/js/animated-list.js?v=20261124_v56"></script>
-  <script src="/app/js/ui-polish.js?v=20261124_v56"></script>
-  <script src="/app/js/jelly-radio.js?v=20261124_v56"></script>
+  <script type="module" src="/app/js/locate.js?v=20261124_v57"></script>
+  <script src="/app/js/animated-list.js?v=20261124_v57"></script>
+  <script src="/app/js/ui-polish.js?v=20261124_v57"></script>
+  <script src="/app/js/jelly-radio.js?v=20261124_v57"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261124_v56', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261124_v57', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
