@@ -2567,7 +2567,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261123_v53" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v54" />
 </head>
 <body class="welcome-active">
 
@@ -4267,7 +4267,7 @@
         }
 
         const ok = (p) => {
-          const { latitude: lat, longitude: lon, accuracy } = p.coords;
+          const { latitude: lat, longitude: lon, accuracy, speed, heading, altitude } = p.coords;
           if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
           const now = p.timestamp || Date.now();
 
@@ -4286,7 +4286,16 @@
             }
           }
 
-          setLoc({ state: accuracy <= 60 ? 'precise' : 'acceptable', lat, lon, accuracy, ts: now });
+          setLoc({
+            state: accuracy <= 60 ? 'precise' : 'acceptable',
+            lat,
+            lon,
+            accuracy,
+            speed: (speed != null && !isNaN(speed)) ? Math.max(0, speed * 3.6) : null,
+            heading: (heading != null && !isNaN(heading)) ? heading : null,
+            altitude: altitude || 920,
+            ts: now
+          });
         };
 
         const fail = (e) => {
@@ -4482,13 +4491,23 @@
           const isFirstFix = !STATE.hasRealDeviceFix;
           const accMeters = Math.round(loc.accuracy || 15);
 
+          let computedHeading = (loc.heading != null && !isNaN(loc.heading)) ? loc.heading : (STATE.userLocation?.heading || 0);
+          if ((loc.heading == null || isNaN(loc.heading)) && STATE.userLocation && Number.isFinite(STATE.userLocation.lat) && Number.isFinite(STATE.userLocation.lng)) {
+            const moveDist = calculateDistanceMeters(STATE.userLocation.lat, STATE.userLocation.lng, loc.lat, loc.lon);
+            if (moveDist >= 2.5) {
+              computedHeading = bearing(STATE.userLocation.lat, STATE.userLocation.lng, loc.lat, loc.lon);
+            }
+          }
+
+          const speedKmh = loc.speed != null ? loc.speed : (STATE.userLocation?.speed || 0);
+
           const fix = {
             lat: loc.lat,
             lng: loc.lon,
-            speed: 0,
-            speedMs: 0,
-            heading: STATE.userLocation?.heading || 0,
-            altitude: 920,
+            speed: speedKmh,
+            speedMs: speedKmh / 3.6,
+            heading: computedHeading,
+            altitude: loc.altitude || 920,
             accuracy: accMeters,
             timestamp: loc.ts || Date.now()
           };
@@ -4528,6 +4547,11 @@
                 duration: isFirstFix ? 750 : 400
               });
             }
+          }
+
+          // Active navigation follows real device position
+          if (typeof NavigationEngine !== 'undefined' && STATE.activeTrip && !NavigationEngine.isSimulating) {
+            NavigationEngine.onRealPositionUpdate(fix);
           }
 
           if (typeof ParkingApp !== 'undefined' && !STATE.selectedPlace) {
@@ -6266,8 +6290,12 @@
                 STATE.userLocation.speed = (fix.speed || 0) * 3.6;
                 STATE.userLocation.accuracy = fix.accuracy || 5;
                 TelemetryController.update(STATE.userLocation);
-                if (STATE.activeTrip && NavigationEngine.trimRouteFrom) {
-                  NavigationEngine.trimRouteFrom(fix.lon, fix.lat);
+                if (STATE.activeTrip && typeof NavigationEngine !== 'undefined') {
+                  if (!NavigationEngine.isSimulating && NavigationEngine.onRealPositionUpdate) {
+                    NavigationEngine.onRealPositionUpdate(STATE.userLocation);
+                  } else if (NavigationEngine.trimRouteFrom) {
+                    NavigationEngine.trimRouteFrom(fix.lon, fix.lat);
+                  }
                 }
               }
             });
@@ -9042,10 +9070,22 @@
         },
 
         async startTrip(lot) {
+          if (!lot) return;
+          cancelAnimationFrame(STATE.animationFrameId);
+          this.isSimulating = false;
           STATE.activeTrip = {
+            ...lot,
             destination: lot,
             startTime: Date.now()
           };
+          STATE.isCameraFollowing = true;
+          this.currentStepIndex = 0;
+
+          const recenterBtn = document.getElementById('btn-recenter-nav');
+          if (recenterBtn) recenterBtn.classList.remove('visible');
+
+          const simLbl = document.getElementById('btn-simulate-trip-label');
+          if (simLbl) simLbl.innerText = 'Start Simulated Drive';
 
           // Erase previous trip breadcrumb trails
           STATE.breadcrumbs = [];
@@ -9103,8 +9143,15 @@
             }
           });
 
-          // Automatically engage live driving simulation with Dynamic Island
-          this.startSimulation();
+          // Trip is live and follows real device movement. Do NOT auto-simulate!
+          this.isSimulating = false;
+          if (MapEngine.tracker) MapEngine.tracker.o.follow = STATE.isCameraFollowing;
+
+          if (STATE.userLocation) {
+            this.onRealPositionUpdate(STATE.userLocation);
+          }
+
+          ParkingApp.showToast(`Navigation active to ${lot.name}. Tracking device location.`, "success");
         },
 
         demoDynamicIsland() {
@@ -9120,7 +9167,9 @@
               price_car: '₹40'
             };
           }
-          this.startTrip(testLot);
+          this.startTrip(testLot).then(() => {
+            this.startSimulation();
+          });
           ParkingApp.showToast("Dynamic Island Driving HUD Active • Live Simulation Running", "success", 3200);
         },
 
@@ -9352,7 +9401,6 @@
         },
 
         trimRouteFrom(curLng, curLat) {
-          if (!this.isSimulating && (!STATE.userLocation || (STATE.userLocation.speed || 0) < 3)) return;
           if (!this.routePoints || this.routePoints.length < 2) return;
           const rSource = MapEngine.map ? MapEngine.map.getSource('route') : null;
           if (!rSource) return;
@@ -9368,8 +9416,8 @@
             }
           }
 
-          // If device is actively moving along route, trim passed segments
-          if (closestIdx > 0 && minD < 40) {
+          // If device is within 50m of route line, trim passed segments forward
+          if (closestIdx > 0 && minD < 50) {
             const remaining = [[curLng, curLat], ...this.routePoints.slice(closestIdx)];
             if (remaining.length >= 2) {
               rSource.setData({
@@ -9377,6 +9425,81 @@
                 geometry: { type: 'LineString', coordinates: remaining }
               });
             }
+          }
+        },
+
+        onRealPositionUpdate(fix) {
+          if (!STATE.activeTrip || this.isSimulating) return;
+          if (!fix || !Number.isFinite(fix.lat) || !Number.isFinite(fix.lng)) return;
+
+          const lot = STATE.activeTrip.destination || STATE.activeTrip;
+          const destLat = Number(lot.lat !== undefined ? lot.lat : lot.latitude);
+          const destLon = Number(lot.lon !== undefined ? lot.lon : (lot.lng !== undefined ? lot.lng : lot.longitude));
+
+          if (Number.isFinite(destLat) && Number.isFinite(destLon)) {
+            const distToDest = calculateDistanceMeters(fix.lat, fix.lng, destLat, destLon);
+
+            // Update remaining distance in trip UI
+            const distEl = document.getElementById('trip-rem-dist');
+            if (distEl) {
+              distEl.innerText = distToDest < 1000 ? `${Math.round(distToDest)} m` : `${(distToDest / 1000).toFixed(1)} km`;
+            }
+
+            // Estimate remaining time (city speed ~25 km/h if stationary, or actual speed if moving)
+            const speedMps = (fix.speed && fix.speed > 5) ? (fix.speed * 1000 / 3600) : (25 * 1000 / 3600);
+            const remainingMins = Math.max(1, Math.round((distToDest / speedMps) / 60));
+            const timeEl = document.getElementById('trip-rem-time');
+            if (timeEl) timeEl.innerText = `${remainingMins} min`;
+            this.updateEtaDisplay(remainingMins);
+
+            // Arrival check: within 25 meters of destination
+            if (distToDest <= 25) {
+              this.handleArrival();
+              return;
+            }
+          }
+
+          // Dynamically trim passed segments along route
+          this.trimRouteFrom(fix.lng, fix.lat);
+
+          // Update turn-by-turn guidance based on closest point on the route
+          if (this.routePoints && this.routePoints.length >= 2 && this.routeSteps && this.routeSteps.length > 0) {
+            let minD = Infinity;
+            let closestIdx = 0;
+            for (let i = 0; i < this.routePoints.length; i++) {
+              const pt = this.routePoints[i];
+              const d = calculateDistanceMeters(fix.lat, fix.lng, pt[1], pt[0]);
+              if (d < minD) {
+                minD = d;
+                closestIdx = i;
+              }
+            }
+
+            const totalPoints = this.routePoints.length;
+            const progress = totalPoints > 1 ? (closestIdx / (totalPoints - 1)) : 0;
+            const stepCount = this.routeSteps.length;
+            const targetStepIdx = Math.min(stepCount - 1, Math.floor(progress * stepCount));
+
+            if (targetStepIdx !== this.currentStepIndex) {
+              this.currentStepIndex = targetStepIdx;
+              this.updateTurnBanner(this.routeSteps[targetStepIdx]);
+              this.renderStepList();
+            }
+          }
+
+          // Camera follows real device location smoothly if map tracker is not already following
+          if (STATE.isCameraFollowing && MapEngine.map && !MapEngine.tracker) {
+            const camBearing = (fix.heading != null && !isNaN(fix.heading) && fix.heading > 0)
+              ? fix.heading
+              : MapEngine.map.getBearing();
+
+            MapEngine.map.easeTo({
+              center: [fix.lng, fix.lat],
+              bearing: camBearing,
+              pitch: 48,
+              zoom: 17,
+              duration: 500
+            });
           }
         },
 
@@ -9443,6 +9566,8 @@
           STATE.isCameraFollowing = true;
           const recenterBtn = document.getElementById('btn-recenter-nav');
           if (recenterBtn) recenterBtn.classList.remove('visible');
+          const simLbl = document.getElementById('btn-simulate-trip-label');
+          if (simLbl) simLbl.innerText = 'Pause Simulated Drive';
 
           // Precompute route segment distances and bearings
           const segments = [];
@@ -9617,6 +9742,9 @@
 
         handleArrival() {
           this.isSimulating = false;
+          cancelAnimationFrame(STATE.animationFrameId);
+          const simLbl = document.getElementById('btn-simulate-trip-label');
+          if (simLbl) simLbl.innerText = 'Start Simulated Drive';
           if (typeof DynamicIslandNav !== 'undefined') {
             DynamicIslandNav.dismiss();
           } else {
@@ -9672,6 +9800,8 @@
           MapEngine.clearRouteLotMarkers();
           const recenterBtn = document.getElementById('btn-recenter-nav');
           if (recenterBtn) recenterBtn.classList.remove('visible');
+          const simLbl = document.getElementById('btn-simulate-trip-label');
+          if (simLbl) simLbl.innerText = 'Start Simulated Drive';
 
           if (!STATE.isTrackingLocation) {
             WakeLockManager.release();
@@ -11127,8 +11257,12 @@
             TelemetryController.update(updatedFix);
           }
 
-          if (STATE.activeTrip && NavigationEngine.trimRouteFrom) {
-            NavigationEngine.trimRouteFrom(lng, lat);
+          if (STATE.activeTrip && typeof NavigationEngine !== 'undefined') {
+            if (!NavigationEngine.isSimulating && NavigationEngine.onRealPositionUpdate) {
+              NavigationEngine.onRealPositionUpdate(updatedFix);
+            } else if (NavigationEngine.trimRouteFrom) {
+              NavigationEngine.trimRouteFrom(lng, lat);
+            }
           }
 
           if (source === 'drag') {
@@ -11194,8 +11328,12 @@
             TelemetryController.update(fix);
             API.sendTraccarPing(fix);
 
-            if (STATE.activeTrip && NavigationEngine.trimRouteFrom) {
-              NavigationEngine.trimRouteFrom(fix.lng, fix.lat);
+            if (STATE.activeTrip && typeof NavigationEngine !== 'undefined') {
+              if (!NavigationEngine.isSimulating && NavigationEngine.onRealPositionUpdate) {
+                NavigationEngine.onRealPositionUpdate(fix);
+              } else if (NavigationEngine.trimRouteFrom) {
+                NavigationEngine.trimRouteFrom(fix.lng, fix.lat);
+              }
             }
           }, 1000);
         },
@@ -12356,14 +12494,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261120_v40"></script>
-  <script src="/app/js/animated-list.js?v=20261120_v40"></script>
-  <script src="/app/js/ui-polish.js?v=20261120_v40"></script>
-  <script src="/app/js/jelly-radio.js?v=20261120_v40"></script>
+  <script type="module" src="/app/js/locate.js?v=20261124_v54"></script>
+  <script src="/app/js/animated-list.js?v=20261124_v54"></script>
+  <script src="/app/js/ui-polish.js?v=20261124_v54"></script>
+  <script src="/app/js/jelly-radio.js?v=20261124_v54"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261123_v53', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261124_v54', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);

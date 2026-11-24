@@ -56,7 +56,7 @@ export async function startLocating({ timeoutMs = 15000 } = {}) {
   }
 
   const ok = (p) => {
-    const { latitude: lat, longitude: lon, accuracy } = p.coords;
+    const { latitude: lat, longitude: lon, accuracy, speed, heading, altitude } = p.coords;
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
     const now = p.timestamp || Date.now();
 
@@ -75,7 +75,16 @@ export async function startLocating({ timeoutMs = 15000 } = {}) {
       }
     }
 
-    set({ state: accuracy <= 60 ? 'precise' : 'acceptable', lat, lon, accuracy, ts: now });
+    set({
+      state: accuracy <= 60 ? 'precise' : 'acceptable',
+      lat,
+      lon,
+      accuracy,
+      speed: (speed != null && !isNaN(speed)) ? Math.max(0, speed * 3.6) : null,
+      heading: (heading != null && !isNaN(heading)) ? heading : null,
+      altitude: altitude || null,
+      ts: now
+    });
   };
 
   const fail = (e) => {
