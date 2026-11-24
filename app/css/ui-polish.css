@@ -3412,6 +3412,298 @@ body.sidebar-collapsed #location-options-drawer {
   }
 }
 
+/* ==========================================================================
+   Fable Motion Animation Engine Styles (MapLibre Living Vector FX)
+   ========================================================================== */
+
+/* 1. Map Touch / Click Liquid Shockwaves */
+.fable-map-shockwave {
+  position: absolute;
+  width: 32px;
+  height: 32px;
+  pointer-events: none;
+  z-index: 99;
+  transform: translate(-50%, -50%) scale(0);
+  border-radius: 50%;
+  border: 2px solid rgba(56, 189, 248, 0.9);
+  box-shadow: 0 0 20px rgba(0, 113, 227, 0.65), inset 0 0 12px rgba(56, 189, 248, 0.4);
+  animation: fable-shockwave-expand 0.8s cubic-bezier(0.12, 0.8, 0.24, 1) forwards;
+}
+
+.fable-map-echo {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(14, 165, 233, 0.65);
+  animation: fable-shockwave-echo 0.8s cubic-bezier(0.12, 0.8, 0.24, 1) forwards;
+}
+
+@keyframes fable-shockwave-expand {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15);
+    opacity: 0.95;
+  }
+  60% {
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(3.8);
+    opacity: 0;
+  }
+}
+
+@keyframes fable-shockwave-echo {
+  0% {
+    transform: scale(0.3);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+}
+
+/* 2. Living Parking Pin Levitation & Sonar Waves */
+.parking-pin.fable-pin {
+  animation: fable-pin-float 3.4s ease-in-out infinite alternate !important;
+  animation-delay: var(--fable-delay, 0s) !important;
+  will-change: transform;
+}
+
+@keyframes fable-pin-float {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-4px);
+  }
+}
+
+.parking-pin.fable-pin:hover {
+  animation-play-state: paused !important;
+  transform: scale(1.14) translateY(-3px) !important;
+  box-shadow: 0 12px 30px rgba(0, 113, 227, 0.45), 0 0 0 2px rgba(56, 189, 248, 0.45) !important;
+}
+
+.parking-pin.fable-pin.is-selected {
+  animation: fable-pin-selected 2.4s ease-in-out infinite alternate !important;
+  box-shadow: 0 12px 32px rgba(0, 113, 227, 0.6), 0 0 18px rgba(56, 189, 248, 0.5) !important;
+}
+
+@keyframes fable-pin-selected {
+  0% {
+    transform: scale(1.1) translateY(-3px);
+  }
+  100% {
+    transform: scale(1.16) translateY(-6px);
+  }
+}
+
+/* Dual Sonar Pulse Rings inside Pins */
+.status-pulse .fable-sonar-ring {
+  position: absolute;
+  inset: -2px;
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.status-green .fable-sonar-ring {
+  border: 1.5px solid rgba(52, 199, 89, 0.85);
+  box-shadow: 0 0 8px rgba(52, 199, 89, 0.4);
+}
+
+.status-orange .fable-sonar-ring {
+  border: 1.5px solid rgba(255, 149, 0, 0.85);
+  box-shadow: 0 0 8px rgba(255, 149, 0, 0.4);
+}
+
+.status-red .fable-sonar-ring {
+  border: 1.5px solid rgba(255, 59, 48, 0.85);
+  box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+}
+
+.status-pulse .fable-sonar-ring.r1 {
+  animation: fable-sonar-ping 2.6s cubic-bezier(0.1, 0.8, 0.25, 1) infinite;
+}
+
+.status-pulse .fable-sonar-ring.r2 {
+  animation: fable-sonar-ping 2.6s cubic-bezier(0.1, 0.8, 0.25, 1) infinite 1.3s;
+}
+
+@keyframes fable-sonar-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.9;
+  }
+  75% {
+    opacity: 0.15;
+  }
+  100% {
+    transform: scale(3.4);
+    opacity: 0;
+  }
+}
+
+/* 3. Fable Destination Beacon with 3D Ground Target Radar */
+.fable-dest-root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fable-ground-target {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%) perspective(300px) rotateX(68deg);
+  width: 52px;
+  height: 52px;
+  pointer-events: none;
+  transform-origin: center center;
+  z-index: 1;
+}
+
+.fable-target-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(239, 68, 68, 0.85);
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+}
+
+.fable-target-ring.tr1 {
+  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+}
+
+.fable-target-ring.tr2 {
+  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite 0.8s;
+}
+
+.fable-target-ring.tr3 {
+  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite 1.6s;
+}
+
+.fable-target-core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.9);
+}
+
+@keyframes fable-target-ripple {
+  0% {
+    transform: scale(0.2);
+    opacity: 0.95;
+  }
+  60% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+.fable-pin-bob {
+  animation: fable-pin-hover-bob 2.8s ease-in-out infinite alternate;
+  transform-origin: bottom center;
+}
+
+@keyframes fable-pin-hover-bob {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  100% {
+    transform: translateY(-5px) scale(1.04);
+  }
+}
+
+/* 4. Fable Vehicle Sonar Radar & Sweep */
+.fable-vehicle-root {
+  position: relative;
+}
+
+.fable-vehicle-sonar {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fable-v-wave {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 113, 227, 0.7);
+  box-shadow: 0 0 12px rgba(0, 113, 227, 0.35);
+}
+
+.fable-v-wave.w1 {
+  animation: fable-vehicle-ping 2.6s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+}
+
+.fable-v-wave.w2 {
+  animation: fable-vehicle-ping 2.6s cubic-bezier(0.1, 0.8, 0.3, 1) infinite 1.3s;
+}
+
+@keyframes fable-vehicle-ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.85;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* 5. Fable Route Energy Gliding Photon */
+.fable-route-orb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 105;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fable-orb-core {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 0 10px #38bdf8, 0 0 18px #0071e3;
+}
+
+.fable-orb-glow {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(0, 113, 227, 0.2) 65%, transparent 100%);
+  animation: fable-orb-pulse 1.4s ease-in-out infinite alternate;
+}
+
+@keyframes fable-orb-pulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.35);
+    opacity: 1;
+  }
+}
+
 
 
 
