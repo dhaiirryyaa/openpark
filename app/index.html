@@ -2080,18 +2080,23 @@
       inset: 0;
       z-index: 2100;
       display: flex;
-      align-items: center;
+      align-items: flex-start;
       justify-content: center;
-      padding: 16px;
-      background: rgba(10, 15, 28, 0.45);
-      backdrop-filter: blur(18px) saturate(160%);
-      -webkit-backdrop-filter: blur(18px) saturate(160%);
+      padding: clamp(14px, 3vh, 30px) 16px 20px;
+      background: rgba(10, 12, 18, 0.65);
+      backdrop-filter: blur(36px) saturate(210%);
+      -webkit-backdrop-filter: blur(36px) saturate(210%);
       opacity: 1;
-      transition: opacity 0.34s var(--spring-curve), transform 0.34s var(--spring-curve), visibility 0.34s ease;
+      visibility: visible;
+      transition: opacity 0.42s cubic-bezier(0.16, 1, 0.3, 1),
+                  visibility 0.42s ease,
+                  backdrop-filter 0.42s ease;
+      overflow-y: auto;
+      scrollbar-width: none;
     }
+    #welcome-overlay::-webkit-scrollbar { display: none; }
     #welcome-overlay.is-hidden {
       opacity: 0;
-      transform: scale(1.03);
       pointer-events: none;
       visibility: hidden;
     }
@@ -2162,18 +2167,50 @@
       transform: translateY(20px) !important;
     }
     .welcome-card {
-      width: min(620px, 100%);
-      max-height: calc(100vh - 32px);
+      width: min(640px, 100%);
+      max-height: calc(100vh - 48px);
       overflow-y: auto;
-      padding: 26px 26px 22px 26px;
-      border-radius: 26px;
+      padding: 16px 24px 22px;
+      border-radius: 34px;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 15px;
       position: relative;
       scrollbar-width: none;
+      background: rgba(26, 28, 36, 0.78);
+      backdrop-filter: blur(50px) saturate(220%);
+      -webkit-backdrop-filter: blur(50px) saturate(220%);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 32px 84px rgba(0, 0, 0, 0.65),
+                  0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+                  0 1px 2px rgba(255, 255, 255, 0.2) inset;
+      transform: translateY(0) scale(1);
+      transition: transform 0.44s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.36s ease,
+                  box-shadow 0.36s ease;
+      will-change: transform, opacity;
+    }
+    #welcome-overlay.is-hidden .welcome-card {
+      transform: translateY(-90px) scale(0.95);
+      opacity: 0;
     }
     .welcome-card::-webkit-scrollbar { display: none; }
+
+    /* iOS Top Grabber Handle */
+    .ios-modal-grabber {
+      width: 44px;
+      height: 5px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.35);
+      margin: -4px auto 2px;
+      cursor: pointer;
+      transition: background 0.2s ease, width 0.2s ease;
+    }
+    .ios-modal-grabber:hover {
+      background: rgba(255, 255, 255, 0.65);
+      width: 52px;
+    }
+
     .welcome-topbar {
       display: flex;
       align-items: center;
@@ -2185,51 +2222,78 @@
       display: inline-flex;
       align-items: center;
       gap: 7px;
-      padding: 5px 12px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 600;
-      background: var(--text-contrast-layer);
-      border: 1px solid var(--color-border-subtle);
-      color: var(--text-primary);
-      cursor: pointer;
-    }
-    .welcome-skip-btn {
       padding: 6px 14px;
       border-radius: 999px;
-      border: 1px solid var(--color-border-subtle);
-      background: var(--text-contrast-layer);
-      color: var(--text-secondary);
       font-size: 12.5px;
+      font-weight: 600;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.9);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    .welcome-icon-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .welcome-icon-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      transform: scale(1.05);
+    }
+    .welcome-skip-btn {
+      padding: 7px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.09);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 13px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: 6px;
       cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .welcome-skip-btn:hover {
-      color: var(--text-primary);
-      background: var(--color-hover);
+      background: rgba(255, 255, 255, 0.18);
+      color: #ffffff;
+      transform: scale(1.02);
+    }
+    .welcome-header-block {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
     }
     .welcome-kicker {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--apple-blue);
-      letter-spacing: 0.2px;
-      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: #38bdf8;
+      margin-bottom: 2px;
     }
     .welcome-title {
-      font-size: clamp(26px, 4.2vw, 34px);
+      font-size: clamp(26px, 3.8vw, 32px);
       font-weight: 800;
-      letter-spacing: -0.03em;
-      line-height: 1.12;
-      color: var(--text-primary);
+      letter-spacing: -0.035em;
+      line-height: 1.15;
+      color: #ffffff;
+      text-shadow: 0 2px 10px rgba(0, 0, 0, 0.35);
     }
     .welcome-subtitle {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-top: 6px;
+      font-size: 13.5px;
+      color: rgba(255, 255, 255, 0.65);
       line-height: 1.45;
+      margin-top: 2px;
     }
     .welcome-search-box {
       position: relative;
@@ -2238,50 +2302,57 @@
     .welcome-search-pill {
       display: flex;
       align-items: center;
-      gap: 10px;
-      height: 54px;
-      padding: 6px 8px 6px 16px;
+      gap: 12px;
+      height: 52px;
+      padding: 6px 8px 6px 18px;
       border-radius: 18px;
-      background: var(--solid-panel-bg);
-      border: 1.5px solid var(--color-border-subtle);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-      transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), 0 1px 0 rgba(255, 255, 255, 0.1) inset;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .welcome-search-pill:focus-within {
-      border-color: var(--apple-blue);
-      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.16);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #38bdf8;
+      box-shadow: 0 10px 30px rgba(0, 113, 227, 0.25), 0 0 0 3px rgba(56, 189, 248, 0.25);
     }
     .welcome-search-pill input {
       flex: 1;
       border: none;
       background: transparent;
       outline: none;
-      color: var(--text-primary);
-      font-size: 15.5px;
+      color: #ffffff;
+      font-size: 15px;
       font-family: inherit;
       min-width: 0;
     }
     .welcome-search-pill input::placeholder {
-      color: var(--text-secondary);
+      color: rgba(255, 255, 255, 0.45);
+    }
+    .search-lens-icon {
+      color: rgba(255, 255, 255, 0.5);
+      flex-shrink: 0;
     }
     .welcome-go-btn {
-      height: 40px;
-      padding: 0 16px;
+      height: 38px;
+      padding: 0 18px;
       border-radius: 13px;
       border: none;
-      background: var(--apple-blue);
+      background: linear-gradient(135deg, #0071e3 0%, #0096ff 100%);
       color: #ffffff;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 700;
       display: inline-flex;
       align-items: center;
       gap: 6px;
       cursor: pointer;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.4);
+      transition: all 0.2s ease;
     }
     .welcome-go-btn:hover {
-      background: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(0, 113, 227, 0.55);
     }
     .welcome-mode-row {
       display: flex;
@@ -2290,83 +2361,276 @@
       scrollbar-width: none;
       -webkit-overflow-scrolling: touch;
       scroll-behavior: smooth;
-      padding-bottom: 4px;
+      padding-bottom: 2px;
       user-select: none;
-      cursor: grab;
-    }
-    .welcome-mode-row:active {
-      cursor: grabbing;
     }
     .welcome-mode-row::-webkit-scrollbar { display: none; }
     .welcome-mode-row .chip-btn {
       flex-shrink: 0;
       white-space: nowrap;
-      transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
-      touch-action: pan-x;
+      padding: 8px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.11);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 12.5px;
+      font-weight: 600;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .welcome-mode-row .chip-btn:hover {
+      background: rgba(255, 255, 255, 0.14);
+      color: #ffffff;
       transform: translateY(-1px);
     }
-    .welcome-mode-row .chip-btn:active {
-      transform: scale(0.96);
+    .welcome-mode-row .chip-btn.active {
+      background: #0071e3;
+      border-color: #38bdf8;
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.4);
     }
     .welcome-section-label {
       font-size: 11.5px;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--text-secondary);
-      margin-bottom: -8px;
+      letter-spacing: 0.7px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: -6px;
     }
     .welcome-quick-grid {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
+      gap: 9px;
     }
     .welcome-dest-card {
-      padding: 12px 12px;
-      border-radius: 16px;
-      background: var(--text-contrast-layer);
-      border: 1px solid var(--color-border-subtle);
+      padding: 12px 11px;
+      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15), 0 1px 0 rgba(255, 255, 255, 0.08) inset;
       display: flex;
       flex-direction: column;
       align-items: flex-start;
-      gap: 4px;
+      gap: 8px;
       text-align: left;
-      color: var(--text-primary);
+      color: #ffffff;
       cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
     .welcome-dest-card:hover {
-      background: var(--color-hover);
-      border-color: rgba(0, 113, 227, 0.35);
+      background: rgba(255, 255, 255, 0.11);
+      border-color: rgba(255, 255, 255, 0.22);
       transform: translateY(-2px);
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
     }
-    .welcome-dest-icon {
-      font-size: 20px;
-      line-height: 1;
-      margin-bottom: 2px;
+    .welcome-dest-card:active {
+      transform: scale(0.96);
+    }
+    .welcome-dest-icon-bubble {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+    .welcome-dest-icon-bubble.bubble-blue {
+      background: rgba(0, 113, 227, 0.25);
+      color: #60a5fa;
+      border: 1px solid rgba(0, 113, 227, 0.35);
+    }
+    .welcome-dest-icon-bubble.bubble-emerald {
+      background: rgba(16, 185, 129, 0.25);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .welcome-dest-icon-bubble.bubble-pink {
+      background: rgba(236, 72, 153, 0.25);
+      color: #f472b6;
+      border: 1px solid rgba(236, 72, 153, 0.35);
+    }
+    .welcome-dest-icon-bubble.bubble-cyan {
+      background: rgba(6, 182, 212, 0.25);
+      color: #22d3ee;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+    }
+    .welcome-dest-icon-bubble.bubble-amber {
+      background: rgba(245, 158, 11, 0.25);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+    }
+    .welcome-dest-icon-bubble.bubble-purple {
+      background: rgba(139, 92, 246, 0.25);
+      color: #c084fc;
+      border: 1px solid rgba(139, 92, 246, 0.35);
+    }
+    .welcome-dest-svg {
+      width: 19px;
+      height: 19px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .welcome-dest-text {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     .welcome-dest-name {
       font-size: 13.5px;
       font-weight: 700;
       line-height: 1.2;
+      color: #ffffff;
     }
     .welcome-dest-sub {
-      font-size: 11.5px;
-      color: var(--text-secondary);
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.55);
       line-height: 1.25;
+    }
+    .neighborhood-chips-row {
+      display: flex;
+      gap: 7px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      padding-bottom: 2px;
+    }
+    .neighborhood-chips-row::-webkit-scrollbar { display: none; }
+    .area-chip {
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .area-chip:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-1px);
     }
     .welcome-footer-actions {
       display: grid;
-      grid-template-columns: 1.25fr 1fr;
-      gap: 10px;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 12px;
       padding-top: 4px;
     }
+    .ios-primary-btn {
+      height: 48px;
+      border-radius: 17px;
+      background: linear-gradient(135deg, #0071e3 0%, #0096ff 100%) !important;
+      color: #ffffff !important;
+      font-size: 14.5px !important;
+      font-weight: 700 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: none;
+      box-shadow: 0 6px 20px rgba(0, 113, 227, 0.45);
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ios-primary-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 26px rgba(0, 113, 227, 0.58);
+    }
+    .ios-primary-btn:active {
+      transform: scale(0.97);
+    }
+    .ios-secondary-btn {
+      height: 48px;
+      border-radius: 17px;
+      background: rgba(255, 255, 255, 0.09) !important;
+      color: #ffffff !important;
+      font-size: 14px !important;
+      font-weight: 600 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      border: 1px solid rgba(255, 255, 255, 0.15) !important;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ios-secondary-btn:hover {
+      background: rgba(255, 255, 255, 0.16) !important;
+      border-color: rgba(255, 255, 255, 0.25) !important;
+      transform: translateY(-1px);
+    }
+    .ios-secondary-btn:active {
+      transform: scale(0.97);
+    }
+    .ios-home-indicator {
+      width: 110px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.25);
+      margin: 2px auto 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .ios-home-indicator:hover {
+      background: rgba(255, 255, 255, 0.5);
+      width: 130px;
+    }
+
+    /* Pull-Down Control Center Notch on Map */
+    #btn-pull-control-center {
+      position: fixed;
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1040;
+      width: 130px;
+      height: 22px;
+      background: rgba(20, 22, 30, 0.72);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-top: none;
+      border-bottom-left-radius: 14px;
+      border-bottom-right-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #btn-pull-control-center:hover {
+      height: 26px;
+      background: rgba(28, 30, 42, 0.9);
+      box-shadow: 0 6px 22px rgba(0, 113, 227, 0.25);
+    }
+    .ios-pull-pill {
+      width: 36px;
+      height: 4px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.45);
+      transition: all 0.2s ease;
+    }
+    #btn-pull-control-center:hover .ios-pull-pill {
+      background: rgba(255, 255, 255, 0.85);
+      width: 44px;
+    }
+
+    body.welcome-active #btn-pull-control-center {
+      display: none !important;
+    }
+
     @media (max-width: 600px) {
       .welcome-card {
-        padding: 20px 16px 18px 16px;
-        gap: 14px;
-        border-radius: 22px;
+        padding: 16px 16px 18px 16px;
+        gap: 13px;
+        border-radius: 26px;
       }
       .welcome-quick-grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2567,7 +2831,7 @@
       transform: translateY(-1px);
     }
   </style>
-  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v55" />
+  <link rel="stylesheet" href="/app/css/ui-polish.css?v=20261124_v56" />
 </head>
 <body class="welcome-active">
 
@@ -3994,16 +4258,24 @@
     </div>
   </div>
 
-  <!-- Welcome / "Where Are You Heading?" Liquid Glass Experience -->
+  <!-- Pull-Down Control Center Notch at Map Top -->
+  <button id="btn-pull-control-center" class="pressable" aria-label="Open Control Center" title="Pull down Control Center">
+    <span class="ios-pull-pill"></span>
+  </button>
+
+  <!-- Welcome / "Where Are You Heading?" iOS Control Center Liquid Glass -->
   <div id="welcome-overlay" role="dialog" aria-modal="true" aria-labelledby="welcome-heading">
-    <div class="apple-glass welcome-card">
+    <div class="welcome-card">
+      <!-- iOS Control Center Top Grabber -->
+      <div class="ios-modal-grabber" title="Slide up to dismiss"></div>
+
       <div class="welcome-topbar">
         <div class="welcome-gps-pill" style="cursor: default;">
           <span class="status-pulse status-green"></span>
           <span>OpenPark • India</span>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
-          <button class="welcome-skip-btn pressable" id="btn-welcome-theme" title="Switch Light / Dark Liquid Glass">
+          <button class="welcome-icon-btn pressable" id="btn-welcome-theme" title="Switch Light / Dark Liquid Glass">
             <svg class="svg-icon-sm" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           </button>
           <button class="welcome-skip-btn pressable" id="btn-welcome-skip">
@@ -4014,7 +4286,7 @@
       </div>
 
       <div>
-        <div class="welcome-kicker" id="welcome-greeting">Good afternoon • OpenPark</div>
+        <div class="welcome-kicker" id="welcome-greeting">Good evening • OpenPark Smart Mobility</div>
         <h1 class="welcome-title" id="welcome-heading">Where are you heading?</h1>
         <p class="welcome-subtitle">Search destinations across Bengaluru &amp; India to get turn-by-turn routes, AI-scanned empty grounds, malls, and EV bay availability.</p>
       </div>
@@ -4065,46 +4337,46 @@
         </button>
       </div>
 
-      <!-- Quick Popular Destinations -->
+      <!-- Quick Popular Destinations (Bento Glass Grid) -->
       <div class="welcome-section-label">Popular Head-Outs</div>
       <div class="welcome-quick-grid">
         <button class="welcome-dest-card pressable" data-quick-dest="MG Road &amp; Brigade Road" data-quick-lat="12.97560" data-quick-lon="77.60660">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-blue">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
           </span>
           <span class="welcome-dest-name">MG Road &amp; CBD</span>
           <span class="welcome-dest-sub">Brigade Rd • Central Hub</span>
         </button>
         <button class="welcome-dest-card pressable" data-quick-dest="KSR Bengaluru City Railway Station" data-quick-lat="12.97780" data-quick-lon="77.57130">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-emerald">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="16" rx="2"/><line x1="4" y1="11" x2="20" y2="11"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></svg>
           </span>
           <span class="welcome-dest-name">Railway Station</span>
           <span class="welcome-dest-sub">Majestic (SBC) • Transit Hub</span>
         </button>
         <button class="welcome-dest-card pressable" data-quick-category="Shopping">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-pink">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
           </span>
           <span class="welcome-dest-name">Malls &amp; Shops</span>
           <span class="welcome-dest-sub">UB City, Orion, Vega</span>
         </button>
         <button class="welcome-dest-card pressable" data-quick-dest="Metro Station">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-cyan">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="16" rx="2"/><line x1="4" y1="11" x2="20" y2="11"/><circle cx="8" cy="15" r="1"/><circle cx="16" cy="15" r="1"/><path d="m8 19-2 3"/><path d="m16 19 2 3"/></svg>
           </span>
           <span class="welcome-dest-name">Metro Stations</span>
           <span class="welcome-dest-sub">Park &amp; Ride Namma Metro</span>
         </button>
         <button class="welcome-dest-card pressable" data-quick-category="Cafes">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-amber">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>
           </span>
           <span class="welcome-dest-name">Cafes &amp; Hangouts</span>
           <span class="welcome-dest-sub">Indiranagar, Koramangala</span>
         </button>
         <button class="welcome-dest-card pressable" data-quick-dest="Kempegowda International Airport">
-          <span class="welcome-dest-icon">
+          <span class="welcome-dest-icon-bubble bubble-purple">
             <svg class="welcome-dest-svg" viewBox="0 0 24 24"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3.5c-.5-.5-2.5 0-4 1.5L13.5 8.5 5.3 6.7c-.8-.2-1.6.2-2 1-.4.8-.2 1.8.5 2.3l4.7 3.5-3.5 3.5-2.4-.6c-.5-.1-1 .1-1.3.5-.4.4-.4 1 0 1.4l2.4 2.4c.4.4 1 .4 1.4 0l.5-1.3 3.5-3.5 3.5 4.7c.5.7 1.5.9 2.3.5.8-.4 1.2-1.2 1-2z"/></svg>
           </span>
           <span class="welcome-dest-name">BLR Airport</span>
@@ -4127,20 +4399,20 @@
         <button class="area-chip pressable" data-area-lat="12.9260" data-area-lon="77.6762" data-area-name="Bellandur">Bellandur</button>
       </div>
 
-      <!-- Bottom Direct CTAs -->
+      <!-- Bottom Direct CTAs (Pin Exact Spot Removed) -->
       <div class="welcome-footer-actions">
-        <button class="btn-primary pressable cursor-target" id="btn-welcome-nearby" data-cursor-label="Near Me">
+        <button class="ios-primary-btn pressable cursor-target" id="btn-welcome-nearby" data-cursor-label="Near Me">
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
-          Parking Near Me
+          <span>Parking Near Me</span>
         </button>
-        <button class="btn-secondary pressable cursor-target" id="btn-welcome-pin-spot" data-cursor-label="Pin Spot" title="Manually place pin on your exact spot">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-          Pin Exact Spot
-        </button>
-        <button class="btn-secondary pressable cursor-target" id="btn-welcome-skip-bottom" data-cursor-label="Explore">
-          Open Map
+        <button class="ios-secondary-btn pressable cursor-target" id="btn-welcome-skip-bottom" data-cursor-label="Explore">
+          <span>Explore Map</span>
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
         </button>
       </div>
+
+      <!-- iOS Home Indicator -->
+      <div class="ios-home-indicator" title="Slide up to dismiss"></div>
     </div>
   </div>
 
@@ -11403,6 +11675,65 @@
             });
           });
 
+          // Pull-Down Notch affordance to open Control Center
+          const btnPull = document.getElementById('btn-pull-control-center');
+          if (btnPull) {
+            btnPull.onclick = () => {
+              if (navigator.vibrate) navigator.vibrate(10);
+              this.show();
+            };
+          }
+
+          // Top grabber and bottom home indicator to dismiss Control Center
+          document.querySelectorAll('.ios-modal-grabber, .ios-home-indicator').forEach(el => {
+            el.addEventListener('click', () => {
+              if (navigator.vibrate) navigator.vibrate(6);
+              this.hide();
+            });
+          });
+
+          // iOS-style pull-down and scroll-down gestures to open Control Center
+          let touchStartY = 0;
+          let touchStartX = 0;
+          window.addEventListener('touchstart', (e) => {
+            if (e.touches && e.touches[0]) {
+              touchStartY = e.touches[0].clientY;
+              touchStartX = e.touches[0].clientX;
+            }
+          }, { passive: true });
+
+          window.addEventListener('touchend', (e) => {
+            if (!e.changedTouches || !e.changedTouches[0]) return;
+            const endY = e.changedTouches[0].clientY;
+            const endX = e.changedTouches[0].clientX;
+            const dy = endY - touchStartY;
+            const dx = endX - touchStartX;
+            const isOpen = !overlay.classList.contains('is-hidden');
+
+            // Pull down from top edge (<120px) triggers Control Center
+            if (!isOpen && touchStartY <= 120 && dy > 45 && Math.abs(dy) > Math.abs(dx)) {
+              if (navigator.vibrate) navigator.vibrate(10);
+              this.show();
+            } else if (isOpen && dy < -50 && Math.abs(dy) > Math.abs(dx) && touchStartY > window.innerHeight * 0.7) {
+              // Swipe up near bottom dismisses Control Center
+              if (navigator.vibrate) navigator.vibrate(6);
+              this.hide();
+            }
+          }, { passive: true });
+
+          // Mousewheel/trackpad downward scroll near top edge reveals Control Center
+          let lastWheelTime = 0;
+          window.addEventListener('wheel', (e) => {
+            const isOpen = !overlay.classList.contains('is-hidden');
+            if (!isOpen && e.clientY <= 90 && e.deltaY < -20) {
+              const now = Date.now();
+              if (now - lastWheelTime > 600) {
+                lastWheelTime = now;
+                this.show();
+              }
+            }
+          }, { passive: true });
+
           // Unified "Parking Near Me" CTA (combines uploaded nearby lots + AI ground/mall/legal scan)
           const btnNearby = document.getElementById('btn-welcome-nearby');
           if (btnNearby) {
@@ -11425,7 +11756,7 @@
             };
           }
 
-          // Direct "Pin Exact Spot" CTA on Welcome screen
+          // Direct "Pin Exact Spot" CTA on Welcome screen (handled gracefully if present)
           const btnWelcomePin = document.getElementById('btn-welcome-pin-spot');
           if (btnWelcomePin) {
             btnWelcomePin.onclick = () => {
@@ -12429,14 +12760,14 @@
       });
     })();
   </script>
-  <script type="module" src="/app/js/locate.js?v=20261124_v55"></script>
-  <script src="/app/js/animated-list.js?v=20261124_v55"></script>
-  <script src="/app/js/ui-polish.js?v=20261124_v55"></script>
-  <script src="/app/js/jelly-radio.js?v=20261124_v55"></script>
+  <script type="module" src="/app/js/locate.js?v=20261124_v56"></script>
+  <script src="/app/js/animated-list.js?v=20261124_v56"></script>
+  <script src="/app/js/ui-polish.js?v=20261124_v56"></script>
+  <script src="/app/js/jelly-radio.js?v=20261124_v56"></script>
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/app/sw.js?v=20261124_v55', { scope: '/app/' })
+        navigator.serviceWorker.register('/app/sw.js?v=20261124_v56', { scope: '/app/' })
           .then((reg) => {
             reg.update();
             console.log('[OpenPark] Offline PWA Service Worker registered:', reg.scope);
