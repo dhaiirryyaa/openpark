@@ -34,7 +34,8 @@
     // 1. Interactive Map Tap / Click Liquid Shockwave
     setupMapClickShockwaves(mapEngine) {
       const attachListener = () => {
-        if (!mapEngine.map) return;
+        if (!mapEngine.map || mapEngine.map._hasLuxuryRipple) return;
+        mapEngine.map._hasLuxuryRipple = true;
         mapEngine.map.on('click', (e) => {
           if (!e || !e.point) return;
           const container = mapEngine.map.getContainer();
@@ -45,14 +46,10 @@
           shockwave.style.left = `${e.point.x}px`;
           shockwave.style.top = `${e.point.y}px`;
 
-          const innerEcho = document.createElement('div');
-          innerEcho.className = 'fable-map-echo';
-          shockwave.appendChild(innerEcho);
-
           container.appendChild(shockwave);
           setTimeout(() => {
             if (shockwave.parentNode) shockwave.parentNode.removeChild(shockwave);
-          }, 850);
+          }, 550);
         });
       };
 
@@ -63,26 +60,20 @@
       }
     },
 
-    // 2. Fable Living Map Pins with Organic Staggered Levitation & Sonar Pings
+    // 2. Fable Living Map Pins with Poised Glass & Sonar Pings
     patchLotMarkers(mapEngine) {
       const origRender = mapEngine.renderLotMarkers;
       if (!origRender || origRender._fablePatched) return;
 
-      const self = this;
       mapEngine.renderLotMarkers = function(lots) {
         origRender.call(this, lots);
 
-        let idx = 0;
         this.markers.forEach((item) => {
           if (!item || !item.element) return;
           const el = item.element;
           el.classList.add('fable-pin');
 
-          // Stagger levitation phases so pins bob rhythmically across the map
-          const delay = -((idx % 6) * 0.55).toFixed(2);
-          el.style.setProperty('--fable-delay', `${delay}s`);
-
-          // Add dual sonar beacon ring to status pulse if missing
+          // Add ethereal sonar beacon ring to status pulse if missing
           const pulse = el.querySelector('.status-pulse');
           if (pulse && !pulse.querySelector('.fable-sonar-ring')) {
             const r1 = document.createElement('span');
@@ -92,14 +83,12 @@
             pulse.appendChild(r1);
             pulse.appendChild(r2);
           }
-
-          idx++;
         });
       };
       mapEngine.renderLotMarkers._fablePatched = true;
     },
 
-    // 3. Fable Destination Beacon with 3D Ground Target Radar
+    // 3. Luxury Destination Beacon with Ground Aperture
     patchDestinationMarker(mapEngine) {
       const origSetDest = mapEngine.setDestinationMarker;
       if (!origSetDest || origSetDest._fablePatched) return;
@@ -109,21 +98,20 @@
 
         if (this.destinationMarker) {
           const el = this.destinationMarker.getElement();
-          if (el && !el.querySelector('.fable-ground-target')) {
+          if (el && !el.querySelector('.fable-ground-aperture')) {
             el.classList.add('fable-dest-root');
 
-            const groundTarget = document.createElement('div');
-            groundTarget.className = 'fable-ground-target';
-            groundTarget.innerHTML = `
-              <span class="fable-target-ring tr1"></span>
-              <span class="fable-target-ring tr2"></span>
-              <span class="fable-target-ring tr3"></span>
-              <span class="fable-target-core"></span>
+            const aperture = document.createElement('div');
+            aperture.className = 'fable-ground-aperture';
+            aperture.innerHTML = `
+              <span class="fable-ground-shadow"></span>
+              <span class="fable-ground-wave w1"></span>
+              <span class="fable-ground-wave w2"></span>
             `;
-            el.prepend(groundTarget);
+            el.prepend(aperture);
 
             const svg = el.querySelector('.destination-pin-svg');
-            if (svg) svg.classList.add('fable-pin-bob');
+            if (svg) svg.classList.add('fable-pin-poised');
           }
         }
       };

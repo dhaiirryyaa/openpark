@@ -2,7 +2,7 @@
    Enables 100% offline self-contained launch, precaching, tile persistence & API fallbacks.
 */
 
-const CACHE_NAME = 'openpark-offline-v62-fable-motion';
+const CACHE_NAME = 'openpark-offline-v63-luxury-motion';
 const PRECACHE_ASSETS = [
   '/favicon.ico',
   '/app/',

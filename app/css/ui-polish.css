@@ -3413,138 +3413,100 @@ body.sidebar-collapsed #location-options-drawer {
 }
 
 /* ==========================================================================
-   Fable Motion Animation Engine Styles (MapLibre Living Vector FX)
+   Fable Motion Animation Engine Styles (Apple-Grade Premium Vector FX)
    ========================================================================== */
 
-/* 1. Map Touch / Click Liquid Shockwaves */
+/* 1. iOS-Grade Fluid Touch Glass Ripple */
 .fable-map-shockwave {
   position: absolute;
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   pointer-events: none;
   z-index: 99;
-  transform: translate(-50%, -50%) scale(0);
+  transform: translate(-50%, -50%) scale(0.2);
   border-radius: 50%;
-  border: 2px solid rgba(56, 189, 248, 0.9);
-  box-shadow: 0 0 20px rgba(0, 113, 227, 0.65), inset 0 0 12px rgba(56, 189, 248, 0.4);
-  animation: fable-shockwave-expand 0.8s cubic-bezier(0.12, 0.8, 0.24, 1) forwards;
+  border: 1.2px solid rgba(255, 255, 255, 0.65);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.22) 0%, rgba(56, 189, 248, 0.12) 40%, transparent 75%);
+  box-shadow: 0 0 16px rgba(56, 189, 248, 0.35);
+  animation: fable-shockwave-luxury 0.52s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-.fable-map-echo {
-  position: absolute;
-  inset: -6px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(14, 165, 233, 0.65);
-  animation: fable-shockwave-echo 0.8s cubic-bezier(0.12, 0.8, 0.24, 1) forwards;
-}
-
-@keyframes fable-shockwave-expand {
+@keyframes fable-shockwave-luxury {
   0% {
-    transform: translate(-50%, -50%) scale(0.15);
+    transform: translate(-50%, -50%) scale(0.2);
     opacity: 0.95;
   }
-  60% {
-    opacity: 0.5;
-  }
   100% {
-    transform: translate(-50%, -50%) scale(3.8);
+    transform: translate(-50%, -50%) scale(2.8);
     opacity: 0;
   }
 }
 
-@keyframes fable-shockwave-echo {
-  0% {
-    transform: scale(0.3);
-    opacity: 0.8;
-  }
-  100% {
-    transform: scale(3.2);
-    opacity: 0;
-  }
-}
-
-/* 2. Living Parking Pin Levitation & Sonar Waves */
+/* 2. Premium Living Parking Pins (Poised, Solid & Ambient) */
 .parking-pin.fable-pin {
-  animation: fable-pin-float 3.4s ease-in-out infinite alternate !important;
-  animation-delay: var(--fable-delay, 0s) !important;
-  will-change: transform;
-}
-
-@keyframes fable-pin-float {
-  0% {
-    transform: translateY(0);
-  }
-  100% {
-    transform: translateY(-4px);
-  }
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.12) !important;
 }
 
 .parking-pin.fable-pin:hover {
-  animation-play-state: paused !important;
-  transform: scale(1.14) translateY(-3px) !important;
-  box-shadow: 0 12px 30px rgba(0, 113, 227, 0.45), 0 0 0 2px rgba(56, 189, 248, 0.45) !important;
+  transform: translateY(-2.5px) scale(1.05) !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.5), 0 0 0 1.5px rgba(56, 189, 248, 0.6) !important;
 }
 
 .parking-pin.fable-pin.is-selected {
-  animation: fable-pin-selected 2.4s ease-in-out infinite alternate !important;
-  box-shadow: 0 12px 32px rgba(0, 113, 227, 0.6), 0 0 18px rgba(56, 189, 248, 0.5) !important;
+  transform: translateY(-2px) scale(1.06) !important;
+  box-shadow: 0 12px 28px rgba(0, 113, 227, 0.45), 0 0 0 2px rgba(56, 189, 248, 0.85) !important;
 }
 
-@keyframes fable-pin-selected {
-  0% {
-    transform: scale(1.1) translateY(-3px);
-  }
-  100% {
-    transform: scale(1.16) translateY(-6px);
-  }
-}
-
-/* Dual Sonar Pulse Rings inside Pins */
+/* Ethereal AirTag-Grade Sonar Pulse on Status Indicator */
 .status-pulse .fable-sonar-ring {
   position: absolute;
-  inset: -2px;
+  inset: -1px;
   border-radius: 50%;
   pointer-events: none;
 }
 
 .status-green .fable-sonar-ring {
-  border: 1.5px solid rgba(52, 199, 89, 0.85);
-  box-shadow: 0 0 8px rgba(52, 199, 89, 0.4);
+  border: 1px solid rgba(52, 211, 153, 0.5);
+  background: radial-gradient(circle, rgba(52, 211, 153, 0.14) 0%, transparent 70%);
+  box-shadow: 0 0 8px rgba(52, 211, 153, 0.25);
 }
 
 .status-orange .fable-sonar-ring {
-  border: 1.5px solid rgba(255, 149, 0, 0.85);
-  box-shadow: 0 0 8px rgba(255, 149, 0, 0.4);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  background: radial-gradient(circle, rgba(251, 191, 36, 0.14) 0%, transparent 70%);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.25);
 }
 
 .status-red .fable-sonar-ring {
-  border: 1.5px solid rgba(255, 59, 48, 0.85);
-  box-shadow: 0 0 8px rgba(255, 59, 48, 0.4);
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: radial-gradient(circle, rgba(248, 113, 113, 0.14) 0%, transparent 70%);
+  box-shadow: 0 0 8px rgba(248, 113, 113, 0.25);
 }
 
 .status-pulse .fable-sonar-ring.r1 {
-  animation: fable-sonar-ping 2.6s cubic-bezier(0.1, 0.8, 0.25, 1) infinite;
+  animation: fable-sonar-ping 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .status-pulse .fable-sonar-ring.r2 {
-  animation: fable-sonar-ping 2.6s cubic-bezier(0.1, 0.8, 0.25, 1) infinite 1.3s;
+  animation: fable-sonar-ping 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite 1.6s;
 }
 
 @keyframes fable-sonar-ping {
   0% {
     transform: scale(1);
-    opacity: 0.9;
+    opacity: 0.85;
   }
-  75% {
+  65% {
     opacity: 0.15;
   }
   100% {
-    transform: scale(3.4);
+    transform: scale(2.4);
     opacity: 0;
   }
 }
 
-/* 3. Fable Destination Beacon with 3D Ground Target Radar */
+/* 3. Luxury Destination Beacon with Ground Aperture */
 .fable-dest-root {
   position: relative;
   display: flex;
@@ -3552,86 +3514,79 @@ body.sidebar-collapsed #location-options-drawer {
   align-items: center;
 }
 
-.fable-ground-target {
+.fable-ground-aperture {
   position: absolute;
   bottom: -4px;
   left: 50%;
-  transform: translateX(-50%) perspective(300px) rotateX(68deg);
-  width: 52px;
-  height: 52px;
+  transform: translateX(-50%) perspective(400px) rotateX(72deg);
+  width: 44px;
+  height: 44px;
   pointer-events: none;
   transform-origin: center center;
   z-index: 1;
 }
 
-.fable-target-ring {
+.fable-ground-shadow {
+  position: absolute;
+  inset: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0, 0, 0, 0.45) 0%, rgba(220, 38, 38, 0.18) 35%, transparent 75%);
+}
+
+.fable-ground-wave {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid rgba(239, 68, 68, 0.85);
-  box-shadow: 0 0 12px rgba(239, 68, 68, 0.4);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.12) 0%, transparent 65%);
+  box-shadow: 0 0 14px rgba(239, 68, 68, 0.22);
 }
 
-.fable-target-ring.tr1 {
-  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite;
+.fable-ground-wave.w1 {
+  animation: fable-luxury-wave 3.4s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
-.fable-target-ring.tr2 {
-  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite 0.8s;
+.fable-ground-wave.w2 {
+  animation: fable-luxury-wave 3.4s cubic-bezier(0.16, 1, 0.3, 1) infinite 1.7s;
 }
 
-.fable-target-ring.tr3 {
-  animation: fable-target-ripple 2.4s cubic-bezier(0.15, 0.85, 0.35, 1) infinite 1.6s;
-}
-
-.fable-target-core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: #ef4444;
-  box-shadow: 0 0 14px rgba(239, 68, 68, 0.9);
-}
-
-@keyframes fable-target-ripple {
+@keyframes fable-luxury-wave {
   0% {
-    transform: scale(0.2);
-    opacity: 0.95;
+    transform: scale(0.5);
+    opacity: 0.9;
   }
-  60% {
-    opacity: 0.4;
+  70% {
+    opacity: 0.2;
   }
   100% {
-    transform: scale(2.6);
+    transform: scale(2.2);
     opacity: 0;
   }
 }
 
-.fable-pin-bob {
-  animation: fable-pin-hover-bob 2.8s ease-in-out infinite alternate;
+.fable-pin-poised {
+  animation: fable-pin-poise 4.2s cubic-bezier(0.4, 0, 0.2, 1) infinite alternate;
   transform-origin: bottom center;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.45));
 }
 
-@keyframes fable-pin-hover-bob {
+@keyframes fable-pin-poise {
   0% {
     transform: translateY(0) scale(1);
   }
   100% {
-    transform: translateY(-5px) scale(1.04);
+    transform: translateY(-2.5px) scale(1.02);
   }
 }
 
-/* 4. Fable Vehicle Sonar Radar & Sweep */
+/* 4. Find My Style Vehicle Sonar Radar */
 .fable-vehicle-root {
   position: relative;
 }
 
 .fable-vehicle-sonar {
   position: absolute;
-  inset: 0;
+  inset: -6px;
   pointer-events: none;
   display: flex;
   align-items: center;
@@ -3640,35 +3595,36 @@ body.sidebar-collapsed #location-options-drawer {
 
 .fable-v-wave {
   position: absolute;
-  inset: -6px;
+  inset: 0;
   border-radius: 50%;
-  border: 1.5px solid rgba(0, 113, 227, 0.7);
-  box-shadow: 0 0 12px rgba(0, 113, 227, 0.35);
+  border: 1px solid rgba(0, 113, 227, 0.45);
+  background: radial-gradient(circle, rgba(0, 113, 227, 0.12) 0%, transparent 70%);
+  box-shadow: 0 0 12px rgba(0, 113, 227, 0.2);
 }
 
 .fable-v-wave.w1 {
-  animation: fable-vehicle-ping 2.6s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+  animation: fable-vehicle-ping 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite;
 }
 
 .fable-v-wave.w2 {
-  animation: fable-vehicle-ping 2.6s cubic-bezier(0.1, 0.8, 0.3, 1) infinite 1.3s;
+  animation: fable-vehicle-ping 3.2s cubic-bezier(0.16, 1, 0.3, 1) infinite 1.6s;
 }
 
 @keyframes fable-vehicle-ping {
   0% {
-    transform: scale(0.6);
-    opacity: 0.85;
+    transform: scale(0.7);
+    opacity: 0.8;
   }
   100% {
-    transform: scale(2.6);
+    transform: scale(2.1);
     opacity: 0;
   }
 }
 
-/* 5. Fable Route Energy Gliding Photon */
+/* 5. Luxury Route Navigation Energy Photon */
 .fable-route-orb {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   pointer-events: none;
   z-index: 105;
@@ -3678,29 +3634,29 @@ body.sidebar-collapsed #location-options-drawer {
 }
 
 .fable-orb-core {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: #ffffff;
-  box-shadow: 0 0 10px #38bdf8, 0 0 18px #0071e3;
+  box-shadow: 0 0 8px #38bdf8, 0 0 16px rgba(0, 113, 227, 0.7);
 }
 
 .fable-orb-glow {
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(56, 189, 248, 0.6) 0%, rgba(0, 113, 227, 0.2) 65%, transparent 100%);
-  animation: fable-orb-pulse 1.4s ease-in-out infinite alternate;
+  background: radial-gradient(circle, rgba(56, 189, 248, 0.45) 0%, rgba(0, 113, 227, 0.15) 60%, transparent 100%);
+  animation: fable-orb-pulse 1.8s ease-in-out infinite alternate;
 }
 
 @keyframes fable-orb-pulse {
   0% {
-    transform: scale(0.85);
-    opacity: 0.7;
+    transform: scale(0.9);
+    opacity: 0.6;
   }
   100% {
-    transform: scale(1.35);
-    opacity: 1;
+    transform: scale(1.25);
+    opacity: 0.95;
   }
 }
 
