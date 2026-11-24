@@ -602,7 +602,7 @@
   top: 14px !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
-  width: min(860px, calc(100vw - 28px)) !important;
+  width: min(760px, calc(100vw - 240px)) !important;
   height: 52px !important;
   z-index: 1200 !important;
   display: flex !important;
