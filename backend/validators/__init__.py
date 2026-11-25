@@ -20,3 +20,14 @@ __all__ = [
     'validate_indian_phone',
     'validate_sensor_zone'
 ]
+"""Validators index."""
+from .ev_slot_validator import validate_ev_slot_payload
+from .revenue_validator import validate_revenue_payload
+from .valet_validator import validate_valet_payload
+from .barrier_validator import validate_barrier_payload
+from .geofence_validator import validate_geofence_payload
+from .speed_telemetry_validator import validate_speed_telemetry
+from .plate_validator import validate_license_plate_format
+from .walking_route_validator import validate_walking_distance
+from .heartbeat_validator import validate_sensor_heartbeat
+from .surge_factor_validator import validate_surge_factor
