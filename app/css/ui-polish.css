@@ -3773,3 +3773,12 @@ input:focus-visible {
     transition: none !important;
   }
 }
+
+/* [Commit 514] Ultra-thin scrollbar styling for autocomplete drop-down lists */
+.custom-autocomplete-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-autocomplete-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
