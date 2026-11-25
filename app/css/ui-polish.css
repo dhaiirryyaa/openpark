@@ -3737,3 +3737,9 @@ body.sidebar-collapsed #location-options-drawer {
 .notch-safe-bottom {
   padding-bottom: max(16px, env(safe-area-inset-bottom));
 }
+
+/* [Commit 509] Overscroll-behavior containment */
+.overscroll-contained {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
