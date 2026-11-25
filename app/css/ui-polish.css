@@ -3729,3 +3729,11 @@ body.sidebar-collapsed #location-options-drawer {
   background-size: 200% 100%;
   animation: evChipShine 4s infinite linear;
 }
+
+/* [Commit 508] Safe-area-inset padding helpers for notched mobile displays */
+.notch-safe-top {
+  padding-top: max(12px, env(safe-area-inset-top));
+}
+.notch-safe-bottom {
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+}
