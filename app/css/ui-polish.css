@@ -3678,3 +3678,9 @@ body.sidebar-collapsed #location-options-drawer {
     --sunlight-accent: #00e5ff;
   }
 }
+
+/* [Commit 502] Hardware-accelerated drawer pull spring curve */
+:root {
+  --spring-drawer-bounce: cubic-bezier(0.19, 1, 0.22, 1);
+  --spring-drawer-friction: 0.88;
+}
