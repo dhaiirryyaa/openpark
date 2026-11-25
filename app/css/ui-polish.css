@@ -3710,3 +3710,11 @@ body.sidebar-collapsed #location-options-drawer {
               0 12px 24px -8px rgba(0, 0, 0, 0.45),
               0 0 0 1px rgba(255, 255, 255, 0.12);
 }
+
+/* [Commit 506] WCAG AA compliant badge color contrast tokens */
+:root {
+  --wcag-green-text: #22c55e;
+  --wcag-orange-text: #f59e0b;
+  --wcag-red-text: #ef4444;
+  --wcag-muted-text: #94a3b8;
+}
