@@ -3765,3 +3765,11 @@ input:focus-visible {
 .nav-turn-icon.is-active {
   animation: maneuverArrowFloat 1.8s ease-in-out infinite;
 }
+
+/* [Commit 513] Reduced-motion media query overrides */
+@media (prefers-reduced-motion: reduce) {
+  .fable-pin, .fable-map-shockwave, .fable-pin-poised, .fable-v-wave {
+    animation: none !important;
+    transition: none !important;
+  }
+}
