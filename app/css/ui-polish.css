@@ -3756,3 +3756,12 @@ input:focus-visible {
 .speed-glow-nominal { box-shadow: 0 0 12px rgba(34, 197, 94, 0.35); }
 .speed-glow-cruising { box-shadow: 0 0 12px rgba(56, 189, 248, 0.35); }
 .speed-glow-excess { box-shadow: 0 0 16px rgba(239, 68, 68, 0.5); }
+
+/* [Commit 512] Dynamic turn guidance maneuver arrow floating animations */
+@keyframes maneuverArrowFloat {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(3px); }
+}
+.nav-turn-icon.is-active {
+  animation: maneuverArrowFloat 1.8s ease-in-out infinite;
+}
