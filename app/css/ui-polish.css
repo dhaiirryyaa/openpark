@@ -3751,3 +3751,8 @@ input:focus-visible {
   outline: 2px solid #0071e3 !important;
   outline-offset: 2px !important;
 }
+
+/* [Commit 511] Telemetry speed dial glow gradients */
+.speed-glow-nominal { box-shadow: 0 0 12px rgba(34, 197, 94, 0.35); }
+.speed-glow-cruising { box-shadow: 0 0 12px rgba(56, 189, 248, 0.35); }
+.speed-glow-excess { box-shadow: 0 0 16px rgba(239, 68, 68, 0.5); }
