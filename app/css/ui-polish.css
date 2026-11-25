@@ -3743,3 +3743,11 @@ body.sidebar-collapsed #location-options-drawer {
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
 }
+
+/* [Commit 510] Focus-visible focus ring styles for accessible keyboard navigation */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible {
+  outline: 2px solid #0071e3 !important;
+  outline-offset: 2px !important;
+}
