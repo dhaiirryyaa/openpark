@@ -3718,3 +3718,14 @@ body.sidebar-collapsed #location-options-drawer {
   --wcag-red-text: #ef4444;
   --wcag-muted-text: #94a3b8;
 }
+
+/* [Commit 507] Badge shine shimmer effect for EV fast charger chips */
+@keyframes evChipShine {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.ev-chip-glow {
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.1) 0%, rgba(255, 255, 255, 0.25) 50%, rgba(56, 189, 248, 0.1) 100%);
+  background-size: 200% 100%;
+  animation: evChipShine 4s infinite linear;
+}
