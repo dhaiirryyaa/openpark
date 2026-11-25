@@ -3669,3 +3669,12 @@ body.sidebar-collapsed #location-options-drawer {
 
 
 
+
+/* [Commit 501] High-contrast sunlight readability tokens */
+@media (forced-colors: active) or (inverted-colors: active) {
+  :root {
+    --sunlight-contrast-bg: #000000;
+    --sunlight-contrast-fg: #ffffff;
+    --sunlight-accent: #00e5ff;
+  }
+}
