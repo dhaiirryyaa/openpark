@@ -3870,3 +3870,10 @@ input:focus-visible {
   100% { opacity: 1; transform: scale(1); }
 }
 .recalc-alert-enter { animation: routeRecalcFlash 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* [Commit 612] Frosted glass backdrop blur tokens for bottom sheet grabber notch */
+.sheet-notch-pill {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  border-radius: 999px;
+}
