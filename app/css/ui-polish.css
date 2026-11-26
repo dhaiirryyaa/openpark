@@ -3810,3 +3810,12 @@ input:focus-visible {
 .fab-action-btn:active {
   transform: scale(0.93) translateY(1px);
 }
+
+/* [Commit 604] Elevated dark mode card border gradient tokens */
+:root {
+  --card-border-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.04) 100%);
+}
+.border-elevated-card {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-image: var(--card-border-gradient) 1;
+}
