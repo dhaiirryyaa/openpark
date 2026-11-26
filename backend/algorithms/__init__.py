@@ -28,3 +28,15 @@ from .turnover_rate import calculate_turnover_rate
 from .battery_discharge import estimate_ev_discharge
 from .sensor_health_watchdog import evaluate_sensor_health
 from .walking_time_estimator import estimate_walking_minutes
+
+from .lane_speed_calibrator import calibrate_lane_speed
+from .level_climb_estimator import estimate_level_climb_seconds
+from .congestion_penalty import get_congestion_penalty_factor
+from .battery_thermal import calculate_thermal_throttle_factor
+from .bay_angle_difficulty import calculate_bay_angle_difficulty
+from .refund_calculator import calculate_refund_amount
+from .camera_overlap_filter import deduplicate_detections
+from .tailgating_detector import is_tailgating_event
+from .loading_zone_checker import is_loading_zone_permitted
+from .sidewalk_accessibility import evaluate_sidewalk_accessibility
+from .patrol_route_optimizer import prioritize_patrol_lots
