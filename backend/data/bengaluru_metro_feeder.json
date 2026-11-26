@@ -1,0 +1,7 @@
+{
+  "metro_park_and_ride": [
+    { "station": "Baiyappanahalli", "line": "Purple", "two_wheeler_bays": 500, "four_wheeler_bays": 200 },
+    { "station": "Nagasandra", "line": "Green", "two_wheeler_bays": 600, "four_wheeler_bays": 250 },
+    { "station": "Silk Institute", "line": "Green", "two_wheeler_bays": 400, "four_wheeler_bays": 150 }
+  ]
+}
