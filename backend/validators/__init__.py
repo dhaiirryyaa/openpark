@@ -31,3 +31,8 @@ from .plate_validator import validate_license_plate_format
 from .walking_route_validator import validate_walking_distance
 from .heartbeat_validator import validate_sensor_heartbeat
 from .surge_factor_validator import validate_surge_factor
+
+from .garage_level_validator import validate_garage_level
+from .loading_permit_validator import validate_loading_permit
+from .patrol_log_validator import validate_patrol_log
+from .refund_validator import validate_refund_claim
