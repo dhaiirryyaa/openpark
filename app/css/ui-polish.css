@@ -3850,3 +3850,9 @@ input:focus-visible {
 .category-filter-pill:active {
   transform: scale(0.95);
 }
+
+/* [Commit 609] Custom focus ring glow for search input field */
+.search-field-lux:focus-within {
+  box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.7), 0 0 16px rgba(0, 113, 227, 0.25);
+  border-color: transparent;
+}
