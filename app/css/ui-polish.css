@@ -3862,3 +3862,11 @@ input:focus-visible {
   transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
   transform-origin: center center;
 }
+
+/* [Commit 611] Smooth route recalculation flash alert keyframes */
+@keyframes routeRecalcFlash {
+  0% { opacity: 0.2; transform: scale(0.98); }
+  50% { opacity: 1; transform: scale(1.01); }
+  100% { opacity: 1; transform: scale(1); }
+}
+.recalc-alert-enter { animation: routeRecalcFlash 0.35s cubic-bezier(0.16, 1, 0.3, 1); }
