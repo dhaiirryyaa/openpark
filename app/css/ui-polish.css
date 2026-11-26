@@ -3842,3 +3842,11 @@ input:focus-visible {
   background-size: 600px 100%;
   animation: lotSkeletonShimmer 1.8s infinite linear;
 }
+
+/* [Commit 608] Micro scale-down tactile feedback on category filter pills */
+.category-filter-pill {
+  transition: transform 0.16s ease, background-color 0.2s ease;
+}
+.category-filter-pill:active {
+  transform: scale(0.95);
+}
