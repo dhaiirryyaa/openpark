@@ -1,7 +1,7 @@
 {
   "name": "OpenPark — Smart Mobility & Live GPS Telemetry",
   "short_name": "OpenPark",
-  "version": "2.7.0",
+  "version": "2.8.0",
   "description": "Next-Gen Urban Parking, AI Spatial Spot Scanner & Real-Time GPS Telemetry",
   "start_url": "/app/",
   "scope": "/app/",

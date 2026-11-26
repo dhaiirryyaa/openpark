@@ -5,9 +5,9 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL%20JS-4.7-396afc.svg)](https://maplibre.org/maplibre-gl-js/docs/API/)
 [![SQLite FTS5](https://img.shields.io/badge/SQLite-FTS5%20Overture%20India-003B57.svg)](https://www.sqlite.org/fts5.html)
-[![Tests](https://img.shields.io/badge/Tests-75%2F75%20Passing-success.svg)](backend/tests/)
-[![Release](https://img.shields.io/badge/Release-v2.7.0-blueviolet.svg)](docs/RELEASE_NOTES_v2.7.0.md)
-[![Commits](https://img.shields.io/badge/Commits-600%2B-informational.svg)](https://github.com/dhaiirryyaa/openpark/commits/main)
+[![Tests](https://img.shields.io/badge/Tests-85%2F85%20Passing-success.svg)](backend/tests/)
+[![Release](https://img.shields.io/badge/Release-v2.8.0-blueviolet.svg)](docs/RELEASE_NOTES_v2.7.0.md)
+[![Commits](https://img.shields.io/badge/Commits-665%2B-informational.svg)](https://github.com/dhaiirryyaa/openpark/commits/main)
 
 **OpenPark** is an open-source, next-generation smart mobility, urban parking discovery, 1 km AI small-ground scanner, India place search, and real-time GPS telemetry platform built with **FastAPI** and **MapLibre GL JS**. It provides sub-second parking discovery, OSRM turn-by-turn routing, Apple-grade luxury vector motion animations, circadian surge pricing, smart EV slot scheduling, and IoT barrier gate control.
 
