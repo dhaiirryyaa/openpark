@@ -5,11 +5,11 @@
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115+-009688.svg)](https://fastapi.tiangolo.com)
 [![MapLibre GL](https://img.shields.io/badge/MapLibre%20GL%20JS-4.7-396afc.svg)](https://maplibre.org/maplibre-gl-js/docs/API/)
 [![SQLite FTS5](https://img.shields.io/badge/SQLite-FTS5%20Overture%20India-003B57.svg)](https://www.sqlite.org/fts5.html)
-[![Tests](https://img.shields.io/badge/Tests-22%2F22%20Passing-success.svg)](backend/test_api.py)
+[![Tests](https://img.shields.io/badge/Tests-75%2F75%20Passing-success.svg)](backend/tests/)
+[![Release](https://img.shields.io/badge/Release-v2.7.0-blueviolet.svg)](docs/RELEASE_NOTES_v2.7.0.md)
+[![Commits](https://img.shields.io/badge/Commits-600%2B-informational.svg)](https://github.com/dhaiirryyaa/openpark/commits/main)
 
-**OpenPark** is an open-source smart parking, 1 km AI small-ground finder, India place search, OSRM routing, and Traccar GPS telemetry platform built with **FastAPI** and **MapLibre GL JS**. It discovers nearby parking facilities and unused `45–550 m²` (`3–6` car) pockets within a strict `1 km` radius, indexes Indian POIs in SQLite FTS5 from Overture Maps, calculates turn-by-turn routes via OSRM, and provides 15-minute spot holds plus an operator touch dashboard.
-
-> **Note:** An upgraded customer-focused edition using OpenFreeMap defaults, total trip-time ranking, service worker offline caching, and privacy controls is maintained separately in `openpark-customer`.
+**OpenPark** is an open-source, next-generation smart mobility, urban parking discovery, 1 km AI small-ground scanner, India place search, and real-time GPS telemetry platform built with **FastAPI** and **MapLibre GL JS**. It provides sub-second parking discovery, OSRM turn-by-turn routing, Apple-grade luxury vector motion animations, circadian surge pricing, smart EV slot scheduling, and IoT barrier gate control.
 
 ---
 
@@ -22,31 +22,49 @@
 
 ---
 
-## 🌟 Core Features
+## 🌟 Core Features & Architecture (v2.7.0)
 
-1. **Unified 1 km Find Parking & AI Small-Ground Scanner (`/api/ai/scan-parking`)**
-   - Strictly scoped to a `<= 1 km` radius around the searched destination or user location.
-   - Identifies small unused pockets (`45–550 m²`, ~3–6 cars), mall plazas, and legal surface bays using local OSM/Overpass caches plus fast CGImap and Photon enrichment, backed by bounded LRU caches (`_cache_put`).
-   - Supports crowd verification (`✅ Parkable` / `🚫 Blocked`) via `POST /api/ai/verify-pocket`.
+### 1. 💎 Apple-Grade Luxury Vector Motion & UI Glassmorphism
+- **Poised Living Markers**: Parking bay badges remain solidly anchored to real-world coordinates with dark glass styling (`backdrop-filter: blur(12px)`) and spring-loaded hover lift (`cubic-bezier(0.16, 1, 0.3, 1)`).
+- **Find My Style Sonar Radars**: Status dots emit calm, hairline telemetry waves (`.fable-sonar-ring`) with exponential opacity decay.
+- **Specular 3D Destination Beacon**: Realistic ground contact shadow (`.fable-ground-shadow`), expanding ground aperture wave (`.fable-ground-wave`), and metallic specular gloss drop pin (`#applePinSpecular`).
+- **iOS Fluid Touch Glass Ripple**: Map taps emit an optical glass diffusion ring (`.fable-map-shockwave`) that dissipates in 0.52s.
+- **iOS Control Center Sheet**: Interactive pull-down control center with gesture handling for 1-tap neighborhood selection and quick head-outs.
+- **Route Energy Gliding Stream**: Luminous photon beam (`.fable-route-orb`) gliding along active navigation paths towards destinations.
 
-2. **India-Scoped Offline & Live Place Search (`/api/places/search`)**
-   - Full-text SQLite FTS5 index (`backend/places_db.py`) hydrated on startup from [data/overture_places_openpark.json.gz](data/overture_places_openpark.json.gz) and constrained to the India bounding box (`6.5 <= lat <= 37.5`, `68.0 <= lon <= 97.5`).
+### 2. ⚡ Algorithmic Computing Suite (`backend/algorithms/`)
+- **Dynamic Traffic-Weighted ETA**: Adjusts travel times based on time-of-day corridor congestion decay (`dynamic_eta.py`).
+- **Circadian Surge Pricing**: Dual-peak Gaussian pricing curve modeling morning (09:30) and evening (18:30) urban rush hours (`circadian_surge.py`).
+- **Smart EV Slot Scheduling**: Power delivery optimizer matching battery capacity, arrival SoC, and charger kW (`ev_slot_scheduler.py`).
+- **Spatial Hash Grid Engine**: O(1) grid cell hashing for sub-millisecond k-nearest neighbor parking lookups (`spatial_hash_grid.py`).
+- **Markov-Chain Occupancy Simulation**: Stochastic arrival/departure probability modeling for predictive vacancy forecasting (`occupancy_markov.py`).
+- **IoT Barrier Gate FSM**: Complete finite state machine (`IDLE`, `OPENING`, `OPEN`, `CLOSING`, `FAULT`) for automated gate access (`barrier_gate_fsm.py`).
+- **Valet Dispatch Optimizer**: Nearest-neighbor driver assignment for automated vehicle drop-off (`valet_dispatch.py`).
+- **Greenhouse Gas CO2 Offset Tracker**: Calculates emission grams avoided by eliminating cruising search time (`co2_savings.py`).
 
-3. **MapLibre GL JS Basemaps & Overlays (`app/index.html`)**
-   - Defaults to **Google Maps Satellite Hybrid** with a non-destructive 1-tap switcher to **GMap Full Detail Retina**, preserving camera state, routes, and AI polygons.
-   - Renders Overpass parking outlines, fuel stations, and toll plazas via `/api/osm/overpass`.
+### 3. 🔍 Unified 1 km AI Small-Ground Scanner (`/api/ai/scan-parking`)
+- Strictly scoped to a `<= 1 km` radius around the searched destination or user location.
+- Identifies small unused pockets (`45–550 m²`, ~3–6 cars), mall plazas, and legal surface bays using local OSM/Overpass caches plus fast CGImap and Photon enrichment.
+- Supports crowd verification (`✅ Parkable` / `🚫 Blocked`) via `POST /api/ai/verify-pocket`.
 
-4. **Parking Availability, 15-Minute Holds & Operator Dashboard (`dashboard/index.html`)**
-   - Pre-seeded Bengaluru parking dataset (`data/bengaluru_parking_opencity.json`).
-   - 15-minute spot reservations (`POST /lots/{lot_id}/hold`, `DELETE /lots/{lot_id}/hold`) with `OP-*` pass codes, plus live crowd reporting (`POST /lots/{lot_id}/reports`).
-   - Dedicated operator touch dashboard (`/dashboard/`) with live WebSocket broadcasts (`/ws/lots/{lot_id}`).
+### 4. 🇮🇳 India-Scoped Offline & Live Place Search (`/api/places/search`)
+- Full-text SQLite FTS5 index (`backend/places_db.py`) hydrated on startup from [data/overture_places_openpark.json.gz](data/overture_places_openpark.json.gz) and constrained to the India bounding box (`6.5 <= lat <= 37.5`, `68.0 <= lon <= 97.5`).
+- Multi-provider fallback support across Photon, Ola Maps, Mappls, and Overpass.
 
-5. **OSRM Navigation & Traccar GPS Telemetry**
-   - Turn-by-turn routes (`/api/traccar/route`) and alternative corridor comparison (`/api/traccar/routes/compare`).
-   - OsmAnd / Traccar HTTP telemetry ingestion (`GET` & `POST /api/traccar`) and WebSocket live vehicle updates (`/ws/vehicle`). When running locally, raw OsmAnd TCP port `5055` is also available; on Railway, HTTP endpoints listen on `$PORT` and raw TCP `5055` requires enabling a Railway TCP Proxy.
+### 5. 🗺️ MapLibre GL JS Basemaps & Overlays
+- High-performance vector engine defaulting to **Google Maps Satellite Hybrid** with instant 1-tap switcher to **GMap Retina Road**.
+- Offline vector grid fallback style for zero-connectivity environments.
+- Autonomous Service Worker (`app/sw.js`) precaching core mobility assets for offline PWA launch.
 
-6. **Optional Provider Proxies**
-   - Server-side endpoints for **Ola Maps** (`/api/olamaps/*`), **Mappls** (`/api/mappls/*`), **Outscraper** (`/api/outscraper/*`), and **Geofabrik** (`/api/geofabrik/*`), enabled when the corresponding environment keys are configured.
+### 6. ⏱️ 15-Minute Spot Holds & Operator Dashboard (`dashboard/index.html`)
+- Pre-seeded Bengaluru parking dataset (`data/bengaluru_parking_opencity.json`).
+- 15-minute spot reservations (`POST /lots/{lot_id}/hold`, `DELETE /lots/{lot_id}/hold`) with `OP-*` pass codes, plus live crowd reporting (`POST /lots/{lot_id}/reports`).
+- Dedicated operator touch dashboard (`/dashboard/`) with live WebSocket broadcasts (`/ws/lots/{lot_id}`).
+
+### 7. 🛰️ OSRM Navigation & Traccar GPS Telemetry
+- Turn-by-turn routes (`/api/traccar/route`) and alternative corridor comparison (`/api/traccar/routes/compare`).
+- OsmAnd / Traccar HTTP telemetry ingestion (`GET` & `POST /api/traccar`) and WebSocket live vehicle updates (`/ws/vehicle`).
+- Smooth heading interpolation via exponential moving average filter (`app/js/utils/heading_filter.js`).
 
 ---
 
@@ -55,9 +73,9 @@
 ### Smart Parking & AI Scanner
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
-| `GET` | `/lots` | List all loaded parking lots |
+| `GET` | `/lots` | List all loaded parking facilities |
 | `GET` | `/lots/nearby` | Parking lots strictly within `<= 1 km` (`radius_m` capped at `1000`) |
-| `GET` | `/lots/{lot_id}` | Single lot details |
+| `GET` | `/lots/{lot_id}` | Single lot details and real-time bay availability |
 | `GET` | `/lots/{lot_id}/telemetry` | Multi-zone occupancy, EV, and heuristic telemetry |
 | `POST` | `/lots/{lot_id}/hold` | Reserve a 15-minute hold and issue an `OP-*` entry pass |
 | `DELETE` | `/lots/{lot_id}/hold` | Release an active hold |
@@ -84,20 +102,16 @@
 
 ---
 
-## 🛠️ Scripts & Utilities
+## 📚 Architecture Decision Records (ADRs)
 
-- **Import Overture Places into SQLite FTS5**:
-  ```bash
-  python3 scripts/overture_places_importer.py
-  ```
-- **Harvest OSM / Overpass Places Dataset**:
-  ```bash
-  python3 scripts/download_places_dataset.py
-  ```
-- **Headless Browser E2E Check**:
-  ```bash
-  ./backend/venv/bin/python scripts/e2e_browser_check.py
-  ```
+Key architectural decisions are documented in [`docs/architecture/`](docs/architecture/):
+- **[ADR-001: SQLite FTS5 for India Geocoding](docs/architecture/c4_model.md)**
+- **[ADR-002: Service Worker Offline-First Strategy](docs/architecture/offline_capabilities.md)**
+- **[ADR-003: Ephemeral GPS Telemetry Processing](docs/architecture/data_flow.md)**
+- **[ADR-004: Multi-Provider Proxy Resilience](docs/architecture/resilience_and_fallbacks.md)**
+- **[ADR-005: Apple-Grade Luxury Vector Motion Architecture](docs/architecture/adr_005_luxury_motion.md)**
+- **[ADR-006: Spatial Hash Grid Indexing vs R-Tree](docs/architecture/adr_006_spatial_indexing.md)**
+- **[ADR-007: Circadian Surge Pricing Mathematical Curve](docs/architecture/adr_007_circadian_surge.md)**
 
 ---
 
@@ -125,9 +139,9 @@ Copy `.env.example` to `.env` and add optional keys (`OPENPARK_API_KEY`, `OLAMAP
 
 ## 🧪 Automated Testing
 
-Run the full 22-test FastAPI backend suite:
+Run the complete 75-test FastAPI & algorithm suite:
 ```bash
-./backend/venv/bin/pytest backend/test_api.py -v
+./backend/venv/bin/pytest backend/test_api.py backend/tests/ -v
 ```
 
 ---
