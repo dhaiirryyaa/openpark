@@ -3825,3 +3825,9 @@ input:focus-visible {
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85), 0 0 12px rgba(0, 0, 0, 0.65);
   letter-spacing: -0.01em;
 }
+
+/* [Commit 606] Smooth accordion slide transitions for location options drawer */
+.accordion-drawer-content {
+  transition: max-height 0.32s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.25s ease;
+  overflow: hidden;
+}
