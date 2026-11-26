@@ -3856,3 +3856,9 @@ input:focus-visible {
   box-shadow: 0 0 0 2px rgba(0, 113, 227, 0.7), 0 0 16px rgba(0, 113, 227, 0.25);
   border-color: transparent;
 }
+
+/* [Commit 610] High-precision compass bearing needle rotation transitions */
+.compass-needle-dynamic {
+  transition: transform 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform-origin: center center;
+}
