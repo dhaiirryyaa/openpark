@@ -30,3 +30,6 @@ from .garage_level import GarageLevel
 from .loading_permit import LoadingPermit
 from .patrol_log import PatrolLog
 from .refund_claim import RefundClaim
+
+from .multimodal_transfer import MultimodalTransfer
+from .duration_log import DurationLog
