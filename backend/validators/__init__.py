@@ -36,3 +36,6 @@ from .garage_level_validator import validate_garage_level
 from .loading_permit_validator import validate_loading_permit
 from .patrol_log_validator import validate_patrol_log
 from .refund_validator import validate_refund_claim
+
+from .multimodal_validator import validate_multimodal_payload
+from .duration_validator import validate_duration_payload
