@@ -3907,3 +3907,9 @@ input:focus-visible {
   0% { transform: translate(-50%, -100%); opacity: 0; }
   100% { transform: translate(-50%, 0); opacity: 1; }
 }
+
+/* [Commit 669] High-visibility dynamic road label halo contrast tokens */
+:root {
+  --road-label-halo: 0 0 4px rgba(0, 0, 0, 0.9), 0 0 8px rgba(0, 0, 0, 0.6);
+}
+.road-label-crisp { text-shadow: var(--road-label-halo); }
