@@ -40,3 +40,9 @@ from .tailgating_detector import is_tailgating_event
 from .loading_zone_checker import is_loading_zone_permitted
 from .sidewalk_accessibility import evaluate_sidewalk_accessibility
 from .patrol_route_optimizer import prioritize_patrol_lots
+
+from .multimodal_scorer import score_multimodal_park_and_ride
+from .duration_survival import estimate_spot_departure_prob
+from .teleport_filter import detect_gps_teleportation
+from .checkdigit_validator import compute_plate_checksum
+from .double_parking_penalty import estimate_double_parking_delay
