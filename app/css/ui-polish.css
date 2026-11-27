@@ -3881,3 +3881,11 @@ input:focus-visible {
 /* [Commit 613] Dynamic color grading for EV fast charger power tier pills */
 .ev-tier-rapid { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
 .ev-tier-ultra { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+/* [Commit 666] Route waypoint arrival pulse animation */
+@keyframes waypointArrivalPulse {
+  0% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.15); opacity: 1; }
+  100% { transform: scale(1); opacity: 0.9; }
+}
+.waypoint-reached { animation: waypointArrivalPulse 1.4s ease-out infinite alternate; }
