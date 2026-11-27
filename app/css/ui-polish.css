@@ -3889,3 +3889,12 @@ input:focus-visible {
   100% { transform: scale(1); opacity: 0.9; }
 }
 .waypoint-reached { animation: waypointArrivalPulse 1.4s ease-out infinite alternate; }
+
+/* [Commit 667] Refined haptic button press depression shadows */
+.haptic-pressable {
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.haptic-pressable:active {
+  transform: translateY(2px) scale(0.98);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.45);
+}
